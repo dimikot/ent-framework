@@ -21,7 +21,7 @@ Source code is at [https://github.com/clickup/ent-framework](https://github.com/
 To install in your TypeScript project:
 
 ```
-npm add @clickup/ent-framework
-pnpm add @clickup/ent-framework
-yarn add @clickup/ent-framework
+npm add ent-framework
+pnpm add ent-framework
+yarn add ent-framework
 ```
