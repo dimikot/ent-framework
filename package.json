@@ -1,0 +1,35 @@
+{
+  "name": "ent-framework",
+  "description": "A PostgreSQL graph database alike library with micro-sharding and row-level security",
+  "version": "2.12.0",
+  "license": "MIT",
+  "keywords": [
+    "postgresql",
+    "postgres",
+    "orm",
+    "sql",
+    "replication lag",
+    "cluster",
+    "sharding",
+    "micro-sharding",
+    "microsharding",
+    "jit"
+  ],
+  "main": "./index.js",
+  "types": "./index.d.ts",
+  "exports": {
+    ".": "./index.js",
+    "./pg": "./pg.js"
+  },
+  "scripts": {
+    "clean": "rm -rf node_modules package-lock.json yarn.lock pnpm-lock.yaml",
+    "deploy": "git pull --rebase && bin/update-package-json.js && git add package.json -m 'v2.12.0' && git push && npm publish"
+  },
+  "dependencies": {
+    "@clickup/ent-framework": "2.12.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/dimikot/ent-framework"
+  }
+}
