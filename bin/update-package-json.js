@@ -1,4 +1,6 @@
 #!/usr/bin/env node
+const { execSync } = require("child_process");
+const { writeFileSync } = require("fs");
 
 async function updatePackageJson(org, name) {
   const origPackageJson = await fetch(
@@ -15,7 +17,7 @@ async function updatePackageJson(org, name) {
     exports: origPackageJson.exports,
     scripts: {
       clean: "rm -rf node_modules package-lock.json yarn.lock pnpm-lock.yaml",
-      deploy: `git pull --rebase && bin/update-package-json.js && git add package.json -m 'v${origPackageJson.version}' && git push && npm publish`,
+      deploy: `git pull --rebase && bin/update-package-json.js && git push && npm publish`,
     },
     dependencies: {
       [`@${org}/${name}`]: origPackageJson.version,
@@ -25,10 +27,13 @@ async function updatePackageJson(org, name) {
       url: `git://github.com/dimikot/${name}`,
     },
   };
-  require("fs").writeFileSync(
+  writeFileSync(
     `${__dirname}/../package.json`,
-    JSON.stringify(newPackageJson, null, 2)
+    JSON.stringify(newPackageJson, null, 2) + "\n"
   );
+
+  execSync("git add package.json", { stdio: "inherit" });
+  execSync(`git commit -m "v${origPackageJson.version}"`, { stdio: "inherit" });
 }
 
 updatePackageJson("clickup", "ent-framework").catch(console.error);

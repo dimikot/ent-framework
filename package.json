@@ -23,7 +23,7 @@
   },
   "scripts": {
     "clean": "rm -rf node_modules package-lock.json yarn.lock pnpm-lock.yaml",
-    "deploy": "git pull --rebase && bin/update-package-json.js && git add package.json -m 'v2.12.0' && git push && npm publish"
+    "deploy": "git pull --rebase && bin/update-package-json.js && git push && npm publish"
   },
   "dependencies": {
     "@clickup/ent-framework": "2.12.0"
