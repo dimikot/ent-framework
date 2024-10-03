@@ -22,8 +22,8 @@
     "./pg": "./pg.js"
   },
   "scripts": {
-    "clean": "rm -rf node_modules package-lock.json yarn.lock pnpm-lock.yaml",
-    "deploy": "git pull --rebase && bin/update-package-json.js && git push && npm publish"
+    "clean": "internal/clean.sh",
+    "deploy": "internal/deploy.sh"
   },
   "dependencies": {
     "@clickup/ent-framework": "2.12.1"

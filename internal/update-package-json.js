@@ -2,10 +2,20 @@
 const { execSync } = require("child_process");
 const { writeFileSync } = require("fs");
 
+function run(command) {
+  console.log(`$ ${command}`);
+  execSync(command, { stdio: "inherit" });
+}
+
 async function updatePackageJson(org, name) {
+  const packageJsonPath = `${__dirname}/../package.json`;
+  const oldPackageJson = require(packageJsonPath);
+  const npmVersion = execSync(`npm view ${name} version`).toString().trim();
+
   const origPackageJson = await fetch(
     `https://raw.githubusercontent.com/${org}/${name}/refs/heads/main/package.json`
   ).then((res) => res.json());
+
   const newPackageJson = {
     name,
     description: origPackageJson.description,
@@ -15,10 +25,7 @@ async function updatePackageJson(org, name) {
     main: origPackageJson.main,
     types: origPackageJson.types,
     exports: origPackageJson.exports,
-    scripts: {
-      clean: "rm -rf node_modules package-lock.json yarn.lock pnpm-lock.yaml",
-      deploy: `git pull --rebase && bin/update-package-json.js && git push && npm publish`,
-    },
+    scripts: oldPackageJson.scripts,
     dependencies: {
       [`@${org}/${name}`]: origPackageJson.version,
     },
@@ -28,12 +35,29 @@ async function updatePackageJson(org, name) {
     },
   };
   writeFileSync(
-    `${__dirname}/../package.json`,
+    packageJsonPath,
     JSON.stringify(newPackageJson, null, 2) + "\n"
   );
 
-  execSync("git add package.json", { stdio: "inherit" });
-  execSync(`git commit -m "v${origPackageJson.version}"`, { stdio: "inherit" });
+  run("git add package.json");
+
+  let commitError = null;
+  try {
+    run(`git commit -m "v${newPackageJson.version}"`);
+  } catch (e) {
+    commitError = e;
+  }
+
+  if (!commitError) {
+    run("git push");
+  }
+
+  if (newPackageJson.version !== npmVersion) {
+    run("npm publish");
+  }
 }
 
-updatePackageJson("clickup", "ent-framework").catch(console.error);
+updatePackageJson("clickup", "ent-framework").catch((e) => {
+  console.error(e);
+  process.exit(1);
+});

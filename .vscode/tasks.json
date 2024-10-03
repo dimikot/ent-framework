@@ -1,0 +1,12 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "git rebase --interactive",
+      "detail": "Opens a UI for interactive rebase (install \"Git rebase shortcuts\" extension).",
+      "type": "shell",
+      "command": "GIT_EDITOR=\"code --wait\" git rebase -i",
+      "problemMatcher": []
+    }
+  ]
+}
