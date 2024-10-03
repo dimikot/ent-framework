@@ -31,7 +31,7 @@ There are several versions of `insert*` static methods on each Ent class:
 * **insertReturning(vc, row)**: same as `insert()`, but immediately loads the just-inserted Ent back from the database and returns it. The reasoning is that the database may have fields with default values or even PG triggers, so we always need 2 round-trips to get the actual data.
 
 {% hint style="info" %}
-In fact, `insert*()` methods do way more that this. They check privacy rules to make sure that a VC can actually insert that data. They call Ent triggers. They infer a proper microshard to write the data to. We'll discuss all those topics later.
+In fact, `insert*()` methods do way more things. They check privacy rules to make sure that a VC can actually insert the data. They call Ent triggers. They infer a proper microshard to write the data to. We'll discuss all those topics later.
 {% endhint %}
 
 When some Ent is loaded in a VC, its `ent.vc` is assigned to that VC. In the above example, we use `req.vc` and `topic.vc` interchangeably.\
