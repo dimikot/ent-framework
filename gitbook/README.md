@@ -10,13 +10,9 @@
 
 There are other features supported, like cross-microshards foreign keys, triggers etc.
 
-Source code is at [https://github.com/clickup/ent-framework](https://github.com/clickup/ent-framework).
-
-<div align="left">
-
-<figure><img src="https://github.com/clickup/ent-framework/actions/workflows/ci.yml/badge.svg?branch=main" alt="" width="188"><figcaption></figcaption></figure>
-
-</div>
+* [Getting Started and Tutorials](https://dimikot.gitbook.io/ent-framework/)
+* [API documentation](https://github.com/clickup/ent-framework/blob/master/docs/modules.md)
+* [Source code](https://github.com/clickup/ent-framework)
 
 To install in your TypeScript project:
 
@@ -25,3 +21,9 @@ npm add ent-framework
 pnpm add ent-framework
 yarn add ent-framework
 ```
+
+<div align="left">
+
+<figure><img src="https://github.com/clickup/ent-framework/actions/workflows/ci.yml/badge.svg?branch=main" alt="" width="188"><figcaption></figcaption></figure>
+
+</div>
