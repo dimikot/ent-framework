@@ -9,41 +9,27 @@ function run(command) {
 
 async function updatePackageJson(org, name) {
   const packageJsonPath = `${__dirname}/../package.json`;
-  const oldPackageJson = require(packageJsonPath);
   const npmVersion = execSync(`npm view ${name} version`).toString().trim();
 
-  const origPackageJson = await fetch(
+  const orgPackageJson = await fetch(
     `https://raw.githubusercontent.com/${org}/${name}/refs/heads/main/package.json`
   ).then((res) => res.json());
 
-  const newPackageJson = {
-    name,
-    description: origPackageJson.description,
-    version: origPackageJson.version,
-    license: origPackageJson.license,
-    keywords: origPackageJson.keywords,
-    main: origPackageJson.main,
-    types: origPackageJson.types,
-    exports: origPackageJson.exports,
-    scripts: oldPackageJson.scripts,
-    dependencies: {
-      [`@${org}/${name}`]: origPackageJson.version,
-    },
-    repository: {
-      type: "git",
-      url: `git://github.com/dimikot/${name}`,
-    },
+  const packageJson = require(packageJsonPath);
+  packageJson.name = name;
+  packageJson.description = orgPackageJson.description;
+  packageJson.version = orgPackageJson.version;
+  packageJson.keywords = orgPackageJson.keywords;
+  packageJson.dependencies = {
+    [`@${org}/${name}`]: orgPackageJson.version,
   };
-  writeFileSync(
-    packageJsonPath,
-    JSON.stringify(newPackageJson, null, 2) + "\n"
-  );
+  writeFileSync(packageJsonPath, JSON.stringify(packageJson, null, 2) + "\n");
 
   run("git add package.json");
 
   let commitError = null;
   try {
-    run(`git commit -m "v${newPackageJson.version}"`);
+    run(`git commit -m "v${packageJson.version}"`);
   } catch (e) {
     commitError = e;
   }
@@ -52,7 +38,7 @@ async function updatePackageJson(org, name) {
     run("git push");
   }
 
-  if (newPackageJson.version !== npmVersion) {
+  if (packageJson.version !== npmVersion) {
     run("npm publish");
   }
 }
