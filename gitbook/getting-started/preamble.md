@@ -1,8 +1,6 @@
 # Preamble
 
-Below, we'll show some Ent Framework usage examples.
-
-We will progress from the simplest code snippets to more and more advanced topics, like:
+Below, we'll show some Ent Framework usage examples. We will progress from the simplest code snippets to more and more advanced topics, like:
 
 * custom ID schemas
 * privacy rules
@@ -14,7 +12,9 @@ We will progress from the simplest code snippets to more and more advanced topic
 * cross-shards foreign keys and inverse indexes
 * etc.
 
-The app's code structure will be something like:
+### Code Structure
+
+The examples in this tutorial will be located in the following files:
 
 * core/
   * ent.ts
