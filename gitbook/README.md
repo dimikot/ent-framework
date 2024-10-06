@@ -1,5 +1,5 @@
 ---
-cover: .gitbook/assets/logo.svg
+cover: .gitbook/assets/logo-hero.svg
 coverY: 0
 layout:
   cover:
