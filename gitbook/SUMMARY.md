@@ -1,6 +1,6 @@
 # Table of contents
 
-* [🟢 Ent Framework](README.md)
+* [Ent Framework](README.md)
 
 ## Getting Started
 

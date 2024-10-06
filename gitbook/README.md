@@ -1,4 +1,23 @@
-# 🟢 Ent Framework
+---
+cover: .gitbook/assets/logo.svg
+coverY: 0
+layout:
+  cover:
+    visible: true
+    size: hero
+  title:
+    visible: true
+  description:
+    visible: false
+  tableOfContents:
+    visible: true
+  outline:
+    visible: false
+  pagination:
+    visible: true
+---
+
+# Ent Framework
 
 The TypeScript library for working with microsharded PostgreSQL databases.
 
