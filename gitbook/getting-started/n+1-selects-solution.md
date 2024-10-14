@@ -22,7 +22,7 @@ The answer is: **let the DB access engine take care of batching**.
 
 Imagine we have some list of comment IDs shown on the screen. For each comment, we want to load its creator, the owning topic, and for each topic, load its creator too. Then, return it all as a JSON to the client.
 
-Of course we want to send as few SQL queries to the database as possible to minimize connections utilization and round-trip latency. We also do not want to use JOINs (imagine `loadUsers()`, `loadTopics()` and `loadComments()` live in independent modules and don't want to know about each other).
+Of course we want to send as few SQL queries to the database as possible to minimize connections utilization and round-trip latency. We also do not want to use JOINs (imagine `loadUsers()`, `loadTopics()` and `loadComments()` live in independent modules and don't want to know about each other, plus the data lives in different microshards).
 
 First, let's see, what will happen if we think in terms of "load a list of things" abstraction. This is how people used to fight the "N+1 Selects" problem in the past.
 
