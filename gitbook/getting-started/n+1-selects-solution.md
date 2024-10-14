@@ -18,13 +18,13 @@ It sounds contradictory. In the example above, if we always use `loadComment(id)
 
 The answer is: **let the DB access engine take care of batching**.
 
-## Traditional List Based Approach \[from 1990x]
+## Traditional List Based Approach
 
 Imagine we have some list of comment IDs shown on the screen. For each comment, we want to load its creator, the owning topic, and for each topic, load its creator too. Then, return it all as a JSON to the client.
 
 Of course we want to send as few SQL queries to the database as possible to minimize connections utilization and round-trip latency. We also do not want to use JOINs (imagine `loadUsers()`, `loadTopics()` and `loadComments()` live in independent modules and don't want to know about each other).
 
-First, let's see, what will happen if we think in terms of "load a list of things" abstraction. This is how people tried to fight "N+1 Selects" problem in the past, in jQuery era.
+First, let's see, what will happen if we think in terms of "load a list of things" abstraction. This is how people used to fight the "N+1 Selects" problem in the past.
 
 ```typescript
 import { map, uniq, keyBy } from "lodash";
@@ -70,7 +70,7 @@ Look at this spaghetti mess. The code appears very coupled.
 
 The root of the problem here is clear: we think in terms of the lists, and the code encourages us to "accumulate" lists manually.
 
-## Ent Framework Approach: Automatic Batching \[from 202x]
+## Ent Framework Approach: Automatic Batching
 
 Now let's see what happens if we stop thinking in terms of lists and, instead, switch to "per individual object" paradigm.
 
