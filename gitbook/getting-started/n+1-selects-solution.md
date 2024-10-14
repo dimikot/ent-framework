@@ -158,6 +158,14 @@ app.get("/comments", async (req, res) => {
 
 Now it's responsibility of each Ent to load the related data.
 
+This will, as previously, produce the same exact 3 DB queries:
+
+```sql
+SELECT * FROM comments WHERE id IN(...);
+SELECT * FROM topics WHERE id IN(...);
+SELECT * FROM users WHERE id IN(...);
+```
+
 In traditional ORMs, such helper loading methods are added to the classes automatically. Ent Framework doesn't do it and requires you to write a bit of boilerplate. Why? For general purpose use cases, we may need not one, but 2 method for each field, like `creator()` and `creatorNullable()`. This is because foreign keys do not work reliably enough across microshards, so in some cases, we should always be ready that some Ent is not in the database, even when its field is technically non-nullable. Luckily, in practice, it is not hard at all to add such methods manually, so we don't lose too much here.
 
 ## Batching vs. JOINs
