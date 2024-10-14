@@ -159,3 +159,20 @@ app.get("/comments", async (req, res) => {
 Now it's responsibility of each Ent to load the related data.
 
 In traditional ORMs, such helper loading methods are added to the classes automatically. Ent Framework doesn't do it and requires you to write a bit of boilerplate. Why? For general purpose use cases, we may need not one, but 2 method for each field, like `creator()` and `creatorNullable()`. This is because foreign keys do not work reliably enough across microshards, so in some cases, we should always be ready that some Ent is not in the database, even when its field is technically non-nullable. Luckily, in practice, it is not hard at all to add such methods manually, so we don't lose too much here.
+
+## Batching vs. JOINs
+
+In traditional SQL and in many ORMs, people use JOINs to minimize the number of queries they send to the database engine. Despite JOINs have advantages, they are also problematic:
+
+1. One cannot do JOINs across microshards or machines.
+2. JOINs encourage people to write highly coupled code, similar to the 1st example on this page.
+3. JOINs generally can't run their subqueries in parallel.
+
+Ent Framework's automatic batching can be treated as an alternative to JOINs. It doesn't have any of the above problems, plus (and more importantly), the calls are batched across the entire async functions call stack, which means that you can split the code into independent abstraction layers easily.
+
+Stop thinking in terms of lists. Start thinking in terms of an individual Ent and its behavior.
+
+{% hint style="info" %}
+Of course, in some cases, we still want to run JOINs. Ent Framework exposes low-level API to get access to the underlying DB, so you can craft and run arbitrary queries. It also provides you with a `Loader` abstraction and framework to build your own custom batching strategies. We'll discuss it all in details in the advanced section.
+{% endhint %}
+
