@@ -2,33 +2,29 @@
 
 Ent Framework exposes an opinionated API which allows to write and read data from the microsharded database.
 
-{% code title="entry.ts" %}
-```typescript
-import { app } from "./core/app";
+<pre class="language-typescript" data-title="entry.ts"><code class="lang-typescript">import { app } from "./core/app";
 import { EntComment } from "./ents/EntComment";
 import { EntTopic } from "./ents/EntTopic";
-
-app.post("/test-comments", async (req, res) => {
+<strong>
+</strong>app.post("/topics", async (req, res) => {
   const topic = await EntTopic.insertReturning(req.vc, { 
-    slug: req.body.slug,
+    slug: String(req.body["slug"]),
     creator_id: req.vc.principal,
   });
   const commentID = await EntComment.insert(topic.vc, {
     topic_id: topic.id,
     creator_id: req.vc.principal,
-    message: "Hi there!",
+    message: String(req.body["message"]),
   });
-  res.send(`Created comment ${commentID}`);
+  res.send(`Created topic ${topic.id} and comment ${commentID}`);
 });
-
-```
-{% endcode %}
+</code></pre>
 
 There are several versions of `insert*` static methods on each Ent class:
 
-* **insertIfNotExists(vc, row)**: inserts a new Ent and returns its ID. Returns null if the Ent violates unique index constraints. This is a low-level method, all other methods use it internally.
-* **insert(vc, row)**: same as `insertIfNotExists()`, but throws EntUniqueKeyError if it violates unique index constraints. Always returns an ID of just-inserted Ent.
-* **insertReturning(vc, row)**: same as `insert()`, but immediately loads the just-inserted Ent back from the database and returns it. The reasoning is that the database may have fields with default values or even PG triggers, so we always need 2 round-trips to get the actual data.
+* **`insertIfNotExists(vc, row)`**: inserts a new Ent and returns its ID or null if the Ent violates unique index constraints. This is a low-level method, all other methods use it internally.
+* **`insert(vc, row)`**: inserts a new Ent and returns its ID. Throws `EntUniqueKeyError` if it violates unique index constraints. Always returns an ID of just-inserted Ent.
+* **`insertReturning(vc, row)`**: same as `insert()`, but immediately loads the just-inserted Ent back from the database and returns it. The reasoning is that the database may have fields with default values or even PG triggers, so we always need 2 round-trips to get the actual data.
 
 {% hint style="info" %}
 In fact, `insert*()` methods do way more things. They check privacy rules to make sure that a VC can actually insert the data. They call Ent triggers. They infer a proper microshard to write the data to. We'll discuss all those topics later.
@@ -48,4 +44,4 @@ async function loadTopicOfCommentUglyDontDoItPlease(vc: VC, commentID: string) {
 }
 ```
 
-In fact, we almost never need to pass a VC from function to function: pass Ent instances instead. Having an explicit `vc` argument somewhere is a smell.
+You almost never need to pass a VC from function to function: pass Ent instances instead. Having an explicit `vc` argument somewhere is a smell.
