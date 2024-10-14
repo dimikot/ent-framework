@@ -99,7 +99,7 @@ All calls to `uniq()`, `keyBy()` and `map()` are gone. We now use only `loadX(vc
 
 And still, it runs only 3 SQL queries under the hood:
 
-```
+```sql
 SELECT * FROM comments WHERE id IN(...);
 SELECT * FROM topics WHERE id IN(...);
 SELECT * FROM users WHERE id IN(...);
