@@ -2,7 +2,7 @@
 
 To reveal some magic, could you please make a small favor?
 
-**Stop thinking in terms of lists when loading.** Always think in terms of an individual row/object and an individual id. Not in terms of ID arrays:
+**Stop thinking in terms of lists when loading.** Always think in terms of an individual row/object and an individual ID. Not in terms of an array of IDs:
 
 ```typescript
 async function loadCommentsBadDontDoThis(ids: string[]): Promise<Comment[]> {
