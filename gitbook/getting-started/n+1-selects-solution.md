@@ -110,7 +110,7 @@ SELECT * FROM users WHERE id IN(...);
 * **Caching:** if enabled, an Ent loaded in some VC remains in the VC's cache, so next time it's attempted to load again, the Ent is returned from the cache directly. Ents are immutable JS objects, so it simplifies things even further.
 
 {% hint style="info" %}
-In fact, Ent Framework does similar batching not only for loadX(). It batches all other calls too, including inserts, updates, deletes and even more complicated expression-based multi-row selects.
+In fact, Ent Framework does similar batching not only for `loadX()`. It batches all other calls too, including inserts, updates, deletes and even more complicated expression-based multi-row selects.
 {% endhint %}
 
 ## Helper Loading Methods
