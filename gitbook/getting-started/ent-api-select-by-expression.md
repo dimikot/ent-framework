@@ -93,11 +93,11 @@ Modern database engines are pretty good at managing indexes. You can add them wi
 
 ## What About Microsharding and Horizontal Scaling?
 
-The approach described above works straightforwardly when your database is monolithic. Scaling your app introduces more complexity though due to the involvement of microshards in the traversal process.
+The point of view described above works straightforwardly when your database is monolithic. Scaling your app introduces more complexity though due to the involvement of microshards in the traversal process.
 
-Luckily, we can still rely on the parent-to-children indices mainly.
+Luckily, we can still rely on the parent-to-children indices mainly. And this is where the theory pays off.
 
-When loading children of a parent Ent, the children might be distributed across multiple microshards. A naive way would thus be to just query all microshards using the exact same query (Ent IDs are globally unique) and then merge the results, but of course it would blow up the databases.
+When loading children of a parent Ent, the children might be distributed across multiple microshards. A naive way would thus be to just query all microshards using the exact same query (Ent IDs are globally unique) and then merge the results, but of course it would blow up the DB nodes.
 
 Therefore, before the Ent Framework executes the actual SELECT queries in parallel on multiple nodes to merge their results later, it first determines the **minimal set of microshards** that needs to be queried; in the vast majority of cases, this is just **one microshard**. Those mechanisms are known as **Inverses** and **Ent Colocation** correspondingly, and we’ll explore them in detail later, in advanced sections.
 
