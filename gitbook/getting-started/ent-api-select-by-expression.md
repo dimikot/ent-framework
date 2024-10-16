@@ -99,7 +99,7 @@ Luckily, we can still rely on the parent-to-children indices mainly.
 
 When loading children of a parent Ent, the children might be distributed across multiple microshards. A naive way would thus be to just query all microshards using the exact same query (Ent IDs are globally unique) and then merge the results, but of course it would blow up the databases.
 
-Therefore, before the Ent Framework executes the actual SELECT queries in parallel on multiple nodes to merge their results later, it first determines the **minimal set of microshards** that needs to be queried; in the vast majority of cases, this is just **one microshard**. Those mechanisms are known as **Inverses** and **Ent Colocation** correspondingly, and we’ll explore it in detail later.
+Therefore, before the Ent Framework executes the actual SELECT queries in parallel on multiple nodes to merge their results later, it first determines the **minimal set of microshards** that needs to be queried; in the vast majority of cases, this is just **one microshard**. Those mechanisms are known as **Inverses** and **Ent Colocation** correspondingly, and we’ll explore them in detail later, in advanced sections.
 
 For now, all you need to know is that there is a magical subsystem in Ent Framework called Inverses which, given a parent ID (e.g. EntTopic ID), returns the list of microshards where the children Ents (e.g. EntComment) may **or may not** reside. This "may not" is important: cross-shard queries are not transactional, so sometimes (rarely), slightly more candidate microshards may be returned. In reality it produces no problems for business logic: the "excess" microshards, when queried, will just return 0 children Ents.
 
