@@ -64,13 +64,13 @@ Nothing new again. Or there is something?..
 ```mermaid
 classDiagram
     direction BT
-    class EntComment1["<big>EntComment</big>\n<small>(child)</small>"]
+    class EntComment1["EntComment\n<small>(child)</small>"]
     EntComment1 : topic_id
-    class EntComment2["<big>EntComment</big>\n<small>(child)</small>"]
+    class EntComment2["EntComment\n<small>(child)</small>"]
     EntComment2 : topic_id
-    class EntComment3["<big>EntComment</big>\n<small>(child)</small>"]
+    class EntComment3["EntComment\n<small>(child)</small>"]
     EntComment3 : topic_id
-    class EntTopic["<big>EntTopic</big>\n<small>(parent)</small>"]
+    class EntTopic["EntTopic\n<small>(parent)</small>"]
     EntTopic : id
     EntComment1 <-- EntTopic : <small>???</small>
     EntComment1 --> EntTopic : <small>field\nedge</small>
