@@ -87,7 +87,7 @@ This `???`, dear friends, is the **automatic database index** (or an index prefi
 This distinction between graph edge directions is crucial to understand: for free traversal of the graph, both **field edges** and **indexes** are absolutely essential.
 
 * By defining a DB foreign key on an Ent, you define a field edge, which represents child-to-parent direction in the graph.
-* By defining a DB index, you define the opposite end of that edge, representing parent-to-children direction.
+* By defining a DB index, you define the opposite direction of that edge, which is parent-to-children direction.
 
 Modern database engines are pretty good at managing indexes. You can add them without acquiring write locks on the tables (`CREATE INDEX CONCURRENTLY`), and you can also add more field edges (aka fields with foreign keys) on an existing tables with no downtime, to refer some other Ent from an existing one.
 
