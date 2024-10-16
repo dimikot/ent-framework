@@ -47,7 +47,7 @@ To accomplish this, the Ent Framework provides (surprise!) a `select()` primitiv
 ```typescript
 const comments = await EntComment.select(
   vc,
-  { topic_id: "123" },
+  { topic_id: "123" }, // "load all children comments of topic 123"
   100, // limit
   [{ created_at: "ASC" }] // order by
 );
