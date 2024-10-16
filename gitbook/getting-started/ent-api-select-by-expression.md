@@ -20,7 +20,7 @@ const comments = await EntComment.select(
 
 Below, there will be a bit of theory, fasten your seatbelt.
 
-In graph terms, where each Ent is a node, an Ent's field that points to the ID of another Ent (similar to foreign keys in relational databases) represents an edge. We often refer to these as **field edges**, and traversing them is typically straightforward: you simply load another Ent by the ID obtained from the field of the current Ent. For example, `EntComment#topic_id` or `EntTopic#creator_id` are field edges.
+In graph terms, where each Ent is a node, an Ent's field that points to the ID of another Ent represents an edge. (Or, for relational databases, people typically name it as "foreign key".) We often refer to it as **field edge**; traversing such edges is typically straightforward: you simply load another Ent by the ID obtained from a field of the current Ent. For example, `EntComment#topic_id` or `EntTopic#creator_id` are field edges.
 
 From a different perspective, traversing a field edge can be seen as "going from a child Ent to a parent Ent" (for example, from `EntComment` to its owning `EntTopic`). In other words, it’s a **child-to-parent traversal**, or a **many-to-one relationship:**
 
