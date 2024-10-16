@@ -132,7 +132,7 @@ The full list of operations include:
 
 These operations can be nested in any way, but it's important to ensure that the actual SQL engine uses an appropriate database index for efficiency.
 
-If your project uses microsharding, one of the top-level fields in the `select()` expression must match a parent ID or an array of parent IDs to help the Ent Framework identify the relevant microshards. Notice that we used `topic_id` for this purpose in the example above. There’s no magic here: sometimes, it has to determine which microshards are involved. Alternatively, you can use the special `$shardOfID` operator to explicitly provide this hint in the query.
+If your project uses microsharding, one of the top-level fields in the `select()` expression must match a parent ID or an array of parent IDs to help Ent Framework identify the relevant microshards. Notice that we used `topic_id` for this purpose in the example above. There’s no magic here: sometimes, it has to determine, which microshards are involved. Alternatively, you can use the special `$shardOfID` operator to explicitly provide this hint in the query.
 
 For illustrative purposes, below is a giant `select()` expression from one of Ent Framework's unit tests. It is generally obvious, how the operations work (as opposed to e.g. Elasticsearch query language BTW):
 
@@ -174,9 +174,9 @@ const ents = await EntSome.select(
 
 For more details, see TypeScript `Where<...>` definition in [types.ts](https://github.com/clickup/ent-framework/blob/main/src/types.ts).
 
-## Batching for select() Calls
+## Batching of select() Calls
 
-As everything in Ent Framework, when multiple `select()` calls are run in parallel, they are batched into one giant SQL `UNION ALL` query.
+As everything in Ent Framework, when multiple `select()` calls run in parallel, they are batched into one giant SQL `UNION ALL` query.
 
 The following code will produce only one SQL query:
 
@@ -195,7 +195,7 @@ UNION ALL
 SELECT * FROM topics WHERE creator_id='101'
 ```
 
-Sometimes, `select()` calls are meant to be relatively slow, and we don't want to batch them; instead, we prefer to run them in parallel, in different DB connections. To do so, we can just inject an "event loop spin" barrier:
+Sometimes, `select()` calls are meant to be relatively slow, and we don't want to batch them; instead, we prefer to run them in parallel, in different DB connections. To do so, you can just inject an "event loop spin" barrier:
 
 ```typescript
 // Never produces a UNION ALL SQL query.
