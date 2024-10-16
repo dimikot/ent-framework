@@ -53,7 +53,7 @@ const comments = await EntComment.select(
 );
 ```
 
-In production databases with millions of Ents, it's assumed that the relevant database table has the necessary index to run such queries efficiently; in the above example,
+In production databases with millions of Ents, it's assumed that the relevant table has a necessary index to run such queries efficiently; in the above example,
 
 ```sql
 CREATE INDEX ON comments_topic_id_created_at ON comments(topic_id, created_at);
