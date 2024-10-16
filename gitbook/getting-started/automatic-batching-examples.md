@@ -14,7 +14,7 @@ await Promise.all([
 ]);
 ```
 
-SQL query produced:
+SQL query produced under the hood:
 
 ```sql
 SELECT * FROM topics WHERE id IN(...)

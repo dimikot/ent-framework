@@ -22,6 +22,7 @@ $ psql mytest
   );
 % CREATE TABLE comments(
     id bigserial PRIMARY KEY,
+    created_at timestamptz NOT NULL,
     topic_id bigint REFERENCES topics,
     creator_id bigint NOT NULL,
     message text NOT NULL

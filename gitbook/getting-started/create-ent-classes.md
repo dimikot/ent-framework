@@ -73,6 +73,7 @@ const schema = new PgSchema(
   "comments",
   {
     id: { type: ID, autoInsert: "nextval('comments_id_seq')" },
+    created_at: { type: Date, autoInsert: "now()" },
     topic_id: { type: ID },
     creator_id: { type: ID },
     message: { type: String },
