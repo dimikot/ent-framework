@@ -1,8 +1,8 @@
 # Abstraction Layers
 
-<div data-full-width="true">
+<div data-full-width="false">
 
-<figure><img src="../.gitbook/assets/image (2).png" alt=""><figcaption></figcaption></figure>
+<figure><img src="../.gitbook/assets/image (4).png" alt=""><figcaption></figcaption></figure>
 
 </div>
 
