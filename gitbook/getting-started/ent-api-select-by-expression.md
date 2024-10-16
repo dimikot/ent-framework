@@ -80,9 +80,9 @@ classDiagram
     EntComment3 --> EntTopic : <small>field\nedge</small>
 ```
 
-Let's think about those `???` on the diagram. To traverse edges in a graph in both directions, the edges must be bi-directional (or, there should be pairs of edges, which is the same). In the graph with bi-directional edges we discussed earlier, the child-to-parent direction of an edge is represented by an "Ent field edge". But what corresponds to `???`, the opposite **parent-to-child direction** of that edge?
+Let's think about those `???` on the diagram. To traverse edges in a graph in both directions, the edges must be bi-directional (or, there should be pairs of edges, which is the same). In the graph with bi-directional edges we discussed earlier, the child-to-parent direction of an edge is represented by an "Ent field edge". But what corresponds to `???`, the opposite **parent-to-children direction** of that edge?
 
-This `???`'s is the **automatic database index** (or an index prefix, which is `parent_id` in the example). In fact, as we mentioned above that, without such an index, the queries will just blow up.&#x20;
+This `???`, dear friends, is the **automatic database index** (or an index prefix, which is `parent_id` in the example). In fact, as we mentioned above that, without such an index, the queries will just blow up.&#x20;
 
 This distinction between graph edge directions is crucial to understand: for free traversal of the graph, both **field edges** and **indexes** are absolutely essential.
 
