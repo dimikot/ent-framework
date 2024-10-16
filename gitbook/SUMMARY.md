@@ -13,3 +13,7 @@
 * [N+1 Selects Solution](getting-started/n+1-selects-solution.md)
 * [Automatic Batching Examples](getting-started/automatic-batching-examples.md)
 * [Ent API: select() by Expression](getting-started/ent-api-select-by-expression.md)
+
+## Architecture
+
+* [Abstraction Layers](architecture/abstraction-layers.md)
