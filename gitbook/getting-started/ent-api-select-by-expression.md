@@ -105,7 +105,9 @@ For now, all you need to know is that there is a magical subsystem in Ent Framew
 
 ## Query Language
 
-The `select()` API in Ent exposes a simple query language. If a plain object is passed, it combines all the specified field constraints using an AND operation:
+The `select()` API uses a simple query language.
+
+If a plain object is passed, it combines all the specified field constraints using an AND operation:
 
 ```typescript
 const comments = await EntComment.select(
