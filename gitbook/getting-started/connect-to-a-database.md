@@ -35,12 +35,12 @@ To access that database, create an instance of Cluster:
 ```typescript
 import { Cluster } from "ent-framework";
 import { PgClientPool } from "ent-framework/pg";
-import type { PoolConfig } from "pg";
 
 export const cluster = new Cluster({
   islands: () => [{
     no: 0,
     nodes: [{
+      name: "island0-master",
       host: "localhost",
       port: 5432,
       user: "postgres",
@@ -50,7 +50,7 @@ export const cluster = new Cluster({
       max: 20,
     }]
   }],
-  createClient: (node: PoolConfig) => new PgClientPool({ config: node }),
+  createClient: ({ name, ...config }) => new PgClientPool({ name, config }),
   loggers: {
     clientQueryLogger: (props) => console.debug(props),
     swallowedErrorLogger: (props) => console.log(props),
