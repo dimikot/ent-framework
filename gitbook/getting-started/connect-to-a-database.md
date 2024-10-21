@@ -31,7 +31,7 @@ $ psql mytest
 
 To access that database, create an instance of Cluster:
 
-{% code title="core/ent.ts" fullWidth="false" %}
+{% code title="ents/cluster.ts" fullWidth="false" %}
 ```typescript
 import { Cluster } from "ent-framework";
 import { PgClientPool } from "ent-framework/pg";

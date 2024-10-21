@@ -6,7 +6,7 @@ Once you have a Cluster instance, you can create Ent classes to access the data.
 ```typescript
 import { PgSchema } from "ent-framework/pg";
 import { ID, BaseEnt, GLOBAL_SHARD, AllowIf, OutgoingEdgePointsToVC } from "ent-framework";
-import { cluster } from "../core/ent";
+import { cluster } from "./cluster";
 
 const schema = new PgSchema(
   "users",
@@ -43,7 +43,7 @@ import {
   OutgoingEdgePointsToVC,
   Require,
 } from "ent-framework";
-import { cluster } from "../core/ent";
+import { cluster } from "./cluster";
 
 const schema = new PgSchema(
   "topics",
@@ -86,7 +86,7 @@ import {
   OutgoingEdgePointsToVC,
   Require,
 } from "ent-framework";
-import { cluster } from "../core/ent";
+import { cluster } from "./cluster";
 import { EntTopic } from "./EntTopic";
 
 const schema = new PgSchema(
