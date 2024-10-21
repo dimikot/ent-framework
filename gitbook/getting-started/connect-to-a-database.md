@@ -6,27 +6,26 @@ To start simple, create a PostgreSQL database and several tables there. You can 
 $ export PGHOST=127.0.0.1
 $ export PGUSER=postgres
 $ export PGPASSWORD=postgres
-
 $ psql
-% CREATE TABLE users(
-    id bigserial PRIMARY KEY,
-    email varchar(256) NOT NULL
-  );
-% CREATE TABLE topics(
-    id bigserial PRIMARY KEY,
-    created_at timestamptz NOT NULL,
-    updated_at timestamptz NOT NULL,
-    slug varchar(64) NOT NULL UNIQUE,
-    creator_id bigint NOT NULL,
-    subject text DEFAULT NULL
-  );
-% CREATE TABLE comments(
-    id bigserial PRIMARY KEY,
-    created_at timestamptz NOT NULL,
-    topic_id bigint REFERENCES topics,
-    creator_id bigint NOT NULL,
-    message text NOT NULL
-  );  
+CREATE TABLE users(
+  id bigserial PRIMARY KEY,
+  email varchar(256) NOT NULL
+);
+CREATE TABLE topics(
+  id bigserial PRIMARY KEY,
+  created_at timestamptz NOT NULL,
+  updated_at timestamptz NOT NULL,
+  slug varchar(64) NOT NULL UNIQUE,
+  creator_id bigint NOT NULL,
+  subject text DEFAULT NULL
+);
+CREATE TABLE comments(
+  id bigserial PRIMARY KEY,
+  created_at timestamptz NOT NULL,
+  topic_id bigint REFERENCES topics,
+  creator_id bigint NOT NULL,
+  message text NOT NULL
+);
 ```
 
 To access that database, create an instance of Cluster:
