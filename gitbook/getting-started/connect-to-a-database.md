@@ -1,13 +1,13 @@
 # Connect to a Database
 
-To start simple, create a PostgreSQL database and several tables there. You can also use you existing database.
+To start simple, create a PostgreSQL database and several tables there. You can also use you existing database:
 
 ```sql
+$ export PGHOST=127.0.0.1
 $ export PGUSER=postgres
 $ export PGPASSWORD=postgres
-$ createdb mytest
 
-$ psql mytest
+$ psql
 % CREATE TABLE users(
     id bigserial PRIMARY KEY,
     email varchar(256) NOT NULL
@@ -37,19 +37,23 @@ import { Cluster } from "ent-framework";
 import { PgClientPool } from "ent-framework/pg";
 
 export const cluster = new Cluster({
-  islands: () => [{
-    no: 0,
-    nodes: [{
-      name: "island0-master",
-      host: "localhost",
-      port: 5432,
-      user: "postgres",
-      password: "postgres",
-      database: "mytest",
-      min: 5,
-      max: 20,
-    }]
-  }],
+  islands: () => [
+    {
+      no: 0,
+      nodes: [
+        {
+          name: "island0-master",
+          host: "127.0.0.1",
+          port: parseInt(process.env.PGPORT || "5432"),
+          user: "postgres",
+          password: "postgres",
+          database: "postgres",
+          min: 5,
+          max: 20,
+        },
+      ],
+    },
+  ],
   createClient: ({ name, ...config }) => new PgClientPool({ name, config }),
   loggers: {
     clientQueryLogger: (props) => console.debug(props),
