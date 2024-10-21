@@ -1,0 +1,16 @@
+services:
+  postgres:
+    image: postgres:16
+    ports:
+      - $PGPORT:5432
+    volumes:
+      - ./ents/cluster.sql:/docker-entrypoint-initdb.d/cluster.sql
+    env_file: .env
+    environment:
+      PGPORT: 5432
+      POSTGRES_PASSWORD: $PGPASSWORD
+    healthcheck:
+      test: "pg_isready -U postgres"
+      interval: 1s
+      timeout: 20s
+      retries: 10

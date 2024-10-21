@@ -31,5 +31,6 @@
   "repository": {
     "type": "git",
     "url": "git://github.com/dimikot/ent-framework.git"
-  }
+  },
+  "packageManager": "pnpm@7.25.1+sha1.1ef0ac6acb8a8d4f726f8321f900a151111f7387"
 }
