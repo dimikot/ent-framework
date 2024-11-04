@@ -1,6 +1,22 @@
+---
+layout:
+  title:
+    visible: false
+  description:
+    visible: true
+  tableOfContents:
+    visible: false
+  outline:
+    visible: false
+  pagination:
+    visible: true
+---
+
+# Ent Framework
+
 <div align="left">
 
-<figure><img src=".gitbook/assets/logo-berkshire-swash.svg" alt="" width="375"></figure>
+<figure><img src=".gitbook/assets/logo-berkshire-swash.svg" alt="" width="375"><figcaption></figcaption></figure>
 
 </div>
 
@@ -11,7 +27,7 @@ The TypeScript library for working with microsharded PostgreSQL databases.
 * [Source code](https://github.com/clickup/ent-framework)
 * [Ent Framework's Discord](https://discord.gg/QXvN6VTCKS)
 
-### Core Features
+#### Core Features
 
 1. **Graph-like representation of entities.** With Ent Framework, you represent each Ent (a domain object of your business logic) as a TypeScript class with immutable properties. An Ent class instance maps to one row of some table in a relational database (like PostgreSQL). It may look similar to ORM, but has many aspects that traditional ORMs don't have.
 2. **Row-level security in a graph (privacy layer).** You manage data as a graph where each node is an Ent instance, and each edge is a field link (think of foreign keys) to other Ents. To be allowed to read (or update/delete) some Ent, you define a set of explicit rules like "user can read EntA if they can read EntB or EntC". And, consequently, in EntB you define its own set of rules, like "user can read EntB if they can read EntD".
@@ -20,7 +36,7 @@ The TypeScript library for working with microsharded PostgreSQL databases.
 5. **Pluggable to your existing relational database.** If your project already uses some ORM or runs raw SQL queries, Ent Framework can be plugged in.
 6. **Tens of other features.** Some examples: cross-microshards foreign keys, composite fields, triggers, build-in caching etc.
 
-### Installation
+#### Installation
 
 ```
 npm add ent-framework
