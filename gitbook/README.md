@@ -1,22 +1,6 @@
----
-layout:
-  title:
-    visible: false
-  description:
-    visible: false
-  tableOfContents:
-    visible: true
-  outline:
-    visible: false
-  pagination:
-    visible: true
----
-
-# Ent Framework
-
 <div align="left">
 
-<figure><img src=".gitbook/assets/logo-berkshire-swash.svg" alt="" width="375"><figcaption></figcaption></figure>
+<figure><img src=".gitbook/assets/logo-berkshire-swash.svg" alt="" width="375"></figure>
 
 </div>
 
