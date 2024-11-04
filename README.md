@@ -1,7 +1,7 @@
 
 <div align="left">
 
-<figure><img src=".gitbook/assets/logo-berkshire-swash.svg" alt="" width="375"><figcaption></figcaption></figure>
+<figure><img src="gitbook/.gitbook/assets/logo-berkshire-swash.svg" alt="" width="375"><figcaption></figcaption></figure>
 
 </div>
 
