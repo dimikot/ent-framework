@@ -1,12 +1,7 @@
 ---
-cover: .gitbook/assets/logo-hero.svg
-coverY: 0
 layout:
-  cover:
-    visible: true
-    size: hero
   title:
-    visible: true
+    visible: false
   description:
     visible: false
   tableOfContents:
@@ -18,6 +13,12 @@ layout:
 ---
 
 # Ent Framework
+
+<div align="left">
+
+<figure><img src=".gitbook/assets/logo-berkshire-swash.svg" alt="" width="375"><figcaption></figcaption></figure>
+
+</div>
 
 The TypeScript library for working with microsharded PostgreSQL databases.
 
