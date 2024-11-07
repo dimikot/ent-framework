@@ -67,7 +67,7 @@ setTimeout(() => cluster.prewarm(), 100);
 
 Terminology:
 
-1. **Cluster** consists of **Islands**. Each Island has a number (there can be many islands for horizontal scaling of the cluster).
+1. **Cluster** consists of **Islands**. Each Island is identified by an integer number (there can be many islands for horizontal scaling of the cluster).
 2. Island consists of master + replica **nodes** (in the above example, we only define one master node and no replicas).&#x20;
 3. Island also hosts **Microshards** (in the example above, we will have no microshards, aka just one global shard). Microshards may travel from island to island during shards rebalancing process; the engine tracks this automatically ("shards discovery").
 

@@ -10,7 +10,7 @@ async function loadCommentsBadDontDoThis(ids: string[]): Promise<Comment[]> {
 }
 
 async function loadComment(id: string): Promise<Comment> {
-  // To this: one ID as an input, one row as an output.
+  // Do this: one ID as an input, one row as an output.
 }  
 ```
 

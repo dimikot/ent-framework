@@ -45,7 +45,7 @@ We will discuss what `loadX()` is in the next sections. In short, it loads an En
 
 Here comes the catch: `loadX()` requires to pass a VC whose principal is the user loading the data. And to derive that VC, we need to call `EntUser#loadX()`. In our case, it's obviously a "chicken and egg" problem, so we just derive a new VC in "god mode" with `vc.toOmniDangerous()` and allow Ent Framework to bypass privacy checks for the very 1st `EntUser` loaded.
 
-Later in your code, add this middleware to the Express app, so all your route handlers will be able to access `req.vc`:
+Later in your code, add `vcMiddleware` to the Express app, so all your route handlers will be able to access `req.vc`:
 
 {% code title="core/app.ts" %}
 ```typescript
