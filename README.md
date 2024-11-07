@@ -8,7 +8,7 @@
 The TypeScript library for working with microsharded PostgreSQL databases.
 
 * [Getting Started and Tutorials](https://ent-framework.net)
-* [API documentation](https://github.com/clickup/ent-framework/blob/master/docs/modules.md)
+* [API documentation](https://github.com/clickup/ent-framework/blob/main/docs/globals.md)
 * [Source code](https://github.com/clickup/ent-framework)
 * [Ent Framework's Discord](https://discord.gg/QXvN6VTCKS)
 
