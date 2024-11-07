@@ -2,9 +2,22 @@
 
 Each Ent usually has an `id` field, serving as its primary key. This enables other Ents to reference it and allows for the use of the highly optimized `loadX(vc, id)` method to load by ID.
 
-Some Ents may also have a **secondary unique key**. This could be a single text field or a combination of multiple fields. For example, `EntUser` might have an `email` field that must be unique across all `EntUser` rows in the database.
+Some Ents may also have a **secondary unique key**. This could be a single text field or a combination of multiple fields. For example, `EntUser` might have an `email` field that must be unique across all `EntUser` rows in the database:
 
-To use a unique key, define it in the Ent's schema and ensure that the corresponding unique index exists in the database. Once set up, you can use the following methods to load by a unique key:
+To use a unique key, define it in the Ent's schema and ensure that the corresponding unique index exists in the database:
+
+```typescript
+const schema = new PgSchema(
+  "users",
+  {
+    id: { type: ID, autoInsert: "nextval('users_id_seq')" },
+    email: { type: String },
+  },
+  ["email"]
+);
+```
+
+Once set up, you can use the following methods to load by a unique key:
 
 * **loadByX(vc, { email: "test@example.com" })**: loads an Ent by its unique key defined in the schema. If no matching row is found in the table, throws an `EntNotFound` error.
 * **loadByNullable(vc, { email: "test@example.com" })**: works the same way as the above method, but returns `null` if no matching Ent is found.
