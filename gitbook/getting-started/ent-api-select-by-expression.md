@@ -27,15 +27,15 @@ From a different perspective, traversing a field edge can be seen as "going from
 ```mermaid
 classDiagram
     direction BT
-    class EntComment["EntComment\n<small>(child)</small>"]
+    class EntComment["EntComment<br><small>(child)</small>"]
     EntComment : topic_id
     EntComment : creator_id
-    class EntTopic["EntTopic\n<small>(parent)</small>"]
+    class EntTopic["EntTopic<br><small>(parent)</small>"]
     EntTopic : creator_id
-    class EntUser["EntUser\n<small>(grandparent)</small>"]
-    EntComment --> EntTopic : <small>field\nedge</small>
-    EntTopic --> EntUser : <small>field\nedge</small>
-    EntComment --> EntUser : <small>field\nedge</small>
+    class EntUser["EntUser<br><small>(grandparent)</small>"]
+    EntComment --> EntTopic : <small>field<br>edge</small>
+    EntTopic --> EntUser : <small>field<br>edge</small>
+    EntComment --> EntUser : <small>field<br>edge</small>
 ```
 
 Nothing too new yet, right? Just a regular relational theory so far.
@@ -64,20 +64,20 @@ Nothing new again. Or there is something?..
 ```mermaid
 classDiagram
     direction BT
-    class EntComment1["EntComment\n<small>(child)</small>"]
+    class EntComment1["EntComment<br><small>(child)</small>"]
     EntComment1 : topic_id
-    class EntComment2["EntComment\n<small>(child)</small>"]
+    class EntComment2["EntComment<br><small>(child)</small>"]
     EntComment2 : topic_id
-    class EntComment3["EntComment\n<small>(child)</small>"]
+    class EntComment3["EntComment<br><small>(child)</small>"]
     EntComment3 : topic_id
-    class EntTopic["EntTopic\n<small>(parent)</small>"]
+    class EntTopic["EntTopic<br><small>(parent)</small>"]
     EntTopic : id
     EntComment1 <-- EntTopic : <small>???</small>
-    EntComment1 --> EntTopic : <small>field\nedge</small>
+    EntComment1 --> EntTopic : <small>field<br>edge</small>
     EntComment2 <-- EntTopic : <small>???</small>
-    EntComment2 --> EntTopic : <small>field\nedge</small>
+    EntComment2 --> EntTopic : <small>field<br>edge</small>
     EntComment3 <-- EntTopic : <small>???</small>
-    EntComment3 --> EntTopic : <small>field\nedge</small>
+    EntComment3 --> EntTopic : <small>field<br>edge</small>
 ```
 
 Let's think about those `???` on the diagram. To traverse edges in a graph in both directions, the edges must be bi-directional (or, there should be pairs of edges, which is the same). In the graph with bi-directional edges we discussed earlier, the child-to-parent direction of an edge is represented by an "Ent field edge". But what corresponds to `???`, the opposite **parent-to-children direction** of that edge?
