@@ -14,6 +14,7 @@
 * [Automatic Batching Examples](getting-started/automatic-batching-examples.md)
 * [Ent API: select() by Expression](getting-started/ent-api-select-by-expression.md)
 * [Ent API: loadBy\*() Unique Key](getting-started/ent-api-loadby-unique-key.md)
+* [Ent API: count()](getting-started/ent-api-count.md)
 
 ## Architecture
 
