@@ -100,7 +100,21 @@ If you read [entgo's docs about edges](https://entgo.io/docs/schema-edges/), you
 
 In Ent Framework, edges in the graph are basically just foreign key fields on Ents (with optional Inverses maintained automatically when needed). So, it is much simpler.
 
-\
+### Ent Framework and entgo
+
+[Entgo](https://entgo.io) is, as it’s stated on the website, “An entity framework for Go. Simple, yet powerful ORM for modeling and querying data”.  It is a library developed and open-sourced by Meta.
+
+It is not the same as Meta’s Ent Framework though:
+
+1. entgo is in Go, whilst Meta’s Ent Framework is in Hack
+2. entgo does not support sharding, deferring it to the underlying database layer at best
+3. there is nothing much about automatic replication lag tracking in entgo
+4. no batching for the underlying SQL queries (i.e. no solution for “N+1 Select” problem)
+5. despite being open-sourced, entgo is not used actively in Meta, which is very different with Meta’s Ent Framework, backing the entire facebook.com service
+
+So all in all, entgo is mostly an ORM-like wrapping library around a single database instance (e.g. PostgreSQL), with no attempts to do horizontal or vertical scaling.
+
+Thus, it is not quite correct to compare TypeScript Ent Framework described here with entgo: the more straight analogy would be ”it’s like a Meta’s Ent Framework, but without TAO and explicit assocs”.\
 
 
 \
