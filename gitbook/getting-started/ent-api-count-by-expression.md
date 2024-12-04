@@ -2,7 +2,7 @@
 
 Count API is similar to `select()`, but instead of loading the matching Ents, it counts them.
 
-## **Ent.count(vc, { slug: "abc", ... }): number**
+## **Ent.count(vc, { field: "...", ... }): number**
 
 Returns the number of Ents matching the `where` condition. Works across multiple microshards.
 

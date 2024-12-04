@@ -11,7 +11,7 @@ There is one caveat though: Ent instances are immutable, so `update*()` methods 
 
 This is why all `update*()` methods have vernose suffixes in their names.
 
-## **ent.updateOriginal({ f1: "...", ... }): boolean**
+## **ent.updateOriginal({ field: "...", ... }): boolean**
 
 Updates the row in the database corresponding to `ent.id` ID. Does not modify any fields of `ent` instance, since it's immutable.&#x20;
 
@@ -39,7 +39,7 @@ WITH rows(id, subject) AS (VALUES(
   RETURNING rows.id
 ```
 
-## **ent.updateReturningX({ f1: "...", ... }): Ent**
+## **ent.updateReturningX({ field: "...", ... }): Ent**
 
 Updates the row in the database,  then **loads the Ent back** using `loadX()` and returns it to you. In case there was no such row in the database, throws `EntNotFound` error (this is what "X" stands for, "eXception").
 
@@ -58,11 +58,11 @@ WITH rows(id, subject) AS (VALUES(
 SELECT * FROM topics WHERE id IN('123', '456');
 ```
 
-## **ent.updateReturningNullable({ f1: "...", ... }): Ent | null**
+## **ent.updateReturningNullable({ field: "...", ... }): Ent | null**
 
 Similarly to `updateReturningX()`, updates the row in the database and loads the updated Ent back, but doesn't throw in case you are trying to update a row which doesn't exist at the moment.
 
-## **ent.updateChanged({ f1: "...", f2: "..." }): string\[] | null | false**
+## **ent.updateChanged({ field1: "...", field2: "...", ... }): string\[] | null | false**
 
 Same as `updateOriginal()`, but updates only the fields which are different in the method's input and in the current Ent instance in memory.
 
@@ -70,7 +70,7 @@ Same as `updateOriginal()`, but updates only the fields which are different in t
 * If no changed fields were detected, returns null as an indication (it's still falsy, but is different from the parent `updateOriginal()'s` false).&#x20;
 * Otherwise, when an update happened, returns the list of fields which were different and triggered that change (a truthy value).
 
-## **ent.updateChangedReturningX({ f1: "...", f2: "..." }): Ent**
+## **ent.updateChangedReturningX({ field: "...", ... }): Ent**
 
 This is probably the longest method name in Ent API. Acts similarly to `updateChanged()`, but returns the modified Ent back (or the original Ent if no fields were actully changed).
 

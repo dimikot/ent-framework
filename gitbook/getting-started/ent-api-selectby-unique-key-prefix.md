@@ -2,7 +2,7 @@
 
 Similar to how `loadBy()` loads a single Ent by its unique key, `selectBy()` call loads _multiple_ ents by their **unique key prefix**.
 
-## Ent.selectBy(vc, { f1: "...", ... }): Ent\[]
+## Ent.selectBy(vc, { field: "...", ... }): Ent\[]
 
 Loads the Ents matching the predicate, considering the predicate is a list of fields from your unique key prefix.
 

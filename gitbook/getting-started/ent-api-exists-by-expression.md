@@ -2,7 +2,7 @@
 
 This is another privacy-unaware API call, similar to `count()`.
 
-## **Ent.exists(vc, { slug: "abc", ... })**: boolean
+## **Ent.exists(vc, { field: "...", ... })**: boolean
 
 Returns true if there isat least one Ent in the database matching the `where` condition. Works across multiple microshards too.
 

@@ -2,11 +2,13 @@
 
 Ent Framework exposes an opinionated API which allows to write and read data from the microsharded database.
 
-<pre class="language-typescript" data-title="entry.ts"><code class="lang-typescript">import { app } from "./core/app";
+{% code title="entry.ts" %}
+```typescript
+import { app } from "./core/app";
 import { EntComment } from "./ents/EntComment";
 import { EntTopic } from "./ents/EntTopic";
-<strong>
-</strong>app.post("/topics", async (req, res) => {
+
+app.post("/topics", async (req, res) => {
   const topic = await EntTopic.insertReturning(req.vc, { 
     slug: String(req.body["slug"]),
     creator_id: req.vc.principal,
@@ -18,21 +20,22 @@ import { EntTopic } from "./ents/EntTopic";
   });
   res.send(`Created topic ${topic.id} and comment ${commentID}`);
 });
-</code></pre>
+```
+{% endcode %}
 
 There are several versions of `insert*` static methods on each Ent class.
 
-## **insertIfNotExists(vc, row): string | null**
+## **insertIfNotExists(vc, { field: "...", ... }): string | null**
 
 inserts a new Ent and returns its ID or null if the Ent violates unique index constraints. This is a low-level method, all other methods use it internally.
 
-## **insert(vc, row): string**
+## **insert(vc, { field: "...", ... }): string**
 
 Inserts a new Ent and returns its ID.
 
 Throws `EntUniqueKeyError` if it violates unique index constraints. Always returns an ID of just-inserted Ent.
 
-## **insertReturning(vc, row): Ent**
+## **insertReturning(vc, { field: "...", ... }): Ent**
 
 Same as `insert()`, but immediately loads the just-inserted Ent back from the database and returns it. The reasoning is that the database may have fields with default values or even PG triggers, so we always need 2 round-trips to get the actual data.
 

@@ -19,6 +19,7 @@
 * [Ent API: count() by Expression](getting-started/ent-api-count-by-expression.md)
 * [Ent API: exists() by Expression](getting-started/ent-api-exists-by-expression.md)
 * [Ent API: selectBy() Unique Key Prefix](getting-started/ent-api-selectby-unique-key-prefix.md)
+* [Ent API: upsert\*()](getting-started/ent-api-upsert.md)
 
 ## Architecture
 
