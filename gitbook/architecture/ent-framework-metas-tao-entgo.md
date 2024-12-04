@@ -114,8 +114,4 @@ It is not the same as Meta’s Ent Framework though:
 
 So all in all, entgo is mostly an ORM-like wrapping library around a single database instance (e.g. PostgreSQL), with no attempts to do horizontal or vertical scaling.
 
-Thus, it is not quite correct to compare TypeScript Ent Framework described here with entgo: the more straight analogy would be ”it’s like a Meta’s Ent Framework, but without TAO and explicit assocs”.\
-
-
-\
-\
+Thus, it is not quite correct to compare TypeScript Ent Framework described here with entgo: the more straight analogy would be ”it’s like a Meta’s Ent Framework, but without TAO and explicit assocs”.
