@@ -1,4 +1,4 @@
-# Ent API: exists()
+# Ent API: exists() by Expression
 
 This is another privacy-unaware API call, similar to `count()`.
 
@@ -14,7 +14,7 @@ As all API calls in Ent Framework, multiple parallel `exists()` calls are batche
 ```typescript
 const [exists1, exists2] = await Promise.all([
   EntTopic.exists(vc, { creator_id: "123" }),
-  EntTopic.exists(vc, { updated_at: { $gt: new Date(”2024-01-01”) } }),
+  EntTopic.exists(vc, { updated_at: { $gt: new Date("2024-01-01") } }),
 ]);
 ```
 
@@ -22,9 +22,9 @@ This sends the following SQL query to the underlying database:
 
 ```sql
 SET enable_seqscan=off;
-SELECT EXISTS (SELECT true FROM topics WHERE creator_id=‘123’)
+SELECT EXISTS (SELECT true FROM topics WHERE creator_id='123')
   UNION ALL
-SELECT EXISTS (SELECT true FROM topics WHERE created_at>‘...’)
+SELECT EXISTS (SELECT true FROM topics WHERE created_at>'...')
 ```
 
 The `exists()` call is even more useful to build custom privacy checks than `count()`, because it’s faster and almost guarantees using an index.
