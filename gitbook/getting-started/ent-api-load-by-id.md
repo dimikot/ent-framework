@@ -16,9 +16,21 @@ app.get("/comments/:id", async (req, res) => {
 
 There are several versions of `load*` static methods on each Ent class:
 
-* **`loadX(vc, id)`**:  loads an Ent by ID. Throws `EntNotFoundError` if there is no such Ent in the database, or `EntNotReadableError` if the VC has no permissions to read it.
-* **`loadNullable(vc, id)`**: loads an Ent by ID if it exists in the database, otherwise returns null. In case an Ent with such ID exists, but the VC doesn't have permissions to access it, the call will throw `EntNotReadableError`.
-* **loadIfReadableNullable(vc, id)**: this is a special method which returns `null` not only when an Ent with such ID doesn't exist, but also if you have to permissions to read it. Basically, it never throws. Permissions are governed by Ent `privacyLoad` rules. These were briefly mentioned earlier and will be discussed in greater detail later.
+## **Ent.loadX(vc, id): Ent**
+
+Loads an Ent by ID.
+
+Throws `EntNotFoundError` if there is no such Ent in the database, or `EntNotReadableError` if the VC has no permissions to read it.
+
+## **Ent.loadNullable(vc, id): Ent | null**
+
+loads an Ent by ID if it exists in the database, otherwise returns null.&#x20;
+
+If an Ent with such ID exists, but the VC doesn't have permissions to access it, the call will throw `EntNotReadableError`.
+
+## **Ent.loadIfReadableNullable(vc, id)**: Ent | null
+
+This is a special method which returns `null` not only when an Ent with such ID doesn't exist, but also if you have to permissions to read it. Basically, it never throws. Permissions are governed by Ent `privacyLoad` rules. These were briefly mentioned earlier and will be discussed in greater detail later.
 
 {% hint style="info" %}
 In most of the cases, prefer `loadX()` and rely on the outer try-catch blocks, as opposed to `loadNullable()` with manual null-checking. Let the framework do its job. And you likely almost never need to use `loadIfReadableNullable()`: it's a smell.

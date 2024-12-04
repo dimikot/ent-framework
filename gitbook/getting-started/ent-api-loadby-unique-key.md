@@ -17,12 +17,19 @@ const schema = new PgSchema(
 );
 ```
 
-Once set up, you can use the following methods to load by a unique key:
+Once set up, you can use the following methods to load by a unique key.
 
-* **loadByX(vc, { email: "test@example.com" })**: loads an Ent by its unique key defined in the schema. If no matching row is found in the table, throws an `EntNotFound` error.
-* **loadByNullable(vc, { email: "test@example.com" })**: works the same way as the above method, but returns `null` if no matching Ent is found.
+## **Ent.loadByX(vc, { email: "..." }): Ent**
 
-### Batching and Prefix Grouping
+Loads an Ent by its unique key defined in the schema.
+
+If no matching row is found in the table, throws an `EntNotFound` error.
+
+## **Ent.loadByNullable(vc, { email: "..." }): Ent | null**
+
+**W**orks the same way as the above method, but returns `null` if no matching Ent is found.
+
+## Batching and by-Prefix Grouping
 
 As always, if multiple `loadBy*()` calls occur in parallel, Ent Framework batches them into a single SQL query to save on the connections utilization, latency and index usage.
 

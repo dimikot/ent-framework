@@ -103,7 +103,7 @@ Therefore, before Ent Framework executes the actual SELECT queries in parallel o
 
 For now, all you need to know is that there is a magical subsystem in Ent Framework called Inverses which, given a parent ID (e.g. EntTopic ID), returns the list of microshards where the children Ents (e.g. EntComment) may **or may not** reside. This "may not" is important: cross-shard writes are not transactional, so sometimes (rarely), slightly more candidate microshards may be returned, but **never less**. In reality it produces no problems for business logic: the "excess" microshards, when queried, will just return 0 children Ents.
 
-## Query Language
+## Ent.select(vc, { ... }, limit, order): Ent\[]
 
 The `select()` API uses a simple query language.
 

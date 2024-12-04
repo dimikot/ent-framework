@@ -2,7 +2,9 @@
 
 This is another privacy-unaware API call, similar to `count()`.
 
-* **exists(vc, where)**: returns true if there isat least one Ent in the database matching the `where` condition. Works across multiple microshards too.
+## **Ent.exists(vc, { slug: "abc", ... })**: boolean
+
+Returns true if there isat least one Ent in the database matching the `where` condition. Works across multiple microshards too.
 
 In terms of the logic, `exists()` call is similar to `count() > 0` check, with two performance optimizations:
 

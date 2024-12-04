@@ -1,8 +1,10 @@
 # Ent API: count() by Expression
 
-Count API is similar to `select()`, but instead of loading the matching Ents, it counts them:
+Count API is similar to `select()`, but instead of loading the matching Ents, it counts them.
 
-* **count(vc, where)**: returns the number of Ents matching the `where` condition. Works across multiple microshards.
+## **Ent.count(vc, { slug: "abc", ... }): number**
+
+Returns the number of Ents matching the `where` condition. Works across multiple microshards.
 
 As usual, if multiple `count()` calls for the same Ent are run in parallel, they are internally batched into a single SQL query:
 

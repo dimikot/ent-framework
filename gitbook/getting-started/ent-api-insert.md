@@ -1,4 +1,4 @@
-# Insert Ents to the Database
+# Ent API: insert\*()
 
 Ent Framework exposes an opinionated API which allows to write and read data from the microsharded database.
 
@@ -20,15 +20,27 @@ import { EntTopic } from "./ents/EntTopic";
 });
 </code></pre>
 
-There are several versions of `insert*` static methods on each Ent class:
+There are several versions of `insert*` static methods on each Ent class.
 
-* **`insertIfNotExists(vc, row)`**: inserts a new Ent and returns its ID or null if the Ent violates unique index constraints. This is a low-level method, all other methods use it internally.
-* **`insert(vc, row)`**: inserts a new Ent and returns its ID. Throws `EntUniqueKeyError` if it violates unique index constraints. Always returns an ID of just-inserted Ent.
-* **`insertReturning(vc, row)`**: same as `insert()`, but immediately loads the just-inserted Ent back from the database and returns it. The reasoning is that the database may have fields with default values or even PG triggers, so we always need 2 round-trips to get the actual data.
+## **insertIfNotExists(vc, row): string | null**
+
+inserts a new Ent and returns its ID or null if the Ent violates unique index constraints. This is a low-level method, all other methods use it internally.
+
+## **insert(vc, row): string**
+
+Inserts a new Ent and returns its ID.
+
+Throws `EntUniqueKeyError` if it violates unique index constraints. Always returns an ID of just-inserted Ent.
+
+## **insertReturning(vc, row): Ent**
+
+Same as `insert()`, but immediately loads the just-inserted Ent back from the database and returns it. The reasoning is that the database may have fields with default values or even PG triggers, so we always need 2 round-trips to get the actual data.
 
 {% hint style="info" %}
 In fact, `insert*()` methods do way more things. They check privacy rules to make sure that a VC can actually insert the data. They call Ent triggers. They infer a proper microshard to write the data to. We'll discuss all those topics later.
 {% endhint %}
+
+## VC Embedding
 
 When some Ent is loaded in a VC, its `ent.vc` is assigned to that VC. In the above example, we use `req.vc` and `topic.vc` interchangeably.\
 \

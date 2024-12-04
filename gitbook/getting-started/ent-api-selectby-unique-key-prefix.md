@@ -1,6 +1,10 @@
 # Ent API: selectBy() Unique Key Prefix
 
-Similar to how `loadBy()` loads a single Ent by its unique key, `selectBy()` call loads _multiple_ ents by their **unique key prefix**. And it does it in a type-safe way: you won’t be able to provide the list of fields which doesn’t match the prefix of your unique key.
+Similar to how `loadBy()` loads a single Ent by its unique key, `selectBy()` call loads _multiple_ ents by their **unique key prefix**.
+
+## Ent.selectBy(vc, { f1: "...", ... }): Ent\[]
+
+Loads the Ents matching the predicate, considering the predicate is a list of fields from your unique key prefix.
 
 Logically, you can load the same Ents by just `select()` call, but then, while batching, it will produce a `UNION ALL` clause, which is inefficient and cause performance problems when multiple calls are batched. In contrast, `selectBy()` never produces a `UNION ALL` clause, but the price we pay for it is the implication that we can only select by the unique key prefix, not by an arbitrary predicate.
 
@@ -54,8 +58,7 @@ Assume we try to build the batched query using the same approach as above:
 ```sql
 -- DON'T DO IT!
 SELECT * FROM inverses WHERE
-  (type='user2topics' AND id1 IN('123', '456'))
-    OR
+  (type='user2topics' AND id1 IN('123', '456')) OR
   (type='topic2comments' AND id1 IN('789'))
 ```
 
