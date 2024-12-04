@@ -13,7 +13,11 @@ This is why all `update*()` methods have vernose suffixes in their names.
 
 ## **ent.updateOriginal({ f1: "...", ... }): boolean**
 
-Updates the row in the database corresponding to `ent.id` ID. Does not modify any fields of `ent` instance, since it's immutable. Runs all the needed privacy checks and Ent Framework triggers (we'll discuss both topics later in advanced chapters). Returns true if the row existed in the database at the moment of the update and false otherwise.
+Updates the row in the database corresponding to `ent.id` ID. Does not modify any fields of `ent` instance, since it's immutable.&#x20;
+
+Runs all the needed privacy checks and Ent Framework triggers (we'll discuss both topics later in advanced chapters). In case there are no `privacyUpdate` rules defined in the Ent class configuration, delegates privacy checking to `privacyInsert` rules.
+
+Returns true if the row existed in the database at the moment of the update and false otherwise.
 
 As always, when multiple `update*()` calls run in parallel, Ent Framework batches them into a single SQL query:
 

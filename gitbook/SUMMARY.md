@@ -15,6 +15,7 @@
 * [Ent API: select() by Expression](getting-started/ent-api-select-by-expression.md)
 * [Ent API: loadBy\*() Unique Key](getting-started/ent-api-loadby-unique-key.md)
 * [Ent API: update\*()](getting-started/ent-api-update.md)
+* [Ent API: deleteOriginal()](getting-started/ent-api-deleteoriginal.md)
 * [Ent API: count() by Expression](getting-started/ent-api-count-by-expression.md)
 * [Ent API: exists() by Expression](getting-started/ent-api-exists-by-expression.md)
 * [Ent API: selectBy() Unique Key Prefix](getting-started/ent-api-selectby-unique-key-prefix.md)
