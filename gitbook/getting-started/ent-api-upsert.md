@@ -53,9 +53,10 @@ INSERT INTO topics(id, created_at, updated_at, slug, creator_id, subject) VALUES
   (id_gen(), now(), now(), 's1', '123', 'test1'),
   (id_gen(), '2020-01-01', now(), 's2', '456', 'test2')
 ON CONFLICT (slug) DO UPDATE SET
+  updated_at=EXCLUDED.updated_at,
   slug=EXCLUDED.slug,
   creator_id=EXCLUDED.creator_id,
-  updated_at=EXCLUDED.updated_at
+  subject=EXCLUDED.subject
 RETURNING id
 ```
 
