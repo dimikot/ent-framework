@@ -25,3 +25,4 @@
 
 * [Abstraction Layers](architecture/abstraction-layers.md)
 * [Ent Framework, Meta’s TAO, entgo](architecture/ent-framework-metas-tao-entgo.md)
+* [JIT in SQL Queries Batching](architecture/jit-in-sql-queries-batching.md)
