@@ -77,6 +77,14 @@ The logic in the example above:
 
 Notice that here we again use delegation: instead of introducing complicated boilerplate in comments privacy rules, we say: "I fully trust the way how privacy is implemented at EntTopic, and I don't want to know details about it at EntComment level". Basically, you build a "chain of trust".
 
+### privacyUpdate and privacyDelete
+
+As mentioned above, `privacyUpdate/Delete` rules are similar to `privacyInsert`, but they are checked by `update*()` and `delete*()` calls correspondingly.
+
+If there is no `privacyUpdate` block defined, then the rules are inherited from `privacyInsert` array.
+
+If there is no `privacyDelete` block mentioned in the configuration, then Ent Framework uses `privacyUpdate` rules for it. (And if there are no `privacyUpdate` rules, then `privacyInsert`).
+
 ## Custom Privacy Predicates
 
 Each item in `privacyLoad`, `privacyInsert` etc. arrays is called a **Rule**. Each Rule instance is parametrized with a boolean **Predicate**. There are several built-in Rules:
