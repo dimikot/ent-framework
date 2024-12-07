@@ -75,7 +75,9 @@ The logic in the example above:
 1. `new Require(new OutgoingEdgePointsToVC("creator_id"))`: it is **required** that the value of `comment.creator_id` is equal to `vc.principal`. I.e. you can only reference yourself as a creator of the just inserted comment.
 2. `new Require(new CanReadOutgoingEdge("topic_id", EntTopic))`: it is **required** that, to create a comment in some topic, you must have at least read access to that topic. I.e. you can create comments in someone else's topics too, as soon as you can read them.
 
-Notice that here we again use delegation: instead of introducing complicated boilerplate in comments privacy rules, we say: "I fully trust the way how privacy is implemented at EntTopic, and I don't want to know details about it at EntComment level". Basically, you build a "chain of trust".
+Notice that here we again use delegation: instead of introducing complicated boilerplate in comments privacy rules, we say: "I fully trust the way how privacy is implemented at EntTopic, and I don't want to know details about it at EntComment level". Basically, you build a **chain of trust**.
+
+
 
 ### privacyUpdate and privacyDelete
 
@@ -85,11 +87,12 @@ If there is no `privacyUpdate` block defined, then the rules are inherited from 
 
 If there is no `privacyDelete` block mentioned in the configuration, then Ent Framework uses `privacyUpdate` rules for it. (And if there are no `privacyUpdate` rules, then `privacyInsert`).
 
-## Custom Privacy Predicates
+## Rule Classes
 
 Each item in `privacyLoad`, `privacyInsert` etc. arrays is called a **Rule**. Each Rule instance is parametrized with a boolean **Predicate**. There are several built-in Rules:
 
-* `new AllowIf(predicate)`: &#x20;
+* `new AllowIf(predicate)`:  if the `predicate` resolves to true and doesn't throw, allows the access immediately, without checking the next rules. Commonly, `AllowIf` is used in `privacyLoad` rules. It checks that there is **at least one** path in the graph originating at the user denoted by the VC and ending at the target Ent. Also, you may use `AllowIf` in the prefix of `privacyInsert/Update/Delete` rules to e.g. allow an admin VC access to the Ent early, without checking all other rules.
+* `new Require(predicate)`: if the `predicate`resolves to true and doesn't throw, tells Ent Framework to go to the next rule in the array to continue. If that was the last `Require` rule in the array, allows access. This rule is commonly used in `privacyInsert/Update/Delete` blocks, where the goal is to insure that **all** rules succeed.
 
 
 
