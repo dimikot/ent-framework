@@ -77,8 +77,6 @@ The logic in the example above:
 
 Notice that here we again use delegation: instead of introducing complicated boilerplate in comments privacy rules, we say: "I fully trust the way how privacy is implemented at EntTopic, and I don't want to know details about it at EntComment level". Basically, you build a **chain of trust**.
 
-
-
 ### privacyUpdate and privacyDelete
 
 As mentioned above, `privacyUpdate/Delete` rules are similar to `privacyInsert`, but they are checked by `update*()` and `delete*()` calls correspondingly.
@@ -91,8 +89,9 @@ If there is no `privacyDelete` block mentioned in the configuration, then Ent Fr
 
 Each item in `privacyLoad`, `privacyInsert` etc. arrays is called a **Rule**. Each Rule instance is parametrized with a boolean **Predicate**. There are several built-in Rules:
 
-* `new AllowIf(predicate)`:  if the `predicate` resolves to true and doesn't throw, allows the access immediately, without checking the next rules. Commonly, `AllowIf` is used in `privacyLoad` rules. It checks that there is **at least one** path in the graph originating at the user denoted by the VC and ending at the target Ent. Also, you may use `AllowIf` in the prefix of `privacyInsert/Update/Delete` rules to e.g. allow an admin VC access to the Ent early, without checking all other rules.
-* `new Require(predicate)`: if the `predicate`resolves to true and doesn't throw, tells Ent Framework to go to the next rule in the array to continue. If that was the last `Require` rule in the array, allows access. This rule is commonly used in `privacyInsert/Update/Delete` blocks, where the goal is to insure that **all** rules succeed.
+* `new AllowIf(predicate)`:  if `predicate` resolves to true and doesn't throw, allows the access immediately, without checking the next rules. Commonly, `AllowIf` is used in `privacyLoad` rules. It checks that there is **at least one** path in the graph originating at the user denoted by the VC and ending at the target Ent. Also, you may use `AllowIf` in the prefix of `privacyInsert/Update/Delete` rules to e.g. allow an admin VC access to the Ent early, without checking all other rules.
+* `new Require(predicate)`: if `predicate`resolves to true and doesn't throw, tells Ent Framework to go to the next rule in the array to continue. If that was the last `Require` rule in the array, allows access. This rule is commonly used in `privacyInsert/Update/Delete` blocks, where the goal is to insure that **all** rules succeed.
+* `new DenyIf(predicate)`: if `predicate` returns true **or throws an error**, then the access is immediately rejected. This rule is rarely useful, but you can try to utilize it for ealy denial of access in any of the privacy arrays.
 
 
 
