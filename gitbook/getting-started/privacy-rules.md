@@ -49,9 +49,11 @@ export class EntComment extends BaseEnt(cluster, schema) {
 }
 ```
 
-When you run e.g. `EntComment.loadX(vc, "123")` (or any other API call, like `loadBy*()` or `select()`), Ent Framework runs `privacyLoad` rules for each Ent.
+### privacyLoad Rules and Graph Reachability
 
-Typically, a **Rule** class used in `privacyLoad` is `AllowIf`: it allows reading the Ent immediately as soon as the **Predicate** passed to it succeeds. There are several pre-defined Predicate classes, and you can also create your own predicates or just pass an async boolean function; we'll discuss it a bit later.
+When you run e.g. `EntComment.loadX(vc, "123")` or any other API call, like `loadBy*()` or `select()`, Ent Framework runs `privacyLoad` rules for each Ent.
+
+Typically, a **Rule** class used in `privacyLoad` is `AllowIf`: it allows reading the Ent immediately as soon as the passed **Predicate**  succeeds. There are several pre-defined Predicate classes, and you can also create your own predicates, or just pass an async boolean function; we'll discuss it a bit later.
 
 So, the logic in the example is following:
 
@@ -66,7 +68,7 @@ As opposed to `privacyLoad`, where a single succeeded rule allows the read, for 
 
 This is because the ability to insert an Ent means that the VC has permissions to reference other Ents in **all** field edges. Typically, for every field edge (foreign key) defined in the Ent, there should be at least one associated **Require** privacy rule.
 
-In other words, having permissions to insert an Ent is almost always the same as having permissions to reference other Ents in its foreign key fields. If we forget to check some of the field edges, then it is possible that the user will be able to create an Ent "belonging" to someone else (by e.g. referencing someone else's ID).
+Having permissions to insert an Ent is almost always the same as having permissions to reference other Ents in its foreign key fields. If we forget to check some of the field edges, then it is possible that the user will be able to create an Ent "belonging" to someone else (by e.g. referencing someone else's ID).
 
 The logic in the example above:
 
