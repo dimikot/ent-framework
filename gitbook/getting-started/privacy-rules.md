@@ -131,7 +131,7 @@ export class CanReadOutgoingEdge<TField extends string>
     public readonly field: TField,
     public readonly toEntClass: EntClass,
   ) {
-    this.name = this.constructor.name + "(" + this.field + ")";
+    this.name = `${this.constructor.name}(${this.field})`;
   }
 
   async check(vc: VC, row: Record<TField, string | null>): Promise<boolean> {
@@ -139,12 +139,10 @@ export class CanReadOutgoingEdge<TField extends string>
     if (!toID) {
       return false;
     }
-
     const cache = vc.cache(IDsCacheReadable);
     if (cache.has(toID!)) {
       return true;
     }
-
     await this.toEntClass.loadX(vc, toID!);
     // sill here and not thrown? save to the cache
     cache.add(toID!);
@@ -153,4 +151,19 @@ export class CanReadOutgoingEdge<TField extends string>
 }
 ```
 
-Each predicate class must be defined with `implements Predicate` which requires the method `check(vc, row)` to be implemented.
+Each predicate class must be defined with `implements Predicate` which requires the method `check(vc, row)` to be implemented, as well as the `name` property to exist.
+
+In the class constructor, you accept any predicate configuration parameters and build a more descriptive `name` for the predicate instance than just the predicate name.
+
+And in `check()` method, you implement your predicate's logic, the same way as you would do it in a functional predicate.
+
+### Built-in Predicates
+
+For convenience, Ent Framework already includes some of the most useful predicates. This set is constantly growing, so check [src/ent/predicates](https://github.com/clickup/ent-framework/tree/main/src/ent/predicates) for the most up-to-date list.
+
+* **new** [**True**](https://github.com/clickup/ent-framework/blob/main/src/ent/predicates/True.ts)**()**: this is the simplest possible predicate, since it always returns true. It is useful when you want to create an Ent class which can be read by anyone.
+* **new** [**OutgoingEdgePointsToVC**](https://github.com/clickup/ent-framework/blob/main/src/ent/predicates/OutgoingEdgePointsToVC.ts)**(field)**: checks that `ent[field]` is equal to `vc.principal`. This is useful for fields like `created_by` or `user_id` or some similar cases, when you want to make sure that the VC's acting user is mentioned in the Ent field to make this field readable (or writable).
+* **new** [**CanReadOutgoingEdge**](https://github.com/clickup/ent-framework/blob/main/src/ent/predicates/CanReadOutgoingEdge.ts)**(field, ToEntClass)**: delegates the  privacy check to another Ent Class (`ToEntClass`) considering that `toEnt.id` is equal to `ent[field]` . Sounds complicated, but in proactice it means the the VC has permissions to read another Ent that is parent to the current Ent, and is pointed by `field` . A good example is a predicate on EntComment: `privacyLoad: [new CanReadOutgoindEdge("topic_id", EntTopic)]` means that, to read this comment, the VC must be able to read its parent topic.
+* **new** [**CanUpdateOutgoingEdge**](https://github.com/clickup/ent-framework/blob/main/src/ent/predicates/CanUpdateOutgoingEdge.ts)**(field, ToEntClass)**: similar to `CanReadOutgoingEdge` above, but delegates the check to the parent Ent's `privacyUpdate` rules.
+* **new** [**CanDeleteOutgoingEdge**](https://github.com/clickup/ent-framework/blob/main/src/ent/predicates/CanDeleteOutgoingEdge.ts)**(field, ToEntClass)**: same as `CanUpdateOutgoingEdge`, but for `privacyDelete` delegation to the parent Ent. In practice, this predicate is rarely used.
+* **new** [**IncomingEdgeFromVCExists**](https://github.com/clickup/ent-framework/blob/main/src/ent/predicates/IncomingEdgeFromVCExists.ts)**(EntEdge, entEdgeVCField, entEdgeFKField, entEdgeFilter?)**: checks that there is a **child** Ent in the graph (EntEdge) who points to both our current Ent and to `vc.principal`. In other words, checks that there is a direct junction Ent between the VC and our current Ent.
