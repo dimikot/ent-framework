@@ -87,11 +87,27 @@ If there is no `privacyDelete` block mentioned in the configuration, then Ent Fr
 
 ## Rule Classes
 
-Each item in `privacyLoad`, `privacyInsert` etc. arrays is called a **Rule**. Each Rule instance is parametrized with a boolean **Predicate**. There are several built-in Rules:
+Each item in `privacyLoad`, `privacyInsert` etc. arrays is called a **Rule**. Each Rule instance is parametrized with a boolean **Predicate**. There are several built-in rules:
 
 * `new AllowIf(predicate)`:  if `predicate` resolves to true and doesn't throw, allows the access immediately, without checking the next rules. Commonly, `AllowIf` is used in `privacyLoad` rules. It checks that there is **at least one** path in the graph originating at the user denoted by the VC and ending at the target Ent. Also, you may use `AllowIf` in the prefix of `privacyInsert/Update/Delete` rules to e.g. allow an admin VC access to the Ent early, without checking all other rules.
 * `new Require(predicate)`: if `predicate`resolves to true and doesn't throw, tells Ent Framework to go to the next rule in the array to continue. If that was the last `Require` rule in the array, allows access. This rule is commonly used in `privacyInsert/Update/Delete` blocks, where the goal is to insure that **all** rules succeed.
 * `new DenyIf(predicate)`: if `predicate` returns true **or throws an error**, then the access is immediately rejected. This rule is rarely useful, but you can try to utilize it for ealy denial of access in any of the privacy arrays.
 
+## Custom Predicates
 
+**Predicate** is like a function which accepts an acting VC, a database row (or, in case of `privacyUpdate`, both the old and the new row) and returns true/false or throws an error.
+
+The simplest way to define a predicate is exactly that, pass it as an async function:
+
+```typescript
+privacyLoad: [
+  new AllowIf(new OutgoingEdgePointsToVC("id")),
+  new AllowIf(async function VCIsAdmin(vc) {
+    const vcUser = await EntUser.loadX(vc, vc.principal);
+    return !!vcUser.is_admin;
+  }),
+]
+```
+
+Notice that we gave this function an inline name, `VCIsAdmin`. If the predicate returns false or throws an error, that name will be used as a part of the error message. Of course we could just use an anonymous lambda (like `async (vc) => {}`), but if we did so and the predicate returned false, then the error won't be much descriptine.
 
