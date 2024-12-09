@@ -93,9 +93,11 @@ Each item in `privacyLoad`, `privacyInsert` etc. arrays is called a **Rule**. Ea
 * `new Require(predicate)`: if `predicate`resolves to true and doesn't throw, tells Ent Framework to go to the next rule in the array to continue. If that was the last `Require` rule in the array, allows access. This rule is commonly used in `privacyInsert/Update/Delete` blocks, where the goal is to insure that **all** rules succeed.
 * `new DenyIf(predicate)`: if `predicate` returns true **or throws an error**, then the access is immediately rejected. This rule is rarely useful, but you can try to utilize it for ealy denial of access in any of the privacy arrays.
 
-## Custom Predicates
+## Predicates
 
 **Predicate** is like a function which accepts an acting VC, a database row and returns true/false or throws an error.
+
+### Custom Functional Predicates
 
 The simplest way to define a predicate is exactly that, pass it as an async function:
 
@@ -111,5 +113,44 @@ privacyLoad: [
 
 Notice that we gave this function an inline name, `CommentIsInPublicTopic`. If the predicate returns false or throws an error, that name will be used as a part of the error message. Of course we could just use an anonymous lambda (like `async (vc) => {}`), but if we did so and the predicate returned false, then the error won't be much descriptive.
 
-You can also define preticates as classes, to make them more friendly for debugging.
+Here, `row` is strongly-typed: you can use Ent data fields. It is not an Ent instance though, which is currently a TypeScript limitation: you can't self-reference a class in its mixin.
 
+### Custom Class Predicates
+
+You can also define preticates as classes, to make them more friendly for debugging. In fact, Ent Framework's built-in predicates are implemented as classes.
+
+As an example, let's see how a built-in predicate `CanReadOutgoingEdge` works:
+
+```typescript
+export class CanReadOutgoingEdge<TField extends string>
+  implements Predicate<Record<TField, string | null>>
+{
+  readonly name;
+
+  constructor(
+    public readonly field: TField,
+    public readonly toEntClass: EntClass,
+  ) {
+    this.name = this.constructor.name + "(" + this.field + ")";
+  }
+
+  async check(vc: VC, row: Record<TField, string | null>): Promise<boolean> {
+    const toID = row[this.field];
+    if (!toID) {
+      return false;
+    }
+
+    const cache = vc.cache(IDsCacheReadable);
+    if (cache.has(toID!)) {
+      return true;
+    }
+
+    await this.toEntClass.loadX(vc, toID!);
+    // sill here and not thrown? save to the cache
+    cache.add(toID!);
+    return true;
+  }
+}
+```
+
+Each predicate class must be defined with `implements Predicate` which requires the method `check(vc, row)` to be implemented.
