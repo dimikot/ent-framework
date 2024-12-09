@@ -95,19 +95,21 @@ Each item in `privacyLoad`, `privacyInsert` etc. arrays is called a **Rule**. Ea
 
 ## Custom Predicates
 
-**Predicate** is like a function which accepts an acting VC, a database row (or, in case of `privacyUpdate`, both the old and the new row) and returns true/false or throws an error.
+**Predicate** is like a function which accepts an acting VC, a database row and returns true/false or throws an error.
 
 The simplest way to define a predicate is exactly that, pass it as an async function:
 
 ```typescript
 privacyLoad: [
   new AllowIf(new OutgoingEdgePointsToVC("id")),
-  new AllowIf(async function VCIsAdmin(vc) {
-    const vcUser = await EntUser.loadX(vc, vc.principal);
-    return !!vcUser.is_admin;
+  new AllowIf(async function CommentIsInPublicTopic(vc, row) {
+    const topic = await EntTopic.loadX(vc, row.topic_id);
+    return topic.published_at !== null;
   }),
 ]
 ```
 
-Notice that we gave this function an inline name, `VCIsAdmin`. If the predicate returns false or throws an error, that name will be used as a part of the error message. Of course we could just use an anonymous lambda (like `async (vc) => {}`), but if we did so and the predicate returned false, then the error won't be much descriptine.
+Notice that we gave this function an inline name, `CommentIsInPublicTopic`. If the predicate returns false or throws an error, that name will be used as a part of the error message. Of course we could just use an anonymous lambda (like `async (vc) => {}`), but if we did so and the predicate returned false, then the error won't be much descriptive.
+
+You can also define preticates as classes, to make them more friendly for debugging.
 
