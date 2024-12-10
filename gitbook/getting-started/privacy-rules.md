@@ -224,8 +224,16 @@ export class EntOrgainzation extends BaseEnt(cluster, organizationsSchema) {
 
 You use `IncomingEdgeFromVCExists` just once in `EntOrganization`, and then for all other children Ents, you delegate permission checks to their parent organization, using `OutgoingEdgePointsToVC` typically.
 
-#### new [Or](https://github.com/clickup/ent-framework/blob/main/src/ent/predicates/Or.ts)(\[predicate1, predicate2, ...])
+#### new [Or](https://github.com/clickup/ent-framework/blob/main/src/ent/predicates/Or.ts)(predicate1, predicate2, ...)
 
 This is a composite predicate, allowing to call other predicates in pallel. It returns true if any of the predicates returned true and no predicates threw an error.
 
 Notice that you likely don't need this predicate when working with `privacyLoad`, since it's typically a chain of `AllowIf` rules. The `AllowIf` rule already works in an "or-fashion". But for `privacyUpdate/Delete` rules, the `Or` predicate may be useful (`Require` rule is "and-ish" on its nature).
+
+#### new [VCHasFlavor](https://github.com/clickup/ent-framework/blob/main/src/ent/predicates/VCHasFlavor.ts)(FlaviorClass)
+
+This predicate returns true if there is flavor of a particular class added to the acting VC.
+
+Flavors will be discussed later in details. For now, we can just mentioned that it's some kind of a "flag" which can be added to a VC instance for later rechecking or to carry some auxiliary information (more precisely, you can derive a new VC with a flavor added to it, since VC itself is an immutable object).
+
+A very common case is to define your own `VCAdmin` flavor which is added to a VC very early in the request cycle with `vc = vc.withFlavor(new VCAdmin())`, when the corresponding user is an admin and can see any data in the database. Then, in `privacyLoad/Insert/Update/Delete` of the Ent classes, you can add `new AllowIf(new VCHasFlavor(VCAdmin))` to allow an admin to read that Ent unconditionally.
