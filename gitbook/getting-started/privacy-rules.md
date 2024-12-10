@@ -222,4 +222,10 @@ export class EntOrgainzation extends BaseEnt(cluster, organizationsSchema) {
 }
 ```
 
-You do it once in `EntOrganization`, and then for all other children Ents, you delegate permission checks to their parent organization.
+You use `IncomingEdgeFromVCExists` just once in `EntOrganization`, and then for all other children Ents, you delegate permission checks to their parent organization, using `OutgoingEdgePointsToVC` typically.
+
+#### new [Or](https://github.com/clickup/ent-framework/blob/main/src/ent/predicates/Or.ts)(\[predicate1, predicate2, ...])
+
+This is a composite predicate, allowing to call other predicates in pallel. It returns true if any of the predicates returned true and no predicates threw an error.
+
+Notice that you likely don't need this predicate when working with `privacyLoad`, since it's typically a chain of `AllowIf` rules. The `AllowIf` rule already works in an "or-fashion". But for `privacyUpdate/Delete` rules, the `Or` predicate may be useful (`Require` rule is "and-ish" on its nature).
