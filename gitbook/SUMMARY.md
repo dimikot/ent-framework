@@ -21,6 +21,7 @@
 * [Ent API: selectBy() Unique Key Prefix](getting-started/ent-api-selectby-unique-key-prefix.md)
 * [Ent API: upsert\*()](getting-started/ent-api-upsert.md)
 * [Privacy Rules](getting-started/privacy-rules.md)
+* [Validators](getting-started/validators.md)
 
 ## Architecture
 
