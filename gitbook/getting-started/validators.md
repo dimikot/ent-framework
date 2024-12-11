@@ -29,4 +29,27 @@ export class EntComment extends BaseEnt(cluster, schema) {
 }
 ```
 
-In fact, validators have so much in common with privacy rules that internally, the whole Ent Franework's privacy engine is called `Validation`.
+In fact, validators have so much in common with privacy rules that internally, the whole Ent Framework's privacy engine is called `Validation`.
+
+The use case for validators is enforcing some early integrity checks on Ent fields before saving it to the database:
+
+```typescript
+try {
+  const comment = EntComment.insertReturning(vc, {
+    topic_id: topic.id,
+    creator_id: vc.principal,
+    message: request.body.message,
+  });
+} catch (e: unknown) {
+  if (e instanceof EntValidationError) {
+    return res.json({
+      errors: e.errors.map((e) => ({
+        field: e.field,
+        message: e.message,
+      })),
+    });
+  } else {
+    throw e;
+  }
+}
+```
