@@ -22,6 +22,7 @@
 * [Ent API: upsert\*()](getting-started/ent-api-upsert.md)
 * [Privacy Rules](getting-started/privacy-rules.md)
 * [Validators](getting-started/validators.md)
+* [Triggers](getting-started/triggers.md)
 
 ## Architecture
 
