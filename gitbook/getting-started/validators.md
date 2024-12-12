@@ -29,9 +29,11 @@ export class EntComment extends BaseEnt(cluster, schema) {
 }
 ```
 
-In fact, validators have so much in common with privacy rules that internally, the whole Ent Framework's privacy engine is called `Validation`.
+If you want to build your own custom validation predicate, make sure that it implements `EntValidationErrorInfo` interface. Otherwise, you won't be able to use it in `validators` block.
 
-The use case for validators is enforcing some early integrity checks on Ent fields before saving it to the database:
+Validators have so much in common with privacy rules that internally, the whole Ent Framework's privacy engine is called `Validation`.
+
+The use case for validators is enforcing some early integrity checks on Ent fields before saving the Ent to the database:
 
 ```typescript
 try {
@@ -40,6 +42,7 @@ try {
     creator_id: vc.principal,
     message: request.body.message,
   });
+  ...
 } catch (e: unknown) {
   if (e instanceof EntValidationError) {
     return res.json({
