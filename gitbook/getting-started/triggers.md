@@ -228,6 +228,10 @@ Here we pass a tuple with 2 lambdas:
 
 In the trigger code, you still need to check that the operation is not `DELETE`, but it is way better still than having a boilerplate in the previous example.
 
+The "deps builder" lambda can be async, so you can run other database queries in it and make decisions based on their results.
+
+Notice that "deps builder" tuple also works for `beforeUpdate`, as well as for `afterUpdate` and `afterMutation` triggers we'll discuss below.
+
 ## After-Triggers
 
 After-triggers are called seqentially, as soon as an insert/update/delete mutation succeeds in the database.
@@ -235,3 +239,88 @@ After-triggers are called seqentially, as soon as an insert/update/delete mutati
 ### afterInsert Triggers
 
 Triggers of this kind act exactly as `beforeInsert`, but they are called after a successful database operation, not before. There, you can do some auxiliary work, but keep in mind that, if this work fails, the Ent will remain created in the database still. There are no (and cannot be) built-in transactions across multiple independent IO services and multiple different microshards.
+
+```typescript
+...
+afterInsert: [
+  async (vc, { input }) => {
+    ...
+  },
+],
+...
+```
+
+### afterUpdate Triggers
+
+The only difference with `beforeUpdate` triggers here is that there is no `input` argument passed: the only things you have are `oldRow` and `newRow` :
+
+```typescript
+...
+afterUpdate: [
+  async (vc, { oldRow, newRow }) => {
+    ...
+  },
+],
+...
+```
+
+You can also use "deps builder" syntax in `afterUpdate`, to run the trigger code only if some particular fields change:
+
+```typescript
+...
+afterUpdate: [
+  ...
+  [
+    (vc, row) => [row.subject], // "deps builder"
+    async (vc, { oldRow, newRow }) => {
+      ...
+    },
+  ],
+],
+...
+```
+
+### afterDelete Triggers
+
+In `afterDelete`, you can run some optional cleanup of other resources associated to the just-deleted Ent. Keep in mind though that it's all non-transactional: if your cleanup fails, it won't be retried, and the row will already be deleted in the database.
+
+```typescript
+...
+afterDelete: [
+  async (vc, { oldRow }) => {
+    ...
+  },
+],
+...
+```
+
+### afterMutation Triggers
+
+Similarly to `beforeMutation` triggers, `afterMutation` triggers allow you to react on any of insert/update/delete operations. but only after this operation succeeds in the database.&#x20;
+
+There is also no `input` argument available in this kind of triggers, only `newOrOldRow`.
+
+```typescript
+...
+afterMutation: [
+  async (vc, { op, newOrOldRow }) => {
+    ...
+  },
+],
+...
+```
+
+You can use "deps builder" syntax too if you want to react only when some particular fields change on an update (or on insert and delete unconditionally):
+
+```typescript
+...
+afterMutation: [
+  [
+    (vc, row) => [row.subject], // "deps builder"
+    async (vc, { op, newOrOldRow }) => {
+      ...
+    },
+  ],
+],
+...
+```
