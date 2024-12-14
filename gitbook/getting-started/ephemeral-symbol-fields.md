@@ -32,7 +32,7 @@ export class EntComment extends BaseEnt(cluster, schema) {
             const text = await encrypt(newOrOldRow[$MESSAGE]);
             await EntCommentText.upsertReturning(
               vc,
-              { id: newOrOldRow.id, text }
+              { id: newOrOldRow.id, text },
             ); 
           }
         },
@@ -49,16 +49,17 @@ export class EntComment extends BaseEnt(cluster, schema) {
 ...
 const comment = await EntComment.insertReturning(vc, {
   topic_id: "123",
-  // Required property!
-  [$MESSAGE]: "Hello",
+  [$MESSAGE]: "Hello", // required property!
 });
 ```
 
-From Ent Framework's point of view, `$MESSAGE` is a regular field: you can provide a type for it in the schema and, if there is no `autoInsert=true` specified for it, the property will be required.
+From Ent Framework's point of view, `$MESSAGE` is a regular field: you can provide a type for it in the schema and, if there is no `autoInsert` specified for it, the property will be required (non-optional). Also, `allowNull` plays its regular role here.
 
-But since it's an ephemeral (symbol) field, it won't be stored in the database. The data is only available in your triggers. The analogy here is simple:
+But since `$MESSAGE` is an ephemeral (symbol) field, it won't be stored in the database. The data is **only available in your triggers**. The analogy on why it won't be stored is simple:
 
 * When you run `JSON.stringify(obj)`, it skips all of the symbol fields.
 * By default, `Object.keys(obj)` also doesn't return symbol keys.
 
-TypeScript won't let you forget passing the `$MESSAGE`: it will raise an error saying that `$MESSAGE` is a required property of the `insertReturning()` argument.
+(The above is just an analogy and a convention of course.)
+
+TypeScript doesn't let you forget passing the `$MESSAGE`: it will raise an error saying that `$MESSAGE` is a required property of the `insertReturning()` argument. Also, in your triggers, the type of `input[$MESSAGE]` will be `string` and not `string | undefined`, so you can assume that the value is always passed.
