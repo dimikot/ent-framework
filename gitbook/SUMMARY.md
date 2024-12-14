@@ -23,6 +23,7 @@
 * [Privacy Rules](getting-started/privacy-rules.md)
 * [Validators](getting-started/validators.md)
 * [Triggers](getting-started/triggers.md)
+* [Ephemeral (Symbol) Fields](getting-started/ephemeral-symbol-fields.md)
 
 ## Architecture
 
