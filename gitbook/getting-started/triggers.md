@@ -4,9 +4,9 @@ Triggers are hooks which Ent Framework execute right before or after a mutation 
 
 The word "hook" also draws the analogy with React Hooks (from frontend world), since update-triggers in Ent Framework have several traits in common with React's `useEffect()` hook.
 
-## Before-Triggers
-
 Triggers are defined in the Ent Class configuration, near [privacy rules](privacy-rules.md).
+
+## Before-Triggers
 
 In before-triggers, you can:
 
@@ -34,6 +34,7 @@ export class EntTopic extends BaseEnt(cluster, schema) {
       beforeInsert: [...],
       beforeUpdate: [...],
       beforeDelete: [...],
+      beforeMutation: [...],
     });
   }
 }
@@ -223,6 +224,14 @@ beforeMutation: [
 Here we pass a tuple with 2 lambdas:
 
 1. The 1st lambda, `(vc, row) => [row.subject]`, is called "deps builder". It extracts some part of the row, and Ent Framework will call the trigger code **only if** that part has actually changed on an update (and also on insert/delete, since those are also considered as "changes")
-2. The 2nd lambda is your trigger code.
+2. The 2nd lambda is your trigger code. Ent Framework will run it only if the 1st callback returned a value different between the old and the new rows (or it's an insert or delete operation).  If you are familiar with React, you can notice that this mechanism is similar to how its `useEffect()` hook works.
 
 In the trigger code, you still need to check that the operation is not `DELETE`, but it is way better still than having a boilerplate in the previous example.
+
+## After-Triggers
+
+After-triggers are called seqentially, as soon as an insert/update/delete mutation succeeds in the database.
+
+### afterInsert Triggers
+
+Triggers of this kind act exactly as `beforeInsert`, but they are called after a successful database operation, not before. There, you can do some auxiliary work, but keep in mind that, if this work fails, the Ent will remain created in the database still. There are no (and cannot be) built-in transactions across multiple independent IO services and multiple different microshards.
