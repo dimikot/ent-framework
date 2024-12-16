@@ -9,6 +9,7 @@
 * [Create Ent Classes](getting-started/create-ent-classes.md)
 * [VC: Viewer Context and Principal](getting-started/vc-viewer-context-and-principal.md)
 * [Ent API: insert\*()](getting-started/ent-api-insert.md)
+* [Built-in Field Types](getting-started/built-in-field-types.md)
 * [Ent API: load\*() by ID](getting-started/ent-api-load-by-id.md)
 * [N+1 Selects Solution](getting-started/n+1-selects-solution.md)
 * [Automatic Batching Examples](getting-started/automatic-batching-examples.md)
@@ -24,7 +25,6 @@
 * [Validators](getting-started/validators.md)
 * [Triggers](getting-started/triggers.md)
 * [Ephemeral (Symbol) Fields](getting-started/ephemeral-symbol-fields.md)
-* [Custom Field Types](getting-started/custom-field-types.md)
 
 ## Architecture
 

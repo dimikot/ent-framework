@@ -1,8 +1,8 @@
 # JIT in SQL Queries Batching
 
-One of the core Ent Framework's features is that it batches multiple concurrently running calls into a single SQL query. It also doesn't use JOIN for good, to enable seamless microsharding support and allow you to write your application code as if there is no "N+1 Selects" problem exists at all. In a typical workload, there are **lots** of concurrent queries running even for a single web request, and the batching factor is high.
+One of the core Ent Framework's features is that it batches multiple concurrently running calls into a single SQL query. It also doesn't use JOIN for good, to enable seamless microsharding support and allow you to write your application code as if there is no "N+1 Selects" problem existing at all. In a typical workload, there are **lots** of concurrent queries running even for a single web request, and the batching factor is high.
 
-Batching greatly reduces the database connections utilization, and open connections are one of the most expensive resources in the cluster, even when some proxy service (like pgbouncer) sits between the backend and PostgreSQL.
+Batching greatly reduces the database connections utilization. Open connections are one of the most expensive resources in the cluster, even when some proxy service (like pgbouncer) sits between the backend and PostgreSQL.
 
 In fact, even in a small backend cluster, you **must** use something like [pgbouncer](https://www.pgbouncer.org), [pgcat](https://github.com/postgresml/pgcat) or other alternative.
 
