@@ -25,6 +25,7 @@
 * [Validators](getting-started/validators.md)
 * [Triggers](getting-started/triggers.md)
 * [Ephemeral (Symbol) Fields](getting-started/ephemeral-symbol-fields.md)
+* [Custom Field Types](getting-started/custom-field-types.md)
 
 ## Architecture
 

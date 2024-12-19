@@ -2,9 +2,11 @@
 
 Before we move to the next Ent API calls, let's talk about the Ent field types that are natively supported in Ent Framework:
 
-<table><thead><tr><th width="218">Field Definition</th><th width="155">TypeScript Type</th><th>PostgreSQL Type</th></tr></thead><tbody><tr><td>{ type: String }</td><td>string</td><td>varchar, text, bigint, numeric, ...</td></tr><tr><td>{ type: ID }</td><td>string</td><td>varchar, text, bigint, ...</td></tr><tr><td>{ type: Number }</td><td>number</td><td>int, bigint, doube, ...</td></tr><tr><td>{ type: Date }</td><td>Date</td><td>timestamptz, timestamp</td></tr><tr><td>{ type: Boolean }</td><td>boolean</td><td>boolean</td></tr><tr><td>{ type: YourCustomType }</td><td>will discuss later</td><td>typically jsonc, bytea or anything else</td></tr></tbody></table>
+<table><thead><tr><th width="218">Field Definition</th><th width="155">TypeScript Type</th><th>PostgreSQL Type</th></tr></thead><tbody><tr><td>{ type: String }</td><td>string</td><td>varchar, text, bigint, numeric, ...</td></tr><tr><td>{ type: ID }</td><td>string</td><td>varchar, text, bigint, ...</td></tr><tr><td>{ type: Number }</td><td>number</td><td>int, bigint, doube, ...</td></tr><tr><td>{ type: Date }</td><td>Date</td><td>timestamptz, timestamp</td></tr><tr><td>{ type: Boolean }</td><td>boolean</td><td>boolean</td></tr><tr><td>{ type: YourCustomType }</td><td><a href="custom-field-types.md">will discuss later</a></td><td>typically jsonc, bytea or anything else</td></tr></tbody></table>
 
-Also, fields may be _nullable_ and _optional_, with the corresponding support from TypeScript side.
+You can also define custom field types: [custom-field-types.md](custom-field-types.md "mention")
+
+Fields may be _nullable_ and _optional_, with the corresponding support from TypeScript side.
 
 Nullability and optionality concepts are often times mixed up. In Ent Framework, they are independent on each other and are used for different use cases.
 
