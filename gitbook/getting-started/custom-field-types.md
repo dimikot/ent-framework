@@ -71,14 +71,16 @@ await topic.updateChanged({
 });
 ```
 
-## Custom Types and Backward Compatibility Aspects
+## Backward/Forward Compatibility Aspects
 
 When working with custom types, it's crucial to think about the database schema migration and backward compatibility aspects, especially when you add non-optional properties to your type, or when you change inner types of the properties.
+
+The hardest thing here is that you need to care not only about backward compatibility (when you must be ready to read the old data format from the existing database rows), but also about forward compatibility (i.e. be ready to **write** the data in an old format), because there may still be the readers in the cluster running the old code and expecting the old data format.
 
 Let's get back to the type which we defined previously:
 
 ```typescript
-type ActorsValue = {
+type ActorsValueOld = {
   editor_ids: string[];
   viewer_ids: string[];
 };
@@ -89,4 +91,21 @@ const topic = await EntTopic.insertReturning(vc, {
 });
 ```
 
-Here, we stored a row to the database, so it remains there.
+Here, we stored a row to the database, so it remains there:
+
+```
+ROW(id="123", ..., actors='{"editor_ids":["42"],"viewer_ids":[]}')
+```
+
+Imagine now that we want to change the type: instead of storing just user IDs, we also want to store the timestamps when those users performed an action last time:
+
+```typescript
+type ActorsValueNew = {
+  editor_ids: Array<{ id: string; ts: number; }>;
+  viewer_ids: Array<{ id: string; ts: number; }>;
+};
+```
+
+### Deployment 1: New Format in Code, Old Format in Database
+
+To transition between the custom type formats, we first need to update the code to let it work with `ActorsValueNew` . But the code must still write the data as `ActorsValueOld`: the deployment is not an immediate process, so there are periods of time when both Node processe with the new code and Node processes with the old code run at the same time.
