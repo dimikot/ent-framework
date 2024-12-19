@@ -21,11 +21,13 @@ CREATE TABLE topics(
 You define a custom type by providing an object with 3 callbacks:
 
 ```typescript
-const ActorType = {  
-  dbValueToJs: (v: unknown): Array<{
-    kind: "creator" | "viewer" | "editor";
-    id: string;
-  }> => {
+type ActorsValue = {
+  editor_ids: string[];
+  viewer_ids: string[];
+};
+
+const ActorsType = {  
+  dbValueToJs: (v: unknown): ActorsValue => {
     // node-postgres already parses jsonc internally,
     // so we don't need anything more here
     return v;
@@ -45,7 +47,7 @@ const ActorType = {
 * `stringify(obj)`: given a value of your custom type, converts it into a string representation compatible with PostgreSQL value. Ent Framework will run this callback every time you use the custom field in any query (e.g. insert/update/delete or even when selecting Ents).
 * `parse(str)`: this callback is the opposite of `stringify()`. Ent Framework doesn't call it (since it uses `dbValueToJs` instead), but for convenience and completeness of the interface, it's still here.
 
-Once the above 3 callbacks are defined, you can declare a custom type field in your schema:
+Once the above 3 callbacks are defined, you can declare a field of custom type in your schema:
 
 ```typescript
 const schema = new PgSchema(
@@ -59,12 +61,32 @@ const schema = new PgSchema(
 ...
 const topic = await EntTopic.insertReturning(vc, {
   ...,
-  actors: [{ kind: "editor", id: "42" }, ...],
+  actors: { editor_ids: ["42"], viewer_ids: [] },
 });
 ...
-console.log(topic.actors[0].kind);
+console.log(topic.actors.editor_ids);
 ...
 await topic.updateChanged({
-  actors: [{ kind: "viewer", id: "42" }],
+  actors: { editor_ids: [], viewer_ids: ["42"] },
 });
 ```
+
+## Custom Types and Backward Compatibility Aspects
+
+When working with custom types, it's crucial to think about the database schema migration and backward compatibility aspects, especially when you add non-optional properties to your type, or when you change inner types of the properties.
+
+Let's get back to the type which we defined previously:
+
+```typescript
+type ActorsValue = {
+  editor_ids: string[];
+  viewer_ids: string[];
+};
+...
+const topic = await EntTopic.insertReturning(vc, {
+  ...,
+  actors: { editor_ids: ["42"], viewer_ids: [] },
+});
+```
+
+Here, we stored a row to the database, so it remains there.
