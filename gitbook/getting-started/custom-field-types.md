@@ -26,7 +26,7 @@ type ActorsValue = {
   viewer_ids: string[];
 };
 
-const ActorsType = {  
+const ActorsType = {
   dbValueToJs: (v: unknown): ActorsValue => {
     // node-postgres already parses jsonc internally,
     // so we don't need anything more here
@@ -80,7 +80,7 @@ The hardest thing here is that you need to care not only about backward compatib
 Let's get back to the type which we defined previously:
 
 ```typescript
-type ActorsValueOld = {
+type ActorsValueV1 = {
   editor_ids: string[];
   viewer_ids: string[];
 };
@@ -97,10 +97,10 @@ Here, we stored a row to the database, so it remains there:
 ROW(id="123", ..., actors='{"editor_ids":["42"],"viewer_ids":[]}')
 ```
 
-Imagine now that we want to change the type: instead of storing just user IDs, we also want to store the timestamps when those users performed an action last time:
+Imagine now that we want to significantly change the type: instead of storing just user IDs, we also want to store the timestamps when those users performed an action last time:
 
 ```typescript
-type ActorsValueNew = {
+type ActorsValue = {
   editor_ids: Array<{ id: string; ts: number; }>;
   viewer_ids: Array<{ id: string; ts: number; }>;
 };
@@ -108,4 +108,34 @@ type ActorsValueNew = {
 
 ### Deployment 1: New Format in Code, Old Format in Database
 
-To transition between the custom type formats, we first need to update the code to let it work with `ActorsValueNew` . But the code must still write the data as `ActorsValueOld`: the deployment is not an immediate process, so there are periods of time when both Node processe with the new code and Node processes with the old code run at the same time.
+As a preliminary step, we need to rename `ActorsValue` to `ActorsValueV1`, to declare it as an "old data format". This, newest format that we'll introduce will always be named as just `ActorsValue`.
+
+To transition between the custom type formats, we then need to update the code to let it work with `ActorsValue`. But the code must still **write** the data in the old `ActorsValueV1` format: the deployment is not an immediate process, so there are periods of time when Node processes with the new code and Node processes with the old code run at the same time.
+
+```typescript
+const ActorsType = {
+  // Accepts BOTH the old format and the new format. Returns new format.
+  dbValueToJs: (obj: ActorsValueV1 | ActorsValue): ActorsValue =>
+    return {
+      editor_ids: obj.editor_ids.map(
+        (v) => typeof v === "string" ? { id: v, ts: Date.now() } : v,
+      ),
+      viewer_ids: ...,
+    };
+  }
+  
+  // Accepts only new format. Stringifies to the old format.
+  stringify: (obj: ActorsValue): string => {
+    return JSON.stringify({
+      editor_ids: obj.editor_ids.map((v) => v.id),
+      viewer_ids: ...,
+    } as ActorsValueV1);
+  }
+  
+  // Auxiliary counter-part to stringify().
+  parse: (v: string): ActorsValue => {
+    return this.dbValueToJs(JSON.parse(v));
+  }
+}
+
+```
