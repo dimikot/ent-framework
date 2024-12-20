@@ -27,6 +27,10 @@
 * [Ephemeral (Symbol) Fields](getting-started/ephemeral-symbol-fields.md)
 * [Custom Field Types](getting-started/custom-field-types.md)
 
+## Advanced
+
+* [Custom Field Refactoring](advanced/custom-field-refactoring.md)
+
 ## Architecture
 
 * [Abstraction Layers](architecture/abstraction-layers.md)
