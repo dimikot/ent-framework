@@ -27,19 +27,19 @@ type ActorsValue = {
 };
 
 const ActorsType = {
-  dbValueToJs: (v: unknown): ActorsValue => {
+  dbValueToJs(v: unknown): ActorsValue {
     // node-postgres already parses jsonc internally,
     // so we don't need anything more here
     return v;
-  }
+  },
   
-  stringify: (obj: unknown) => {
+  stringify(obj: ActorsValue): string {
     return JSON.stringify(v);
-  }
+  },
   
-  parse: (v: string) => {
+  parse(v: string): ActorsValue {
     return JSON.parse(v);
-  }
+  },
 }
 ```
 
@@ -115,27 +115,43 @@ To transition between the custom type formats, we then need to update the code t
 ```typescript
 const ActorsType = {
   // Accepts BOTH the old format and the new format. Returns new format.
-  dbValueToJs: (obj: ActorsValueV1 | ActorsValue): ActorsValue =>
+  dbValueToJs(obj: ActorsValueV1 | ActorsValue): ActorsValue {
     return {
       editor_ids: obj.editor_ids.map(
         (v) => typeof v === "string" ? { id: v, ts: Date.now() } : v,
       ),
-      viewer_ids: ...,
+      ...
     };
-  }
+  },
   
   // Accepts only new format. Stringifies to the old format.
-  stringify: (obj: ActorsValue): string => {
+  stringify(obj: ActorsValue): string {
     return JSON.stringify({
       editor_ids: obj.editor_ids.map((v) => v.id),
-      viewer_ids: ...,
+      ...
     } as ActorsValueV1);
-  }
+  },
   
   // Auxiliary counter-part to stringify().
-  parse: (v: string): ActorsValue => {
+  parse(v: string): ActorsValue {
     return this.dbValueToJs(JSON.parse(v));
-  }
+  },
 }
-
 ```
+
+The idea is following:
+
+1. In our code, we always work with the new format, `ActorsValue`.
+2. When writing to the database, we use the old format, `ActorsValueV1`.
+3. When reading from the database, we are able to recognize both the old format `ActorsValueV1` and the new format `ActorsValue`. This behavior will remain with us forever, becuse we'll keep having the data stored in the database in old format.
+
+Notice how much TypeScript does help us here: it ensures that we won't return nor accept a mismatched type in both `dbValueToJs()` and `stringify()` (try returning some different shape, and you'll see a compile-time error):
+
+* `dbValueToJs(obj: ActorsValueV1 | ActorsValue)` allows us to work with a union type, which is safer than working with e.g. `any`.
+* `return JSON.stringify({ ... } as ActorsValueV1)` doesn't let us to return data in a wrong format and ensures that it conforms the `ActorsValueV1` shape.
+
+This change in the code needs to be deployed, and we must be sure that there is no old code running anywhere before continuing.
+
+### Deployment 2: New Format in Code and DB, Able to Read Old Format&#x20;
+
+Once we're sure that the code can read both the old data format `ActorsValueV1` and the new format `ActorsValue`, we can proceed with the 2nd step: switch to writing the new data in the new format.
