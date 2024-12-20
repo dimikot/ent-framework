@@ -1,12 +1,16 @@
 # Custom Field Refactoring
 
-In [custom-field-types.md](../getting-started/custom-field-types.md "mention") article, we discussed, how you can add Ent fields of an arbitrary shape to your Ent class. You also learned some examples on adding new properties to such fields.
+In [custom-field-types.md](../getting-started/custom-field-types.md "mention") article, we discussed, how you can add Ent fields of an arbitrary shape to your Ent class.&#x20;
 
-Although adding optional and required properties to custom types cover the absolute most of cases, sometimes we want to do a large refactoring, changing the shape of the data entirely. It's harder to do, since you need to deal with both the old format and the new format at all times (unless you want to rewrite all the rows in your entire database), but there are some best practices still.
+You also learned, how easy it is to modify the custom type when you add new properties.
 
-### Backward/Forward Compatibility Aspects
+Although adding optional and required properties to custom types covers the absolute most of cases, sometimes we want to do a large refactoring, changing the shape of the data entirely. It's harder to do, since you need to deal with both the old format and the new format at all times (unless you want to rewrite all the rows in your database).
 
-When working with custom types, it's crucial to think about the database schema migration and backward compatibility aspects, especially when you add non-optional properties to your type, or when you change inner types of the properties.
+There are some best practices still, and TypeScript helps here a lot.
+
+## Backward/Forward Compatibility Aspects
+
+When modifying custom types, it's crucial to think about the database schema migration and backward compatibility aspects, especially when you add non-optional properties to your type, or when you change inner types of the properties.
 
 The hardest thing here is that you need to care not only about backward compatibility (when you must be ready to read the old data format from the existing database rows), but also about forward compatibility (i.e. be ready to **write** the data in an old format), because there may still be the readers in the cluster running the old code and expecting the old data format.
 
@@ -39,7 +43,7 @@ type Actors = {
 };
 ```
 
-### Deployment 1: New Format in Code, Old Format in Database
+## Deployment 1: New Format in Code, Old Format in Database
 
 As a preliminary step, we need to rename `Actors` to `ActorsV1`, to declare it as an "old data format". This, newest format that we'll introduce will always be named as just `Actors`.
 
@@ -89,7 +93,7 @@ Notice how much TypeScript does help us here: it ensures that we won't return no
 
 This change in the code needs to be deployed, and we must be sure that there is no old code running anywhere before continuing.
 
-### Deployment 2: New Format in Writes, Ability to Read Old Format Still
+## Deployment 2: New Format in Writes, Ability to Read Old Format Still
 
 Once we're sure that the code can read both the old data format `ActorsV1` and the new format `Actors`, we can proceed with the 2nd step: switch to writing the new data in the new format. We can do so, because there are no old readers in the cluster anymore.
 
