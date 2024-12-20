@@ -26,6 +26,10 @@
 * [Triggers](getting-started/triggers.md)
 * [Custom Field Types](getting-started/custom-field-types.md)
 
+## Scalability
+
+* [Replication and Lag Tracking](scalability/replication-and-lag-tracking.md)
+
 ## Advanced
 
 * [Ephemeral (Symbol) Fields](advanced/ephemeral-symbol-fields.md)
