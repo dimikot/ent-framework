@@ -23,7 +23,7 @@ You define a custom type by providing an object with 3 callbacks:
 ```typescript
 type Actors = {
   editor_ids: string[];
-  viewer_ids: string[];
+  // will add more fields later
 };
 
 const ActorsType = {
@@ -61,17 +61,17 @@ const schema = new PgSchema(
 ...
 const topic = await EntTopic.insertReturning(vc, {
   ...,
-  actors: { editor_ids: ["42"], viewer_ids: [] },
+  actors: { editor_ids: ["42"] },
 });
 ...
 console.log(topic.actors.editor_ids);
 ...
 await topic.updateChanged({
-  actors: { editor_ids: [], viewer_ids: ["42"] },
+  actors: { editor_ids: ["101"] },
 });
 ```
 
-## Adding an Optional Field to Custom Type
+## Adding an Optional Property to Custom Type
 
 When you have a custom type, you'll most likely want to modify it in the future.
 
@@ -80,21 +80,48 @@ The simplest possible modification is adding an optional property:
 ```typescript
 type Actors = {
   editor_ids: string[];
-  viewer_ids: string[];
-  commenter_ids?: string[]; // added; optional
+  viewer_ids?: string[]; // <-- added; optional
 };
 ```
 
 You don't need to change anything else:&#x20;
 
-* Your existing rows in the database (without `commenter_ids`) will be readable by the new code, since the field is optional.
-* When your code assigns a value to `commenter_ids`, it will also be written to the database, and it won't conflict with the old code that can still be running somewhere in the cluster.
+* Your existing rows in the database (without `viewer_ids`) will be readable by the new code, since the property is optional.
+* When your code assigns a value to `viewer_ids`, it will also be written to the database, and it won't conflict with the old code that can still be running somewhere in the cluster.
 
-## Adding a Required Field to Custom Type
+## Adding a Required Property to Custom Type
 
-Optional fields are good, but it adds a technical debt of tealing with them everywhere in your code. A better variant would be to make the field required.
+Optional propertied are good (and in fact they are the only "officially recommended" way of adding properties in serialization protocols like [protobuf](https://protobuf.dev)), but optionality adds a technical debt spaghetti everywhere in your code where you work with your new properties. A better variant would be to make the property **required**.
 
-## Backward/Forward Compatibility Aspects
+```typescript
+type Actors = {
+  editor_ids: string[];
+  viewer_ids: string[]; // <-- added; required
+};
+
+const ActorsType = {
+  dbValueToJs(v: /* a little lie */ Actors): Actors {
+    v.viewer_ids ??= []; // <-- added
+    return v;
+  },
+  
+  stringify(obj: Actors): string {
+    return JSON.stringify(v);
+  },
+  
+  parse(v: string): Actors {
+    return this.dbValueToJs(JSON.parse(v));
+  },
+}
+```
+
+The only change you need to make in `ActorsType` is to default-assign `[]` to `viewer_ids` property. Notice that we lie to TypeScript here a little: `v` argument of `dbValueToJs(v)` is in fact of type `Actors & { viewer_ids?: string[] }`, not of type `Actors`. But for simplicity, it's acceptable.
+
+## Changing the Shape Severely
+
+Although adding optional and required properties to custom types cover the absolute most of cases, sometimes we want to do a large refactoring, changing the shape of the data entirely. It's harder to do, since you need to deal with both the old format and the new format at all times (unless you want to rewrite all the rows in your entire database), but there are some best practices still.
+
+### Backward/Forward Compatibility Aspects
 
 When working with custom types, it's crucial to think about the database schema migration and backward compatibility aspects, especially when you add non-optional properties to your type, or when you change inner types of the properties.
 
