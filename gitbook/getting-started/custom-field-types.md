@@ -71,6 +71,29 @@ await topic.updateChanged({
 });
 ```
 
+## Adding an Optional Field to Custom Type
+
+When you have a custom type, you'll most likely want to modify it in the future.
+
+The simplest possible modification is adding an optional property:
+
+```typescript
+type Actors = {
+  editor_ids: string[];
+  viewer_ids: string[];
+  commenter_ids?: string[]; // added; optional
+};
+```
+
+You don't need to change anything else:&#x20;
+
+* Your existing rows in the database (without `commenter_ids`) will be readable by the new code, since the field is optional.
+* When your code assigns a value to `commenter_ids`, it will also be written to the database, and it won't conflict with the old code that can still be running somewhere in the cluster.
+
+## Adding a Required Field to Custom Type
+
+Optional fields are good, but it adds a technical debt of tealing with them everywhere in your code. A better variant would be to make the field required.
+
 ## Backward/Forward Compatibility Aspects
 
 When working with custom types, it's crucial to think about the database schema migration and backward compatibility aspects, especially when you add non-optional properties to your type, or when you change inner types of the properties.
