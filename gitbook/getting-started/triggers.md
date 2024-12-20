@@ -4,7 +4,7 @@ Triggers are hooks which Ent Framework execute right before or after a mutation 
 
 The word "hook" also draws the analogy with React Hooks (from frontend world), since update-triggers in Ent Framework have several traits in common with React's `useEffect()` hook.
 
-Triggers are defined in the Ent Class configuration, near [privacy rules](privacy-rules.md).
+Triggers are defined in the Ent Class configuration, near [privacy-rules.md](privacy-rules.md "mention").
 
 ## Before-Triggers
 

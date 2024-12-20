@@ -24,11 +24,11 @@
 * [Privacy Rules](getting-started/privacy-rules.md)
 * [Validators](getting-started/validators.md)
 * [Triggers](getting-started/triggers.md)
-* [Ephemeral (Symbol) Fields](getting-started/ephemeral-symbol-fields.md)
 * [Custom Field Types](getting-started/custom-field-types.md)
 
 ## Advanced
 
+* [Ephemeral (Symbol) Fields](advanced/ephemeral-symbol-fields.md)
 * [Custom Field Refactoring](advanced/custom-field-refactoring.md)
 
 ## Architecture

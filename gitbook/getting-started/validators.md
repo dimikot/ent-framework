@@ -1,6 +1,6 @@
 # Validators
 
-Validators are predicates, similar to what you use in  `privacyInsert/Update` rules. They are called all at the same time, and the error messages (if any) are accumulated to build and throw a compound `EntValidationError` instance.
+Validators are predicates, similar to what you use in  `privacyInsert/Update` [privacy-rules.md](privacy-rules.md "mention"). They are called all at the same time, and the error messages (if any) are accumulated to build and throw a compound `EntValidationError` instance.
 
 ```typescript
 export class EntComment extends BaseEnt(cluster, schema) {

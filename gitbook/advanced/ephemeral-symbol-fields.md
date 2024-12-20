@@ -1,6 +1,6 @@
 # Ephemeral (Symbol) Fields
 
-Sometimes we want to pass auxiliary information into a trigger, but there is really no field in the Ent schema corresponding to it. We need some temporary place to put the data to, to let the trigger read it and run some additional logic (like another Ent creation or update).
+Sometimes we want to pass auxiliary information into [triggers.md](../getting-started/triggers.md "mention"), but there is really no field in the Ent schema corresponding to it. We need some temporary place to put the data to, to let the trigger read it and run some additional logic (like another Ent creation or update).
 
 At the same time, you may want that "temporary place" to be non-optional on inserts. I.e. if you create a new Ent in the database, that piece of information must be treated as required.
 
