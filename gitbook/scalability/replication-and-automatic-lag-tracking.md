@@ -88,9 +88,30 @@ Notice that we don't tell it, which endpoint is master and what endpoints are re
 
 In fact, master and one of replicas may switch roles in real time (when you do some PostgreSQL maintenance, or when a master node fails, and you promote a replica to be the new master). Ent Framework handles such switches automatically and with no downtime.
 
-### AWS RDS and Reader Endpoint
+### AWS RDS Writer and Reader Endpoints
 
-If you use Amazon's RDS or Aurora, it provides you with just 2 hostnames:
+If you use Amazon's RDS or Aurora, it provides you with 2 hostnames:
 
-* Writer (master) endpoint
-* Reader (random replica) endpoint
+* **Writer** (master) endpoint. When there is an outage on the master node, RDS automatically promotes one of the replicas to be a new master, and changes the writer endpoint routing to point to the new master.
+* **Reader** (random replica) endpoint. If there are multiple replicas in the cluster, RDS routes the connections to a "random" replica (i.e. it's unpredictable, to which one).
+
+From the first glance, it looks like both are pretty useful features.
+
+But it's only the first glance, and it all falls apart when it comes to the replication lag tracking problem.
+
+* **Writer endpoint switch latency**: If there is a master outage, then, even after the new master is promoted in the cluster, the writer endpoint switches to it not immediately: there is some artificial latency,
+* **Reader endpoint routing is unpredictable**: often times, one replica is already "in sync" with the master (relative to the current user; we'll talk about it a bit later), whilst another replica is not yet. The engine like Ent Framework needs to know exactly, which replica does it connect to, to properly track its replication lag and metrics.
+
+So, when working with Ent Framework, it's highly discouraged to use the automatically routed reader and writer endpoints. Instead, you'd better tell the engine the exact list of nodes in the cluster, and let it decide the rest.
+
+Luckily, in Ent Framework, you can even modify the list of nodes in real time, without restarting the Node app. I.e. if you have a periodic timer loop that reads the up-to-date list of cluster nodes and returns it to Ent Framework, it will work straight away and with no downtime. Nodes may appear and disappear from the cluster, and master may switch roles with replicas: Ent Framework will take care of it all and to the needed transparent retries.
+
+This is why in `Cluster` configuration, the list of islands (nodes) is returned by a callback. You can tell this callback to return a different list once the cluster layout changes:
+
+```typescript
+export const cluster = new Cluster({
+  islands: () => [...],
+  ...,
+});
+
+```
