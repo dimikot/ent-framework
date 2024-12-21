@@ -103,12 +103,12 @@ export const cluster = new Cluster({
       no: 0,
       nodes: [
         {
-          name: "pg-001",
+          name: "abc-instance-1",
           host: "abc-instance-1.abcd.us-west-2.rds.amazonaws.com",
           ...,
         },
         {
-          name: "pg-002",
+          name: "abc-instance-3",
           host: "abc-instance-2.efgh.us-west-2.rds.amazonaws.com",
           ...,
         },
@@ -117,5 +117,20 @@ export const cluster = new Cluster({
   ],
   ...,
 });
-
 ```
+
+## VC Timeline and Automatic Lag Tracking
+
+Once you set up the `Cluster` instance, Ent Framework is able to automatically discover, which exact node is master and what nodes are replicas.
+
+Imagine you run the following series of calls:
+
+```typescript
+const topicID = await EntTopic.insert(vc, { ... });
+... // short delay (like 10 ms)
+const topic = await EntTopic.loadX(vc, topicID);
+```
+
+The 1st call will be executed against the master node, but what about the 2nd one? Will a replica be used there?
+
+No, it won't: the 2nd call will also run against the master node, because 10 ms is a too short time interval for the replica to receive that update from master.
