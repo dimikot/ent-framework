@@ -84,4 +84,13 @@ export const cluster = new Cluster({
 });
 ```
 
-Notice that we don't tell it, which endpoint is master and what endpoints are replicas: Ent Framework will detect it automatically.
+Notice that we don't tell it, which endpoint is master and what endpoints are replicas: Ent Framework will detect it automatically.&#x20;
+
+In fact, master and one of replicas may switch roles in real time (when you do some PostgreSQL maintenance, or when a master node fails, and you promote a replica to be the new master). Ent Framework handles such switches automatically and with no downtime.
+
+### AWS RDS and Reader Endpoint
+
+If you use Amazon's RDS or Aurora, it provides you with just 2 hostnames:
+
+* Writer (master) endpoint
+* Reader (random replica) endpoint
