@@ -28,7 +28,7 @@
 
 ## Scalability
 
-* [Replication and Lag Tracking](scalability/replication-and-lag-tracking.md)
+* [Replication and Automatic Lag Tracking](scalability/replication-and-automatic-lag-tracking.md)
 
 ## Advanced
 
