@@ -58,21 +58,9 @@ export const cluster = new Cluster({
     {
       no: 0,
       nodes: [
-        {
-          name: "pg-001a",
-          host: "pg-001a.your-domain.com",
-          ...,
-        },
-        {
-          name: "pg-001b",
-          host: "pg-001b.your-domain.com",
-          ...,
-        },
-        {
-          name: "pg-001c",
-          host: "pg-001c.your-domain.com",
-          ...,
-        },
+        { name: "pg-001a", host: "pg-001a.your-domain.com", ... },
+        { name: "pg-001b", host: "pg-001b.your-domain.com", ... },
+        { name: "pg-001c", host: "pg-001c.your-domain.com", ... },
       ],
     },
   ],
@@ -110,7 +98,23 @@ This is why in `Cluster` configuration, the list of islands (nodes) is returned 
 
 ```typescript
 export const cluster = new Cluster({
-  islands: () => [...],
+  islands: () => [ // <-- callback
+    {
+      no: 0,
+      nodes: [
+        {
+          name: "pg-001",
+          host: "abc-instance-1.abcd.us-west-2.rds.amazonaws.com",
+          ...,
+        },
+        {
+          name: "pg-002",
+          host: "abc-instance-2.efgh.us-west-2.rds.amazonaws.com",
+          ...,
+        },
+      ],
+    },
+  ],
   ...,
 });
 
