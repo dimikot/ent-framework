@@ -6,6 +6,18 @@ In this article, we'll talk about replication.
 
 "Replication" means that you can write the data rows to one database machine, and then, after a short (but significant!) delay, can read the same data from one or more replica machines. PostgreSQL built-in replication ensures that everything written to the master DB will eventually appear in all of the replica DBs.
 
+## Terminology
+
+Before we continue, let's agree on some common terminology.
+
+* **Master and Replica**: you probabl know what's that already. You commit data to the master node, and it eventually appears on all replica nodes.
+* **Replication lag**: time passed between the moment the data is committed to the master and the moment when this data can be read from a replica. Each replica has its own replication lag, since they all replay transactions from the master independently.
+* **Read-After-Write Consistency**: if you write something in some context and then can read it back immediately in the same context, such API is called "read-after-write consistent". Of course, "write to master, read from replica" workflow is not read-after-write consistent (but "write to master, read from master" is). At the same time, Ent Framework API _is_ read-after-write consistent (we'll discuss it in details below).
+* **Eventual consistency**: you write something, and then _eventually_, after some delay (possibly large), you can read it back. "Write to master, read from replica" is an example of an eventually consistent workflow (which is not read-after-write consistent).
+* **Write-Ahead Log (WAL)**: when you commit some data to the master node, transactional databases (like PostgreSQL) first write it to a special "append-only" place called WAL. Once it's done, they save the rows to the database files. (In practice it's way more complicated than that, but for simplicity, we can stop on the simple definition.) WAL is also replayed on all replicas, so it's guaranteed that the replicas follow the master.
+* **Log Sequence Number (LSN)**: on master, a position in WAL after some transaction commit; on replica, a position in WAL up to which the replica has already replayed the commits from master.
+* **Timeline**: in Ent Framework, it's a special property of VC which remembers, what were LSNs on the master node after each write to each microshard/table. It's like a temporal state of the database related to the operations in a particular VC (basically, by a particular user).
+
 ## Set up Replication in PostgreSQL
 
 Ent Framework is just a client library, which means that you need to configure PostgreSQL replication before continuing.
@@ -135,12 +147,3 @@ The 1st call will be executed against the master node, but will a replica be use
 
 Ent Framework knows the it should run a call against the master node, because for the VC used, it remembers the "Write-Ahead Log position" after each write. For replicas, it also knows their WAL position, so before sending a query to some replica, Ent Framework compares the position on master at the time of the last write **in this VC** with the position at the replica.
 
-### Terminology
-
-So far we mentioned several new terms, which require some deeper explanation.
-
-* **Master and Replica**: you commit data to the master node, and it eventually appears on all replica nodes.
-* **Replication lag**: difference between the time the data is committed to the master node and the time when the data can be read from replica nodes.
-* **Write-Ahead Log (WAL)**: when you commit some data to the master node, transactional databases (like PostgreSQL) first write it to a special "append-only" place called WAL. Once it's done, they save the rows to the database files. (In practice it's way more complicated than that, but for simplicity, we can stop on the simple definition.) WAL is also replayed on all replicas, so it's guaranteed that the replicas follow the master.
-* **Log Sequence Number (LSN)**: on master, a position in WAL after some transaction commit; on replica, a position in WAL up to which the replica has already replayed the commits from master.
-* **Timeline**: in Ent Framework, it's a special property of VC which remembers, what were LSNs on the master node after each write to each microshard/table. It's like a temporal state of the database related to the operations in a particular VC (basically, by a particular user).
