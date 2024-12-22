@@ -119,18 +119,26 @@ export const cluster = new Cluster({
 });
 ```
 
-## VC Timeline and Automatic Lag Tracking
+## WAL, LSN, Timeline and Automatic Lag Tracking
 
 Once you set up the `Cluster` instance, Ent Framework is able to automatically discover, which exact node is master and what nodes are replicas.
 
 Imagine you run the following series of calls:
 
 ```typescript
-const topicID = await EntTopic.insert(vc, { ... });
+await EntTopic.insert(vc, { ... });
 ... // short delay (like 10 ms)
-const topic = await EntTopic.loadX(vc, topicID);
+const topics = await EntTopic.select(vc, {...}, 100); // <-- master or replica?
 ```
 
-The 1st call will be executed against the master node, but what about the 2nd one? Will a replica be used there?
+The 1st call will be executed against the master node, but will a replica be used for the 2nd call? No, it won't: the 2nd call will also run against the master node.  10 ms is a too short time interval for the replica to receive the update from master, is if it was queried there, we would not receive the just-inserted topic in the list of all topics returned by `select()` call.
 
-No, it won't: the 2nd call will also run against the master node, because 10 ms is a too short time interval for the replica to receive that update from master.
+Ent Framework knows the it should run a call against the master node, because for the VC used, it remembers the "Write-Ahead Log position" after each write. For replicas, it also knows their WAL position, so before sending a query to some replica, Ent Framework compares the position on master at the time of the last write **in this VC** with the position at the replica.
+
+### Terminology
+
+So far we mentioned several new terms, which require some deeper explanation.
+
+* **Master and Replica**: you commit data to the master node, and it eventually appears on all replica nodes.
+* **Replication lag**: difference between the time the data is committed to the master node and the time when the data can be read from replica nodes.
+* **Write-Ahead Log (WAL)**: when you commit some data to he master node, transactional databases (like PostgreSQL) first write it to a special place called WAL, and once it's done, they save the rows to the database files. (In practice it's way more complicated than that, but for simplicity, we can stop on this definition.)
