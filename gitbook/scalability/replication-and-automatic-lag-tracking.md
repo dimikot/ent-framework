@@ -16,7 +16,6 @@ Before we continue, let's agree on some common terminology.
 * **Eventual consistency**: you write something, and then _eventually_, after some delay (possibly large), you can read it back. "Write to master, read from replica" is an example of an eventually consistent workflow (which is not read-after-write consistent).
 * **Write-Ahead Log (WAL)**: when you commit some data to the master node, transactional databases (like PostgreSQL) first write it to a special "append-only" place called WAL. Once it's done, they save the rows to the database files. (In practice it's way more complicated than that, but for simplicity, we can stop on the simple definition.) WAL is also replayed on all replicas, so it's guaranteed that the replicas follow the master.
 * **Log Sequence Number (LSN)**: on master, a position in WAL after some transaction commit; on replica, a position in WAL up to which the replica has already replayed the commits from master.
-* **Timeline**: in Ent Framework, it's a special property of VC which remembers, what were LSNs on the master node after each write to each microshard/table. It's like a temporal state of the database related to the operations in a particular VC (basically, by a particular user).
 
 ## Set up Replication in PostgreSQL
 
@@ -131,7 +130,7 @@ export const cluster = new Cluster({
 });
 ```
 
-## WAL, LSN, Timeline and Automatic Lag Tracking
+## Automatic Lag Tracking
 
 Once you set up the `Cluster` instance, Ent Framework is able to automatically discover, which exact node is master and what nodes are replicas.
 
@@ -145,5 +144,15 @@ const topics = await EntTopic.select(vc, {...}, 100); // <-- master or replica?
 
 The 1st call will be executed against the master node, but will a replica be used for the 2nd call? No, it won't: the 2nd call will also run against the master node.  10 ms is a too short time interval for the replica to receive the update from master, is if it was queried there, we would not receive the just-inserted topic in the list of all topics returned by `select()` call.
 
-Ent Framework knows the it should run a call against the master node, because for the VC used, it remembers the "Write-Ahead Log position" after each write. For replicas, it also knows their WAL position, so before sending a query to some replica, Ent Framework compares the position on master at the time of the last write **in this VC** with the position at the replica.
+Ent Framework knows the it should run a call against the master node, because for the VC used, it remembers the LSN (write-ahead log position) after each write. For replicas, it also knows their LSNs, so before sending a query to some replica, Ent Framework compares the master LSN at the time of the last write **in this VC** with the LSN at the replica.
+
+### Timelines
+
+Ent Framework provides an "read-after-write consistency" guarantee within the context of the same VC's principal.
+
+The context within which a read-after-write consistency is guaranteed is called a **Timeline**. Timeline is a special property of VC which remembers, what were LSNs on the master node after each write to each microshard/table. It's like a temporal state of the database related to the operations in a particular VC (basically, by a particular user).
+
+Here are several anaglogies to help you better understand, what a timeline is.
+
+1. Frame of reference in special relativity. It is well known that the order of events happened in one frame of reference is not necessarily the same as in some other frame of reference.
 
