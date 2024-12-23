@@ -152,7 +152,8 @@ Ent Framework provides an "read-after-write consistency" guarantee within the co
 
 The context within which a read-after-write consistency is guaranteed is called a **Timeline**. Timeline is a special property of VC which remembers, what were LSNs on the master node after each write to each microshard/table. It's like a temporal state of the database related to the operations in a particular VC (basically, by a particular user).
 
-Here are several anaglogies to help you better understand, what a timeline is.
+Here is an anaglogy to help you better understand, what a timeline is.
 
-1. Frame of reference in special relativity. It is well known that the order of events happened in one frame of reference is not necessarily the same as in some other frame of reference.
+1. **Frame of reference in special relativity.** It is well known that the order of 2 events happened in one frame of reference is not necessarily the same as in some other frame of reference. I.e. light bulbs A and B separated by 1 mln miles away from each other may blink at the same time in one frame of reference, or "first A then B" in another frame, or "first B then A" in a 3rd frame of reference. The order of events is strictly defined only in case if the light (the fastest speed of information transfer) is able to travel between A and B before the bulbs blinked (then, it will be "first A then B"). The same thing applies to timelines in Ent Framework: read-after-write consistency is only guaranteed within the same timeline. Also, one timeline can send a "signal" to another timeline propagating the knowledge about the change, and after that signal is received, the read-after-write consistency will apply to that other timeline.
+2. **Time machine.**
 
