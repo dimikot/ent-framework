@@ -137,12 +137,12 @@ Once you set up the `Cluster` instance, Ent Framework is able to automatically d
 Imagine you run the following series of calls:
 
 ```typescript
-await EntTopic.insert(vc, { ... });
+await EntComment.insert(vc, { ... });
 ... // short delay (like 10 ms)
-const topics = await EntTopic.select(vc, {...}, 100); // <-- master or replica?
+const comments = await EntComment.select(vc, {...}, 100); // <-- master or replica?
 ```
 
-The 1st call will be executed against the master node, but will a replica be used for the 2nd call? No, it won't: the 2nd call will also run against the master node.  10 ms is a too short time interval for the replica to receive the update from master, is if it was queried there, we would not receive the just-inserted topic in the list of all topics returned by `select()` call.
+The 1st call will be executed against the master node, but will a replica be used for the 2nd call? No, it won't: the 2nd call will also run against the master node.  10 ms is a too short time interval for the replica to receive the update from master, is if it was queried there, we would not receive the just-inserted comment in the list of all comments returned by `select()` call.
 
 Ent Framework knows the it should run a call against the master node, because for the VC used, it remembers the LSN (write-ahead log position) after each write. For replicas, it also knows their LSNs, so before sending a query to some replica, Ent Framework compares the master LSN at the time of the last write **in this VC** with the LSN at the replica.
 
@@ -152,8 +152,25 @@ Ent Framework provides an "read-after-write consistency" guarantee within the co
 
 The context within which a read-after-write consistency is guaranteed is called a **Timeline**. Timeline is a special property of VC which remembers, what were LSNs on the master node after each write to each microshard/table. It's like a temporal state of the database related to the operations in a particular VC (basically, by a particular user).
 
-Here is an anaglogy to help you better understand, what a timeline is.
+Here is an analogy to help you better understand, what a timeline is: **frame of reference in special relativity.** It is well known that the order of 2 events happened in one frame of reference is not necessarily the same as in some other frame of reference.&#x20;
 
-1. **Frame of reference in special relativity.** It is well known that the order of 2 events happened in one frame of reference is not necessarily the same as in some other frame of reference. I.e. light bulbs A and B separated by 1 mln miles away from each other may blink at the same time in one frame of reference, or "first A then B" in another frame, or "first B then A" in a 3rd frame of reference. The order of events is strictly defined only in case if the light (the fastest speed of information transfer) is able to travel between A and B before the bulbs blinked (then, it will be "first A then B"). The same thing applies to timelines in Ent Framework: read-after-write consistency is only guaranteed within the same timeline. Also, one timeline can send a "signal" to another timeline propagating the knowledge about the change, and after that signal is received, the read-after-write consistency will apply to that other timeline.
-2. **Time machine.**
+E.g. events "light bulb A blinked" and "bulb B blinked" separated by 1 mln miles may happen at the same time in one frame of reference, or "first A then B" in another frame, or "first B then A" in a 3rd frame of reference. The order of events is strictly defined only in case if the light (the fastest speed of signal propagation possible) is able to travel between A and B (then, it will be "first A then B").
+
+The same thing applies to timelines in Ent Framework: read-after-write consistency is only guaranteed within the same timeline. Also, one timeline can send a "signal" to another timeline propagating the knowledge about the change. After that signal is received, the read-after-write consistency will apply to another timeline.
+
+```typescript
+app.post("/comments", async (req, res) => {
+  await EntComment.insert(req.vc, { ... });
+  req.session.timelines = vc.serializeTimelines();
+  return res.redirect("/comments");
+});
+
+app.get("/comments", async (req, res) => {
+  req.vc.deserializeTimelines(req.sessdion.timelines);
+  const comments = await EntComment.select(req.vc, {...}, 100);
+  return res.render("comments.tpl", { comments });
+});
+```
+
+
 
