@@ -165,7 +165,7 @@ Consider the following pseudo-code:
 ```typescript
 app.post("/comments", async (req, res) => {
   await EntComment.insert(req.vc, { ... });
-  req.session.timelines = vc.serializeTimelines();
+  req.session.timelines = req.vc.serializeTimelines();
   return res.redirect("/comments");
 });
 
@@ -187,9 +187,31 @@ The word "after" is intentionally enclosed in quotes: the same way as there is n
 
 ### Propagating Timelines via a Pub-Sub Engine
 
-There are still cases where we still want one user to immediately see the data modified by another user, i.e. establish some cross-user read-after-write consistency.
+There are still cases where we want one user to immediately see the data modified by another user, i.e. establish some cross-user read-after-write consistency.
 
-If we think a little bit about it, we realize that it happens only in one use case: when a data modification made by user A causes other users (B, C etc.) to "unfreeze and rerender". I.e. we must already have a transport to propagate that "fanout-unfreeze" signal. So all we need is to just add a payload (with serialized timelines) as a piggy-back to this signal, and then, users B, C etc. will establish a read-after-write consistency with user A's write.
+If we think about it, we realize that it happens only in one use case: when a data modification made by user A causes other users (B, C etc.) to "unfreeze and re-render". I.e. we must already have a transport to propagate that "fanout-unfreeze" signal. So all we need is to just add a payload (with serialized timelines) as a piggy-back to this signal, and then, users B, C etc. will establish a read-after-write consistency with user A's write.
+
+```typescript
+app.post("/:topic_id/comments", async (req, res) => {
+  const topicID = req.params.topic_id;
+  await EntComment.insert(req.vc, { topic_id: topicID, ... });
+  await pubSub.publish({
+    topicID,
+    timelines: req.vc.serializeTimelines(),
+  });
+});
+
+...
+pubSub.subscribe(async (payload) => {
+  vc.deserializeTimelines(payload.timelines);
+  const comments = await EntComment.select(
+    req.vc,
+    { topic_id: payload.topicID, ... }, 
+    100,
+  );
+  await sendToClient(comments);
+});
+```
 
 
 
