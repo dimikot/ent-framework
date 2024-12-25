@@ -158,6 +158,10 @@ E.g. events "light bulb A blinked" and "bulb B blinked" separated by 1 mln miles
 
 The same thing applies to timelines in Ent Framework: read-after-write consistency is only guaranteed within the same timeline. Also, one timeline can send a "signal" to another timeline propagating the knowledge about the change. After that signal is received, the read-after-write consistency will apply to another timeline.
 
+### Propagating Timelines via Session
+
+Consider the following pseudo-code:
+
 ```typescript
 app.post("/comments", async (req, res) => {
   await EntComment.insert(req.vc, { ... });
@@ -171,6 +175,21 @@ app.get("/comments", async (req, res) => {
   return res.render("comments.tpl", { comments });
 });
 ```
+
+The browser sends a POST request to `/comments`, then a new comment is inserted in the database, and the browser is immediately redirected to a GET `/comments` endpoint. Since we serialize all VC's timelines in the POST endpoint ("1st frame of reference") and then deserializes them in the GET endpoint ("2nd frame of reference"), the second VC received a "signal" from the first VC, and it established a strong read-after-write consistency between them. So, the 2nd request will be served by the master node.
+
+Notice that the above way of timelines propagation (via session) only works in the context of a single user (single session). Imagine we have the following sequence of events:
+
+1. User A called `POST /comments` and added a comment to the master database.
+2. Immediately "after" that, user B called `GET /comments` to see the list of comments. Since the timelines of user B are in another "frame of reference", the request will be served by a replica node (not by master), which means that user B will likely see the old data.
+
+The word "after" is intentionally enclosed in quotes: the same way as there is no absolute sequentiality in special relativity, there is also no guarantee regarding read-after-write consistency between different timelines. And it is generally fine: we don't care whether user B loaded the old or the new data; even if they are lucky and got the new data, they could instead have just a little higher network latency, or pressed Reload button a little earlier, so they could have seen the old data even in the case there was no replicas in the cluster at all, and all requests would have served by the master node only.
+
+### Propagating Timelines via a Pub-Sub Engine
+
+There are still cases where we still want one user to immediately see the data modified by another user, i.e. establish some cross-user read-after-write consistency.
+
+If we think a little bit about it, we realize that it happens only in one use case: when a data modification made by user A causes other users (B, C etc.) to "unfreeze and rerender". I.e. we must already have a transport to propagate that "fanout-unfreeze" signal. So all we need is to just add a payload (with serialized timelines) as a piggy-back to this signal, and then, users B, C etc. will establish a read-after-write consistency with user A's write.
 
 
 
