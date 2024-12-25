@@ -150,13 +150,11 @@ Ent Framework knows the it should run a call against the master node, because fo
 
 Ent Framework provides an "read-after-write consistency" guarantee within the context of the same VC's principal.
 
-The context within which a read-after-write consistency is guaranteed is called a **Timeline**. Timeline is a special property of VC which remembers, what were LSNs on the master node after each write to each microshard/table. It's like a temporal state of the database related to the operations in a particular VC (basically, by a particular user).
+The context within which a read-after-write consistency is guaranteed is called a **Timeline**. Timeline is a special property of VC which remembers, what were LSNs on the master node after each write to each microshard+table. It's like a temporal state of the database related to the operations in a particular VC (basically, by a particular user).
 
-Here is an analogy to help you better understand, what a timeline is: **frame of reference in special relativity.** It is well known that the order of 2 events happened in one frame of reference is not necessarily the same as in some other frame of reference.&#x20;
+Here is a physics analogy to help you better understand, what a timeline is: **frame of reference in special relativity.** It is well known that the order of 2 events happened in one frame of reference is not necessarily the same as in some other frame of reference. E.g. events "light bulb A blinked" and "bulb B blinked" separated by 1 mln miles may happen at the same time in one frame of reference, or "first A then B" in another frame, or "first B then A" in a 3rd frame of reference. The order of events is strictly defined only in case when the light (the fastest speed of signal propagation possible) is able to travel between A and B (then, it will be "first A then B"). I.e. some information needs to be passed from A to B, and only then we can tell for sure that "B happened after A" and not vice versa.
 
-E.g. events "light bulb A blinked" and "bulb B blinked" separated by 1 mln miles may happen at the same time in one frame of reference, or "first A then B" in another frame, or "first B then A" in a 3rd frame of reference. The order of events is strictly defined only in case if the light (the fastest speed of signal propagation possible) is able to travel between A and B (then, it will be "first A then B").
-
-The same thing applies to timelines in Ent Framework: read-after-write consistency is only guaranteed within the same timeline. Also, one timeline can send a "signal" to another timeline propagating the knowledge about the change. After that signal is received, the read-after-write consistency will apply to another timeline.
+The same thing applies to timelines in Ent Framework: read-after-write consistency is only guaranteed within the same timeline. Also, one timeline can send a "signal" to another timeline propagating the knowledge about the change. After that signal is received, the read-after-write consistency will apply to across those timelines.
 
 ### Propagating Timelines via Session
 
@@ -176,14 +174,24 @@ app.get("/comments", async (req, res) => {
 });
 ```
 
-The browser sends a POST request to `/comments`, then a new comment is inserted in the database, and the browser is immediately redirected to a GET `/comments` endpoint. Since we serialize all VC's timelines in the POST endpoint ("1st frame of reference") and then deserializes them in the GET endpoint ("2nd frame of reference"), the second VC received a "signal" from the first VC, and it established a strong read-after-write consistency between them. So, the 2nd request will be served by the master node.
+The browser sends a `POST /comments`  request, so a new comment is inserted in the database, and the browser is immediately redirected to a `GET /comments`  endpoint. Since we serialize all VC's timelines in the POST endpoint ("1st frame of reference") and then deserialize them in the GET endpoint ("2nd frame of reference"), the second VC receives a "↯-signal" from the first VC, and it establishes a strong read-after-write consistency between them. Thus, the 2nd request will be served by the master node and read the recent data.
 
-Notice that the above way of timelines propagation (via session) only works in the context of a single user (single session). Imagine we have the following sequence of events:
+<figure><img src="../.gitbook/assets/image (13).png" alt="" width="563"><figcaption></figcaption></figure>
 
-1. User A called `POST /comments` and added a comment to the master database.
-2. Immediately "after" that, user B called `GET /comments` to see the list of comments. Since the timelines of user B are in another "frame of reference", the request will be served by a replica node (not by master), which means that user B will likely see the old data.
+### Independent Timelines Use Case
 
-The word "after" is intentionally enclosed in quotes: the same way as there is no absolute sequentiality in special relativity, there is also no guarantee regarding read-after-write consistency between different timelines. And it is generally fine: we don't care whether user B loaded the old or the new data; even if they are lucky and got the new data, they could instead have just a little higher network latency, or pressed Reload button a little earlier, so they could have seen the old data even in the case there was no replicas in the cluster at all, and all requests would have served by the master node only.
+Notice that the above way of timelines propagation (via session) only works in the context of a single user (single session), when we're able to send a "↯-signal" from the write event to the read event.
+
+Now let's see what happens when we have two independent users, Alice and Bob.
+
+1. Alice calls `POST /comments` and adds a comment to the master database.
+2. Immediately "after" that, Bob calls `GET /comments` to see the list of comments.
+
+<figure><img src="../.gitbook/assets/image (14).png" alt="" width="563"><figcaption></figcaption></figure>
+
+Since the timelines of Bob are in another "frame of reference" than Alice's, and we did not send any signal from Alice to Bob, the request will likely be served from a replica node (not from the master), which means that Bob will likely see the old data.
+
+The same way as there is no absolute sequentiality in special relativity, there is also no guarantee regarding read-after-write consistency between different timelines. And it is generally fine: we don't care whether Bob loaded the old or the new data. Even if he is lucky and got the new data, he could instead have had just a little higher network latency, or pressed Reload button a little earlier, so he could have seen the old data even in the case there was no replicas in the cluster at all, and all requests would have been served by the master node only.
 
 ### Propagating Timelines via a Pub-Sub Engine
 
