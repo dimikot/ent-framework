@@ -189,9 +189,10 @@ The word "after" is intentionally enclosed in quotes: the same way as there is n
 
 There are still cases where we want one user to immediately see the data modified by another user, i.e. establish some cross-user read-after-write consistency.
 
-If we think about it, we realize that it happens only in one use case: when a data modification made by user A causes other users (B, C etc.) to "unfreeze and re-render". I.e. we must already have a transport to propagate that "fanout-unfreeze" signal. So all we need is to just add a payload (with serialized timelines) as a piggy-back to this signal, and then, users B, C etc. will establish a read-after-write consistency with user A's write.
+If we think about it, we realize that it happens only in one use case: when a data modification made by user A causes other users (B, C etc.) to "unfreeze and re-render". I.e. we must already have a transport to propagate that "fanout-unfreeze" signal. So all we need is to just add a payload (with serialized timelines) as a piggy-back to this signal, and then, users B, C etc. will establish a read-after-write consistency with user A's prior write.
 
 ```typescript
+// Ran by a user A who adds a comment.
 app.post("/:topic_id/comments", async (req, res) => {
   const topicID = req.params.topic_id;
   await EntComment.insert(req.vc, { topic_id: topicID, ... });
@@ -201,7 +202,8 @@ app.post("/:topic_id/comments", async (req, res) => {
   });
 });
 
-...
+// Ran by each user (B, C etc.) to receive updates related to a
+// particular topic (rough pseudo-code).
 pubSub.subscribe(async (payload) => {
   vc.deserializeTimelines(payload.timelines);
   const comments = await EntComment.select(
@@ -213,5 +215,14 @@ pubSub.subscribe(async (payload) => {
 });
 ```
 
+Noitice that VC's method `deserializeTimelines()` **merges** the received timelines signal into the current VC's timelines. You can call call it as many times as needed, when you receive a pub-sub signal.
 
+### What Data is Stored In  a Timeline
+
+VC timelines are basically an array of the following structures:
+
+* **shard**: microshard number where a write happened;
+* **table**: the name of the table experienced a write in that microshard;
+* **LSN**: a write-ahead log position after the above write;
+* **expiration time**: a timestamp where the above information stop to make sense, and Ent Framework treats it as non-existing.
 
