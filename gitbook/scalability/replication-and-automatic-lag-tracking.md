@@ -165,7 +165,7 @@ app.post("/comments", async (req, res) => {
 });
 
 app.get("/comments", async (req, res) => {
-  req.vc.deserializeTimelines(req.sessdion.timelines);
+  req.vc.deserializeTimelines(req.session.timelines);
   const comments = await EntComment.select(req.vc, {...}, 100);
   return res.render("comments.tpl", { comments });
 });
