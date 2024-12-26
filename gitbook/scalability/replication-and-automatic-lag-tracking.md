@@ -6,6 +6,10 @@ In this article, we’ll focus on replication.
 
 “Replication” means you can write data to a single database machine and, after a short (but noticeable) delay, read the same data from one or more replica machines. PostgreSQL’s built-in replication ensures that all data written to the master database eventually appears on every replica.
 
+{% hint style="info" %}
+By data propagation method, there are asynchronous and synchronous replication approaches. And by node roles, there are singe-master and multi-master configurations. They all have different trade-offs. In this article, by "replication" we mean the most popular setup: "asynchronous single-master replication".
+{% endhint %}
+
 ## Terminology
 
 Before we continue, let's agree on a common terminology.
@@ -80,7 +84,7 @@ export const cluster = new Cluster({
 });
 ```
 
-Notice that we don't tell it, what endpoint is master and what endpoints are replicas: Ent Framework will detect it automatically.&#x20;
+Notice that we don't tell it, what endpoint is master and what endpoints are replicas: Ent Framework will detect it automatically.
 
 In fact, master and one of replicas may switch roles in real time (when you do some PostgreSQL maintenance, or when a master node fails, and you promote a replica to be the new master). Ent Framework handles such switches automatically and with no downtime.
 
@@ -139,7 +143,7 @@ await EntComment.insert(vc, { ... });
 const comments = await EntComment.select(vc, {...}, 100); // <-- master or replica?
 ```
 
-The 1st call will be executed against the master node, but will a replica be used for the 2nd call? No, it won't: the 2nd call will also run against the master node.  10 ms is a too short time interval for the replica to receive the update from master. If it was queried from a replica, we would not receive the just-inserted comment in the list of all comments returned by `select()` call.
+The 1st call will be executed against the master node, but will a replica be used for the 2nd call? No, it won't: the 2nd call will also run against the master node. 10 ms is a too short time interval for the replica to receive the update from master. If it was queried from a replica, we would not receive the just-inserted comment in the list of all comments returned by `select()` call.
 
 Ent Framework knows that in should use the master for reading, because for the VC used, it remembers the LSN (write-ahead log position) after each write. For replicas, it also knows their LSNs, so before sending a query to some replica, Ent Framework compares the master LSN at the time of the last write **in this VC** with the LSN at the replica.
 
@@ -171,7 +175,7 @@ app.get("/comments", async (req, res) => {
 });
 ```
 
-The browser sends a `POST /comments`  request, so a new comment is inserted in the database, and the browser is immediately redirected to a `GET /comments`  endpoint. Since we serialize all VC's timelines in the POST endpoint ("1st frame of reference") and then deserialize them in the GET endpoint ("2nd frame of reference"), the second VC receives a "↯-signal" from the first VC, and it establishes a strong read-after-write consistency between them. Thus, the 2nd request will be served by the master node and read the recent data.
+The browser sends a `POST /comments` request, so a new comment is inserted in the database, and the browser is immediately redirected to a `GET /comments` endpoint. Since we serialize all VC's timelines in the POST endpoint ("1st frame of reference") and then deserialize them in the GET endpoint ("2nd frame of reference"), the second VC receives a "↯-signal" from the first VC, and it establishes a strong read-after-write consistency between them. Thus, the 2nd request will be served by the master node and read the recent data.
 
 <figure><img src="../.gitbook/assets/image (13).png" alt="" width="563"><figcaption><p>The changes happened at "W" will be visible at "R"</p></figcaption></figure>
 
@@ -238,4 +242,3 @@ VC timelines are basically an array of the following structures:
 There is no magic here: to propagate the minimal read-after-write consistency signal, we must know, which table at which microshard experienced a write.
 
 Notice one important thing: since there are no JOINs in Ent Framework, we read data from different microshards and track their timelines independently. That allows to assemble a read-after-write consistent snapshot from multiple microshards when reading.
-
