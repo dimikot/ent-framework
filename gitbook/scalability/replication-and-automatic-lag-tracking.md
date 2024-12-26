@@ -1,10 +1,10 @@
 # Replication and Automatic Lag Tracking
 
-The crucial feature of Ent Framework which defines its existence is built-in support for replication (vertical scaling) and microsharding (horizontal scaling).
+Replication (vertical scaling) and microsharding (horizontal scaling) are the two key features that define Ent Framework—without them, the library would lose its core purpose.
 
-In this article, we'll talk about replication.
+In this article, we’ll focus on replication.
 
-"Replication" means that you can write the data rows to one database machine, and then, after a short (but significant!) delay, read the same data from one or more replica machines. PostgreSQL built-in replication ensures that everything written to the master DB will _eventually_ appear on all of the replica DBs.
+“Replication” means you can write data to a single database machine and, after a short (but noticeable) delay, read the same data from one or more replica machines. PostgreSQL’s built-in replication ensures that all data written to the master database eventually appears on every replica.
 
 ## Terminology
 
