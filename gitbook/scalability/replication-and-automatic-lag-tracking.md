@@ -242,3 +242,9 @@ VC timelines are basically an array of the following structures:
 There is no magic here: to propagate the minimal read-after-write consistency signal, we must know, which table at which microshard experienced a write.
 
 Notice one important thing: since there are no JOINs in Ent Framework, we read data from different microshards and track their timelines independently. That allows to assemble a read-after-write consistent snapshot from multiple microshards when reading.
+
+## Conclusion
+
+In the examples above, we called `serializeTimelines()` and `deserializeTimelines()` methods manually on every endpoint. In real projects though, you most likely don't want to call them explicitly, since it produces too much boilerplate in the code.
+
+Instead, a recommended approach is to embed the above calls into your higher-level framework. E.g. a middleware can call `deserializeTimelines()` very early in the request processing lifecycle (and for all requests), and another middleware may call `serializeTimelines()` right before the response is flushed back to the browser. You may also want to store the timelines not in the session, but in some other ephemeral storage, like Redis. Each framework has its own way of processing the requests, so it's up to you, how you want to use those low-level Ent Framework methods.
