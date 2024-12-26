@@ -6,6 +6,11 @@ In this article, we’ll focus on replication.
 
 “Replication” means you can write data to a single database machine and, after a short (but noticeable) delay, read the same data from one or more replica machines. PostgreSQL’s built-in replication ensures that all data written to the master database eventually appears on every replica.
 
+There are 2 main reasons why replicatiomn has to be used in pretty much every serious service:
+
+1. **Fault tolerance.** The service should survive (ideally with no downtime) in case one single database node goes down. So for every database, you must have at least 2 copies on 2 independent hardware nodes.
+2. **Scaling reads.** In most of the projects, there are way more reads than writes happen. Since we need replicas for fault tolerance anyways, it makes sense to also use them for read queries.
+
 {% hint style="info" %}
 By data propagation method, there are asynchronous and synchronous replication approaches. And by node roles, there are singe-master and multi-master configurations. They all have different trade-offs. In this article, by "replication" we mean the most popular setup: "asynchronous single-master replication".
 {% endhint %}

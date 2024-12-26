@@ -29,6 +29,7 @@
 ## Scalability
 
 * [Replication and Automatic Lag Tracking](scalability/replication-and-automatic-lag-tracking.md)
+* [Sharding (Microsharding)](scalability/sharding-microsharding.md)
 
 ## Advanced
 
