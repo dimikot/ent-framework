@@ -33,25 +33,48 @@ We use the word "node" to mean "a PostgreSQL running on some machine, available 
 
 ### Island
 
-**Island** is a group of PostgreSQL nodes (machines): 1 master and N replicas. Each node on some island effectively holds the same set of data as all other nodes on that island. Data replication across the nodes may be done using the standard PostgreSQL physical replication mechanisms:
+In Ent Framework, "island" is a group of PostgreSQL nodes (machines): 1 master and N replicas. Each node on some island effectively holds the same set of data as all other nodes on that island. Data replication across the nodes may be done using the standard PostgreSQL physical replication mechanisms:
 
-* managed by [repmgr](https://www.repmgr.org/) or other high level tools to introduce failover/switchover (in PostgreSQL terminology, "island" is sometimes referred to as "replication cluster");
+* managed by [repmgr](https://www.repmgr.org/) or other high level tools, to introduce failover/switchover;
 * or managed by AWS RDS/Aurora (in RDS terminology, "island" is called "database").
+
+Every vendor uses different words to name what we call "island" here:
+
+* in PostgreSQL documentation, there is no common term; the closest one is probably "replication cluster"
+* in AWS RDS and Aurora, they call it "database"
+* in AWS Elasticsearch or OpenSearch services, they call it "domain"
+* in AWD Elasticache Redis, they call it "cluster"
+
+The name "island" is a common way to refer all of the above, plus we emphasize the logical nature of the island and that microshards can be migrated from one island to another, the same way as people sail in between them.
 
 ### Microshard (Shard)
 
-Microshard is a minimal unit of data rebalancing. Each shard is a PG schema, example naming: `sh0001`, `sh4242`, `sh0000`. Typically, there are multiple microshards (say, \~50) on each PostgreSQL island, and microshards are randomly distributed across islands (uniformly by the total size).&#x20;
+Microshard is a minimal unit of data rebalancing. Each shard is a PostgreSQL schema, example naming: `sh0001`, `sh4242`, `sh0000`. Typically, there are multiple microshards (say, \~50) on each island, and microshards are randomly distributed across islands (uniformly by the total size).&#x20;
 
-* Once some data rows are written to a Microshard, those data rows never move to another Microshard. I.e. Microshard is first determined at row creation time and then never changes.
-* Microshards can be moved as a whole from one Island to another without downtime. Since each Microshard is small, it's a fast process.
-* One can allocate more Microshards with no downtime (e.g. if we have 300 already, we can add 200 more distributed across the existing Islands uniformly, and the newly created objects will start being put there too).
-* There can be up to 1000 Microshards (the limit is arbitrary though).
-* A Microshard PG schema can be inactive or active. If it's inactive, it is in the process of allocation, or it has just been moved from one Island to another (the schema got activated on the new Island and got inactivated on an old Island).
+* Once some data rows are written to a microshard, those data rows never move to another microshard. I.e. microshard is first determined at row creation time and then never changes.
+* Microshards can be moved **as a whole** from one island to another without downtime. Since each microshard is small, it's a fast process.
+* One can allocate more microshards with no downtime (e.g. if we have 300 already, we can add 200 more and distribute them across the existing islands uniformly, so the newly created objects will start being put there too).
+* There can be up to 10000 microshards (the limit is arbitrary though, you can make it larger if needed). Basically, the maximum number of microshards is determined by the PostgreSQL schemas naming conventions: e.g. `sh1235` or `sh0012` means that there may only be up to 10000 microshards.
+* A microshard schema in PostgreSQL can be **inactive** or **active**. If it's inactive, it is in the process of allocation, or it has just been moved from one island to another (the schema got activated on the new island and got inactivated on an old island).
 
-**Global Microshard, or Shard 0**: typically, there is a "special" global shard, which lives on a separate (bigger) **Island 0**. Tables in Shard 0 do not exist in other Microshards and have a low number of rows with low write and high read volume (e.g. user accounts, workspace metadata etc.).**Cluster** (or Region) is a set of Islands used by the same regional app. E.g. there can be a EU Cluster which consists of 4 Islands, and each Island has 1 master and 2 replica PG machines: 4\*(1+2) = 12 PG machines. New Island can be added to the Cluster, or existing Island can be removed from the Cluster (after all Microshards are moved out of it).It's important to understand that there are 2 points of view on a Cluster:
+### **Global Microshard, Shard 0**
 
-* Physical: Cluster is a set of Islands (doesn't matter which Microshards are on each Island).
-* Logical: Cluster is a set of Microshards (doesn't matter on which exact Islands they live).
+Typically, there is a "special" global microshard, which lives on a separate (with more CPU and more replicas) **island 0**. Tables in shard 0 do not exist in other microshards and have a low number of rows with low write and high read volume (e.g. user accounts, workspace metadata etc.).
+
+This setup is not mandatory though: it's perfectly fine to have the global microshard located on an island with other microshards; it's just a matter of load balancing.
+
+### **Cluster**
+
+Cluster is a set of islands used by the same app. E.g. there can be a European cluster which consists of 4 islands, and each island has 1 master and 2 replica nodes: 4\*(1+2) = 12 PostgreSQL machines. New island can be added to the cluster, or existing island can be removed from the cluster (after all microshards are moved out of it).
+
+It's important to understand that there are 2 points of view on a cluster:
+
+* **Physical:** cluster is a set of islands (doesn't matter which microshards are on each island).
+* **Logical:** cluster is a set of microshards (doesn't matter which exact islands they live on).
+
+{% hint style="info" %}
+Notice that in PostgreSQL documentation, "cluster" means a smaller thing (basically, a PostgreSQL installation on a particular machine). Even "replication cluster" is smaller there (a group of master + replica nodes). In Ent Framework, "cluster" is a more overall concept.
+{% endhint %}
 
 **Physical Table** is a regular PG table living on some PG machine of an Island in some Microshard. A Table can be "sharded" (Logical Table or just Table): in this case, there are effectively M tables in M Microshards, all having the same DDL structure. There is a framework which ensures that all those M tables have the same schema.
 
