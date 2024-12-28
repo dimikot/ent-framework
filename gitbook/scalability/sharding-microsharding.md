@@ -73,15 +73,25 @@ It's important to understand that there are 2 points of view on a cluster:
 * **Logical:** cluster is a set of microshards (doesn't matter which exact islands they live on).
 
 {% hint style="info" %}
-Notice that in PostgreSQL documentation, "cluster" means a smaller thing (basically, a PostgreSQL installation on a particular machine). Even "replication cluster" is smaller there (a group of master + replica nodes). In Ent Framework, "cluster" is a more overall concept.
+Notice that in PostgreSQL documentation, "cluster" means a smaller thing (a PostgreSQL installation on a particular machine, what we call "node' above). Even "replication cluster" is smaller there (a group of master + replica nodes, wha we call "island"). In Ent Framework, "cluster" is a more overall concept: "group of islands" and "group of shards".
 {% endhint %}
 
-**Physical Table** is a regular PG table living on some PG machine of an Island in some Microshard. A Table can be "sharded" (Logical Table or just Table): in this case, there are effectively M tables in M Microshards, all having the same DDL structure. There is a framework which ensures that all those M tables have the same schema.
+### **Physical Table**
 
-**Discovery workflow** in the framework determines, which Island each Microshard is located on. It happens at run-time, automatically. If a Microshard has just been moved to another Island, then the framework picks up this information immediately (with retries if needed).
+Physical table a regular PostgreSQL table living on some node of an island in some microshard. A table can be "sharded" ("logical table" or just "table"): in this case, there are effectively M physical tables in M microshards, all having the same DDL structure. To ensure that all those M tables have the same schema, a database migration tool (such as pg-mig) needs to be used.
 
-**Microshards Rebalancing** calculates, what would be an optimal distribution of Microshards across Islands (based on Microshard sizes), and then performs a set of moves, in a controlled parallel way.
+### **Discovery Workflow**
 
-* Rebalancing needs to run when adding a new Island to a Cluster, to evenly distribute the empty Microshards among Islands. It's a manually initiated process.
-* Rebalancing is used to major-upgrade PG version: first, all Microshards are moved away from an Island, then the empty Island gets re-created from scratch, and then Microshards are rebalanced back.
+In Ent Framework, the engine needs to determine, which island each microshard is located on. This process is called "shards discovery". It happens at run-time, automatically. If a microshard has just been moved to another island, then the framework picks up this information immediately (with retries if needed).
+
+Another kind of workflow is "master-replica discovery": master node of some island may fail at any time, and in this case, one of the replicas will be promoted to become the new master. Although the failover and replica promotion is not a part of Ent Framework (it's a feature of the replication toolset, like repmgr or AWS RDS), Ent Framework needs to react on the promotion promptly and with no downtime.
+
+### **Microshards Rebalancing**
+
+During the reblancing, the tool determines, what would be an optimal distribution of microshards across islands (based on microshard sizes), and then performs a set of moves, in a controlled parallel way.
+
+* Rebalancing needs to run when you add a new island to the cluster, to evenly distribute the empty microshards among islands.
+* Rebalancing is used to upgrade between the major PostgreSQL versions. First, all microshards are moved away from an island, then the empty island gets re-created from scratch, and then microshards are rebalanced back.
+
+Although shards rebalancing is not a part of Ent Framework (you can use e.g. pg-microsharding library), the engine still needs to be aware of a temporary "blip" which appears when a shard is deactivated on an old island, but is not yet activated on a new one.
 
