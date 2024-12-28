@@ -96,3 +96,22 @@ During the reblancing, the tool (such as pg-microsharding) determines, what woul
 
 Although shards rebalancing is not a part of Ent Framework (you can use e.g. pg-microsharding tool), the engine still needs to be aware of a temporary "blip" which appears when a shard is deactivated on an old island, but is not yet activated on a new one.
 
+## Locating a Shard
+
+Assume we have the following call:
+
+```typescript
+const topic = EntTopic.loadX(vc, id);
+```
+
+When topics are distributed across multiple microshards, Ent Framework decides, which microshard should it query the data from. It uses the ID prefix:
+
+```
+3042812345678
+```
+
+To use the default microshard location strategy, there is a convention on ID format, it must consist of 3 parts:
+
+* "3" (Environment Number): you may want to make your IDs globally unique across the entire world, so all IDs in dev environment will start from e.g. 1, IDs in staging with 2, and IDs in production with 3.
+* "0428" (Shard Number): this is where the microshard number reside in the ID structure. In the code, it is also referred as "Shard No".
+*
