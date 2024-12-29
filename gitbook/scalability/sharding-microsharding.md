@@ -58,28 +58,40 @@ Microshard is a minimal unit of data rebalancing. Each shard is a PostgreSQL sch
 * There can be up to 10000 microshards (the limit is arbitrary, you can make it larger if needed). The maximum number of microshards is determined by the PostgreSQL schemas naming convention: e.g. `sh1235` or `sh0012` names mean that there may only be up to 10000 microshards.
 * A microshard schema in the database can be **inactive** or **active**. If it's inactive, it is in the process of allocation, or it has just been moved from one island to another. The schema gets "activated" on the new island and gets inactivated on an old island.
 
-### **Global Microshard, Shard 0**
-
-Typically, there is a "special" global microshard, which lives on a separate (with more CPU and more replicas) **island 0**. Tables in shard 0 do not exist in other microshards and have a low number of rows with rare writes and frequent reads (e.g. user accounts, workspace metadata etc.).
-
-This setup is not mandatory though: it's perfectly fine to have the global microshard located on an island with other microshards; it's just a matter of load balancing.
-
 ### **Cluster**
 
-Cluster is a set of islands used by the same app. E.g. there can be a cluster which consists of 4 islands, and each island has 1 master and 2 replica nodes: 4\*(1+2) = 12 PostgreSQL machines. New island can be added to the cluster, or existing island can be removed from the cluster (after all microshards are moved out of it).
+Cluster is a set of islands used by the same app. E.g. there can be a cluster which consists of 2 islands, and each island has 1 master and 2 replica nodes: 2\*(1+2) = 6 PostgreSQL machines. New island can be added to the cluster, or existing island can be removed from the cluster (after all microshards are moved out of it).
+
+<figure><img src="../.gitbook/assets/image (2).png" alt="" width="563"><figcaption></figcaption></figure>
 
 It's important to understand that there are 2 points of view on a cluster:
 
-* **Physical:** cluster is a set of islands (doesn't matter which microshards are on each island).
-* **Logical:** cluster is a set of microshards (doesn't matter which exact islands they live on).
+* **Physical:** cluster is a set of islands (it doesn't matter, which microshards are on each island).
+* **Logical:** cluster is a set of microshards (it doesn't matter, which islands the microshards live on).
 
 {% hint style="info" %}
 Notice that in PostgreSQL documentation, "cluster" means a smaller thing (a PostgreSQL installation on a particular machine, what we call "node" above). Even "replication cluster" is smaller there (a group of master + replica nodes, what we call "island"). In Ent Framework, "cluster" is a more overall concept: "group of islands" and "group of shards".
 {% endhint %}
 
-### **Physical Table**
+### **Global Microshard, Shard 0**
 
-Physical table a regular PostgreSQL table living on some node of an island in some microshard. A table can be "sharded" ("logical table" or just "table"): in this case, there are effectively M physical tables in M microshards, all having the same DDL structure. To ensure that all those M tables have the same schema, a database migration tool (such as pg-mig) needs to be used; that is beyond the scope of Ent Framework.
+Typically, there is a "special" global microshard, which lives on a separate (with more CPU and more replicas) **island 0**. Tables in shard 0 do not exist in other microshards and have a low number of rows with rare writes and frequent reads (e.g. organizations, workspace metadata etc.).
+
+<figure><img src="../.gitbook/assets/image (3).png" alt="" width="563"><figcaption></figcaption></figure>
+
+This setup is not mandatory though: it's perfectly fine to have the global microshard 0 located on an island together with other microshards; it's just a matter of load balancing.
+
+### **Logical and Physical Tables**
+
+Imagine our cluster has 3 "logical tables": `users`, `topics` and `comments` .
+
+A logical table (e.g. `users`) can be "sharded": in this case, there are effectively M physical tables in M microshards, all having the same DDL structure. Thus, physical table is a regular PostgreSQL table living on some master+replicas of an island in some microshard.&#x20;
+
+To ensure that all M physical tables for the same logical table have the identical schema, a database migration tool (such as pg-mig) needs to be used; that is beyond the scope of Ent Framework, but the tools work in tandem.
+
+<figure><img src="../.gitbook/assets/image (4).png" alt="" width="563"><figcaption></figcaption></figure>
+
+On the picture, there are 3 logical tables (`users`, `topics` and `comments`). The corresponding physical tables live on 4 microshards, and the microshards live on 2 islands. E.g. logical table `users` is represented by 4 physical tables `users` in 4 microshards. Since microshards lives on some island, and island consists of master and replica nodes, there are essentially replicas for every physical table in the cluster.
 
 ### **Discovery Workflow**
 
