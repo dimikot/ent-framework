@@ -29,9 +29,9 @@
 ## Scalability
 
 * [Replication and Automatic Lag Tracking](scalability/replication-and-automatic-lag-tracking.md)
-* [Sharding (Microsharding)](scalability/sharding-microsharding/README.md)
-  * [Terminology](scalability/sharding-microsharding/terminology.md)
-  * [Locating a Shard](scalability/sharding-microsharding/locating-a-shard.md)
+* [Sharding and Microsharding](scalability/sharding-and-microsharding.md)
+* [Terminology](scalability/terminology.md)
+* [Locating a Shard](scalability/locating-a-shard.md)
 
 ## Advanced
 

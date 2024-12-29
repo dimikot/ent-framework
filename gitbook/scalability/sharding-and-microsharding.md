@@ -1,6 +1,6 @@
-# Sharding (Microsharding)
+# Sharding and Microsharding
 
-[replication-and-automatic-lag-tracking.md](../replication-and-automatic-lag-tracking.md "mention") is not a silver bullet: you get fault tolerance and linear reads scaling, but there are limitations too:
+[replication-and-automatic-lag-tracking.md](replication-and-automatic-lag-tracking.md "mention") is not a silver bullet: you get fault tolerance and linear reads scaling, but there are limitations too:
 
 1. **You can't scale writes.** Eventually, your single master will become a bottleneck.
 2. **It's not easy to add more disk space to the database.** You have to shutdown a node, grow its volume and then sync the node back. If it's a master node, and you don't want downtime, then you have to switchover the master with one of replicas. Plus, there is in practice a limit on the total size of the database.

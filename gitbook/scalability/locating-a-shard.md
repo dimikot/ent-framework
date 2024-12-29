@@ -8,7 +8,7 @@ const user = EntUser.loadX(vc, id);
 
 When users are distributed across multiple microshards, Ent Framework decides, which microshard should it query the data from. The decision is made based on the ID prefix:
 
-<figure><img src="../../.gitbook/assets/image.png" alt="" width="282"><figcaption></figcaption></figure>
+<figure><img src="../.gitbook/assets/image.png" alt="" width="282"><figcaption></figcaption></figure>
 
 To use the default microshard location strategy, there is a convention on ID format, it must consist of 3 parts:
 
