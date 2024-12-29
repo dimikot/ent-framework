@@ -101,10 +101,10 @@ Although shards rebalancing is not a part of Ent Framework (you can use e.g. pg-
 Assume we have the following call:
 
 ```typescript
-const topic = EntTopic.loadX(vc, id);
+const user = EntUser.loadX(vc, id);
 ```
 
-When topics are distributed across multiple microshards, Ent Framework decides, which microshard should it query the data from. It uses the ID prefix:
+When users are distributed across multiple microshards, Ent Framework decides, which microshard should it query the data from. The decision is made based on the ID prefix:
 
 ```
 3042812345678
@@ -114,4 +114,30 @@ To use the default microshard location strategy, there is a convention on ID for
 
 * "3" (Environment Number): you may want to make your IDs globally unique across the entire world, so all IDs in dev environment will start from e.g. 1, IDs in staging with 2, and IDs in production with 3.
 * "0428" (Shard Number): this is where the microshard number reside in the ID structure. In the code, it is also referred as "Shard No".
-*
+* "12345678" (Entropy): a "never-repeating random-looking" part of the ID. It may actually not necessarily be random (other strategies are "auto-incremental" and "timestamp-prefixed"), i.e. it's up to the library which generates the new IDs.
+
+Ent ID (and thus, its microshard number) is determined once, at the time when the Ent is inserted. Typically, each microshard schema has its own function that build the IDs, fills the environment and shard number, generates the "never-repeating random-looking" part:
+
+```typescript
+const schema = new PgSchema(
+  "users",
+  {
+    id: { type: ID, autoInsert: "id_gen()" },
+    email: { type: String },
+  },
+  ["email"]
+);
+```
+
+Here, we use `id_gen()` function from pg-id library, which by default generates the IDs in the following format:
+
+```
+EssssRRRRRRRRRRRRRR
+ ^   ^^^^^^^^^^^^^^
+ 4   14
+```
+
+Other functions in pg-id library are:
+
+* `id_gen_timestampic()`: similar to `id_gen()`, but instead of generating randomly looking ids, prepends the "sequence" part of the id with the current timestamp.
+* `id_gen_monotonic()`: the simplest and fastest function among the above: generates next globally-unique monotonic id, without using any timestamps as a prefix. Monotonic ids are more friendly to heavy INSERTs since they maximize the chance for btree index to reuse the newly created leaf pages.
