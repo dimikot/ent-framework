@@ -231,7 +231,7 @@ wsServer.on("subscribe", (ws, message) => {
 });
 ```
 
-<figure><img src="../.gitbook/assets/svg (11).svg" alt=""><figcaption><p>Bob and Charlie at "R" will see Alice's changes made at "W"</p></figcaption></figure>
+<figure><img src="../.gitbook/assets/svg (15).svg" alt=""><figcaption><p>Bob and Charlie at "R" will see Alice's changes made at "W"</p></figcaption></figure>
 
 VC's method `deserializeTimelines()` **merges** the received timelines signal into the current VC's timelines. You can call call it as many times as needed, when you receive a pub-sub signal.
 
