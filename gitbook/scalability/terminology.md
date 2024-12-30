@@ -28,8 +28,8 @@ The name "island" is a common way to refer any of the above concepts. We also em
 Microshard is a minimal unit of data rebalancing. Each shard is a PostgreSQL schema, example naming: `sh0001`, `sh4242`, `sh0000`. Typically, there are multiple microshards (say, \~50) on each island, and microshards are randomly distributed across islands (uniformly by the total size).&#x20;
 
 * Once some data rows are written to a microshard, those data rows never move to another microshard. I.e. microshard is first determined at row creation time and then never changes. (This denotes a small flavor difference between "microshard" and "shard" terms: typically, rows are allowed to change their "macro shard", but are always nailed down to their microshards.)
-* Microshards can be moved **as a whole** from one island to another without downtime. Since each microshard is small, it's a fast and granulaer process.
-* One can allocate more microshards with no downtime. E.g. if we have 300 already, we can add 200 more and distribute them across the existing islands uniformly, so the newly created objects will start being put there too. You can't delete microshards once they are allocated though, because otherwise you'll lose the data.
+* Microshards can be moved **as a whole** from one island to another without downtime. Since each microshard is small, it's a fast and granular process.
+* Additional microshards can be added to the cluster with no downtime. E.g. if we have 300 microshards already, we can add 200 more and distribute them across the existing islands uniformly, so the newly created Ents will start being put there. You can't delete microshards once they are allocated though, because otherwise you'll lose the data.
 * There can be up to 10000 microshards (the limit is arbitrary, you can make it larger if needed). The maximum number of microshards is determined by the PostgreSQL schemas naming convention: e.g. `sh1235` or `sh0012` names mean that there may only be up to 10000 microshards.
 * A microshard schema in the database can be **inactive** or **active**. If it's inactive, it is in the process of allocation, or it has just been moved from one island to another. The schema gets "activated" on the new island and gets inactivated on an old island.
 
@@ -66,7 +66,7 @@ To ensure that all M physical tables for the same logical table have the identic
 
 <figure><img src="../.gitbook/assets/svg (5).svg" alt=""><figcaption></figcaption></figure>
 
-On the picture, there are 3 logical tables (`users`, `topics` and `comments`). The corresponding physical tables live on 4 microshards, and the microshards live on 2 islands. E.g. logical table `users` is represented by 4 physical tables `users` in 4 microshards. Since microshards lives on some island, and island consists of master and replica nodes, there are essentially replicas for every physical table in the cluster.
+On the picture, there are 3 logical tables (`users`, `topics` and `comments`). The corresponding physical tables live in 4 microshards, and the microshards live on 2 islands. E.g. logical table `users` is represented by 4 physical tables `users` in 4 microshards. Since microshards lives on some island, and island consists of master and replica nodes, there are essentially replicas for every physical table in the cluster.
 
 ## **Discovery Workflow**
 
