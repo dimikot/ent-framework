@@ -37,7 +37,7 @@ Microshard is a minimal unit of data rebalancing. Each shard is a PostgreSQL sch
 
 Cluster is a set of islands used by the same app. E.g. there can be a cluster which consists of 2 islands, and each island has 1 master and 2 replica nodes: 2\*(1+2) = 6 PostgreSQL machines. New island can be added to the cluster, or existing island can be removed from the cluster (after all microshards are moved out of it).
 
-<figure><img src="../.gitbook/assets/image (2).png" alt="" width="563"><figcaption></figcaption></figure>
+<figure><img src="../.gitbook/assets/svg (1).svg" alt="" width="563"><figcaption></figcaption></figure>
 
 It's important to understand that there are 2 points of view on a cluster:
 
