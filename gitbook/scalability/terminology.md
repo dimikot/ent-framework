@@ -37,7 +37,7 @@ Microshard is a minimal unit of data rebalancing. Each shard is a PostgreSQL sch
 
 Cluster is a set of islands used by the same app. E.g. there can be a cluster which consists of 2 islands, and each island has 1 master and 2 replica nodes: 2\*(1+2) = 6 PostgreSQL machines. New island can be added to the cluster, or existing island can be removed from the cluster (after all microshards are moved out of it).
 
-<figure><img src="../.gitbook/assets/svg (1).svg" alt="" width="563"><figcaption></figcaption></figure>
+<div data-full-width="false"><figure><img src="../.gitbook/assets/svg (3).svg" alt=""><figcaption></figcaption></figure></div>
 
 It's important to understand that there are 2 points of view on a cluster:
 
@@ -52,7 +52,7 @@ Notice that in PostgreSQL documentation, "cluster" means a smaller thing (a Post
 
 Typically, there is a "special" global microshard, which lives on a separate (with more CPU and more replicas) **island 0**. Tables in shard 0 do not exist in other microshards and have a low number of rows with rare writes and frequent reads (e.g. organizations, workspace metadata etc.).
 
-<figure><img src="../.gitbook/assets/image (3).png" alt="" width="563"><figcaption></figcaption></figure>
+<div data-full-width="false"><figure><img src="../.gitbook/assets/svg (4).svg" alt=""><figcaption></figcaption></figure></div>
 
 This setup is not mandatory though: it's perfectly fine to have the global microshard 0 located on an island together with other microshards; it's just a matter of load balancing.
 
@@ -64,7 +64,7 @@ A logical table (e.g. `users`) can be "sharded": in this case, there are effecti
 
 To ensure that all M physical tables for the same logical table have the identical schema, a database migration tool (such as pg-mig) needs to be used; that is beyond the scope of Ent Framework, but the tools work in tandem.
 
-<figure><img src="../.gitbook/assets/image (4).png" alt="" width="563"><figcaption></figcaption></figure>
+<figure><img src="../.gitbook/assets/svg (5).svg" alt=""><figcaption></figcaption></figure>
 
 On the picture, there are 3 logical tables (`users`, `topics` and `comments`). The corresponding physical tables live on 4 microshards, and the microshards live on 2 islands. E.g. logical table `users` is represented by 4 physical tables `users` in 4 microshards. Since microshards lives on some island, and island consists of master and replica nodes, there are essentially replicas for every physical table in the cluster.
 

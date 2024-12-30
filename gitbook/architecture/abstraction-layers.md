@@ -1,6 +1,6 @@
 # Abstraction Layers
 
-<figure><img src="../.gitbook/assets/image (6).png" alt=""><figcaption></figcaption></figure>
+<figure><img src="../.gitbook/assets/svg (8).svg" alt=""><figcaption></figcaption></figure>
 
 Ent Framework consists of 3 abstraction layers:
 
