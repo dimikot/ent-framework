@@ -86,11 +86,11 @@ This schema is straightforward and easily understood by most people. The junctio
 As a result, Ent Framework imposes a constraint on the abstract data graph: there are no direct “many-to-many” edges:\
 
 
-<figure><img src="../.gitbook/assets/image (7).png" alt="" width="375"><figcaption><p>There is no such thing...</p></figcaption></figure>
+<figure><img src="../.gitbook/assets/svg (14).svg" alt=""><figcaption><p>There is no such thing...</p></figcaption></figure>
 
 Instead, the only type of edges are “many-to-one”. When a “many-to-many” relationship is needed, an intermediate junction node (like EntMembership) is required:
 
-<figure><img src="../.gitbook/assets/image (9).png" alt="" width="563"><figcaption><p>...This is what it we do instead</p></figcaption></figure>
+<figure><img src="../.gitbook/assets/svg (13).svg" alt=""><figcaption><p>...This is what it we do instead</p></figcaption></figure>
 
 Notice that "one to one" and "at most one to one" special cases are treated as special cases of "many to one" with unique index.
 

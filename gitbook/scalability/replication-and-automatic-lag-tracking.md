@@ -182,7 +182,7 @@ app.get("/comments", async (req, res) => {
 
 The browser sends a `POST /comments` request, so a new comment is inserted in the database, and the browser is immediately redirected to a `GET /comments` endpoint. Since we serialize all VC's timelines in the POST endpoint ("1st frame of reference") and then deserialize them in the GET endpoint ("2nd frame of reference"), the second VC receives a "↯-signal" from the first VC, and it establishes a strong read-after-write consistency between them. Thus, the 2nd request will be served by the master node and read the recent data.
 
-<figure><img src="../.gitbook/assets/image (13).png" alt="" width="563"><figcaption><p>The changes happened at "W" will be visible at "R"</p></figcaption></figure>
+<div data-full-width="false"><figure><img src="../.gitbook/assets/svg (9).svg" alt=""><figcaption><p>The changes happened at "W" will be visible at "R"</p></figcaption></figure></div>
 
 ### Independent Timelines Use Case
 
@@ -193,7 +193,7 @@ Now let's see what happens when we have two independent users, Alice and Bob.
 1. Alice calls `POST /comments` and adds a comment to the master database.
 2. Immediately "after" that, Bob calls `GET /comments` to see the list of comments.
 
-<figure><img src="../.gitbook/assets/image (14).png" alt="" width="375"><figcaption><p>At "R", Bob will likely <strong>not</strong> see Alice's changes made at "W"</p></figcaption></figure>
+<figure><img src="../.gitbook/assets/svg (10).svg" alt=""><figcaption><p>At "R", Bob will likely <strong>not</strong> see Alice's changes made at "W"</p></figcaption></figure>
 
 Since the timelines of Bob are in another "frame of reference" than Alice's, and we did not send any signal from Alice to Bob, the request will likely be served from a replica node (not from the master), which means that Bob will likely see the old data.
 
@@ -231,7 +231,7 @@ wsServer.on("subscribe", (ws, message) => {
 });
 ```
 
-<figure><img src="../.gitbook/assets/image (16).png" alt="" width="563"><figcaption><p>Bob and Charlie at "R" will see Alice's changes made at "W"</p></figcaption></figure>
+<figure><img src="../.gitbook/assets/svg (11).svg" alt=""><figcaption><p>Bob and Charlie at "R" will see Alice's changes made at "W"</p></figcaption></figure>
 
 VC's method `deserializeTimelines()` **merges** the received timelines signal into the current VC's timelines. You can call call it as many times as needed, when you receive a pub-sub signal.
 
