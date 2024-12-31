@@ -28,11 +28,49 @@ export const cluster = new Cluster({
 });
 ```
 
-## cluster.shardByNo(): get a Shard by its Number
+## cluster.shardByNo(): Get a Shard by its Number
 
-Allows you to get an instance of `Shard` class (representing a microshard) by its number:
+This is the simplest way to get an instance of `Shard` class (representing a microshard) by its number:
 
-```
+```typescript
 const shard = cluster.shardByNo(42);
+const pgClient = await shard.client(MASTER);
 ```
 
+Having a `Shard` object, you obtain a `Client` instance (in our case, `pgClient`) which enbles access to one of the nodes backing that shard.&#x20;
+
+## Sending SQL Queries via a Client
+
+`PgClient` class exposes 2 ways of sending queries to the database. (This applies to PostgreSQL; for other databases, especially non-SQL, the API is up to that `Client` class implementation.)
+
+## pgClient.query(): Send a Single SQL Query
+
+```typescript
+const rows = await pgClient.query({
+  query: ["SELECT email FROM users WHERE id=?", userID],
+  isWrite: false,
+  annotations: [vc.toAnnotation()],
+  op: "MY_SELECT",
+  table: "users",
+  // Optional properties.
+  hints: { enable_seqscan: "off" },
+  batchFactor: 1,
+});
+```
+
+Notice that `query()` API is pretty verbose: it is not meant to be used in the code directly, introduce your own wrapper if you find yourself sending raw SQL queries frequently. (But better use Ent Framework's calls which hide all of the complexity behind a graph-like language.)
+
+Some properties like `annotations`, `op` and `table` are used for instrumentation purposes only. It is highly recommended to pass them, since it will make the built-in Ent Framework logging meaningful.
+
+### pgClient.acquireConn(): Get a Low-Level node-postgres Client
+
+If you want to get access to the native API of [node-postgres](https://www.npmjs.com/package/pg) library (to use transactions, streaming etc.), use the following code:
+
+```typescript
+const conn = await client.acquireConn();
+try {
+  ...
+} finally {
+  conn.release();
+}
+```
