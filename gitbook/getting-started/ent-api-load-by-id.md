@@ -30,7 +30,9 @@ If an Ent with such ID exists, but the VC doesn't have permissions to access it,
 
 ## **Ent.loadIfReadableNullable(vc, id)**: Ent | null
 
-This is a special method designed to return `null` in two cases: when an Ent with the specified ID does not exist, or when the user lacks the necessary permissions to read it. Notably, it never throws an exception. Permissions are enforced by the `privacyLoad` rules of the Ent, which were briefly introduced earlier and will be covered in more detail later.
+This is a special method designed to return `null` in two cases: when an Ent with the specified ID does not exist, or when the user lacks the necessary permissions to read it. Basically, it never throws. 
+
+Permissions are enforced by the `privacyLoad` rules of the Ent, which were briefly introduced earlier and will be covered in more detail later.
 
 {% hint style="info" %}
 In most of the cases, prefer `loadX()` and rely on the outer try-catch blocks, as opposed to `loadNullable()` with manual null-checking. Let the framework do its job. And you likely almost never need to use `loadIfReadableNullable()`: it's a smell.
