@@ -29,6 +29,17 @@ export const cluster = new Cluster({
 });
 ```
 
+## Shards Discovery
+
+Notice the `shards` configuration property above.
+
+* `nameFormat`: this sprintf-style template defines, how Ent Framework should build the microshard schema name when it knows the microshard number. In our case, the schema names will look like `sh0123` or `sh0000`, and there will be up to 10000 microshards allowed.
+* `discoverQuery`: Ent Framework will run this query on all islands from time to time to figure out, what shards are located where. It will also run this query immediately in several conditions, like "table not found" error (which may mean that a microshard has just been moved from one island to another, so Ent Framework needs to rediscover).
+
+There is also pg-microsharding library which allows you to manipulate microshard schemas: create them, activate, move and rebalance microshards across islands. When this library is used, you can utilize `SELECT * FROM unnest(microsharding.list_active_shards())` as a value for `discoverQuery`.
+
+## Format of IDs
+
 Assume we have the following call:
 
 ```typescript
