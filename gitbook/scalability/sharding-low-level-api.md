@@ -58,15 +58,15 @@ const timeline = vc.timeline(shard, "users");
 const pgClient = await shard.client(timeline);
 ```
 
-## Sending SQL Queries via a Client
+## Sending SQL Queries via a Shard Client
 
 `PgClient` class exposes 2 ways of sending queries to the database. (This applies to PostgreSQL; for other databases, especially non-SQL, the API is up to that `Client` class implementation.)
 
 Internally, `PgClient` maintains a pool of open connections and reuses them automatically. It also works great together with [pgbouncer](https://www.pgbouncer.org) (or any other conections pooler for PostgreSQL) in both "transaction pooling" and "connection pooling" modes. (In real projects, you'll most likely want to use "transaction pooling".)
 
-## pgClient.query(): Send a Single SQL Query
+### pgClient.query(): Send a Single SQL Query
 
-Singular SQL queries can be sent using `query()` method of `PgClient`:
+You can use `query()` method of `PgClient` to send singular SQL queries:
 
 ```typescript
 const rows = await pgClient.query({
@@ -119,4 +119,29 @@ try {
 }
 ```
 
-This code is also pretty verbose: try not to use this API in your code directly; instead, introduce some higher-level wrappers.
+This example is also pretty verbose: try not to use this API in your code directly; instead, introduce some higher-level wrappers.
+
+## Other Ways of Accessing Shards
+
+There are other methods in `Cluster` that allow you to access shards.
+
+### cluster.globalShard(): Access a Global Shard
+
+There is a special microshard in the cluster with number 0. It is called "global shard". Typically, the global shard lives on a separate island with more replicas, since it is used to store shared low cardinal data (like organizations, workspaces, user accounts etc.) that doesn't need to be sharded.
+
+Calling `globalShard()` is the same as calling `shardByNo(0)`.
+
+### cluster.nonGlobalShards(): Get the List of All Shards
+
+This async method returns all microshard instances except the global shard:
+
+```typescript
+const shards = await cluster.nonGlobalShards();
+```
+
+### cluster.randomShard(): Get a Random Shard in the Cluster
+
+When you insert a new row to the database, Ent Framework calls this method to choose a shard for the insertion. This happens for Ents with `shardAffinity` equals to `RANDOM_SHARD` (i.e. when the Ent is not colocated with some other parent Ent).
+
+### cluster.shard(id): Get a Shard from the ID prefix
+
