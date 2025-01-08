@@ -127,4 +127,4 @@ Earlier in [locating-a-shard.md](locating-a-shard.md "mention") article we disus
 
 <figure><img src="../.gitbook/assets/image.png" alt="" width="282"><figcaption></figcaption></figure>
 
-If you have such an ID in a variable, a call to `cluster.shard(id)` will parse it and return a shard instance which you can use then to send low-level SQL queries to that shard.
+If you have such an ID in a variable, a call to `cluster.shard(id)` will parse it and return a shard instance which you can then use to send low-level SQL queries to that shard.
