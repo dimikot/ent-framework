@@ -38,6 +38,8 @@ Notice the `shards` configuration property above.
 
 There is also pg-microsharding library which allows you to manipulate microshard schemas: create them, activate, move and rebalance microshards across islands. When this library is used, you can utilize `SELECT * FROM unnest(microsharding.list_active_shards())` as a value for `discoverQuery`.
 
+As of the islands in the cliuster, just enumerate them and their nodes. Ent Framework will figure out, what nodes are masters and whan nodes are replicas. You can also change the list of islands and nodes in real-time, without restarting the app: Ent Framework is smart enough to pick up the changes if `islands` callback returns a different value (it is called from time to time).
+
 ## Format of IDs
 
 Assume we have the following call:
@@ -77,7 +79,9 @@ EssssRRRRRRRRRRRRRR
  4   14
 ```
 
-The complete list of `id_gen*()` functions are:
+## Stored Functions in pg-id Library
+
+The complete list of `id_gen*()` functions in pg-id library are:
 
 * `id_gen()`: generates next globally-unique randomly-looking id. The main idea is to not let external people infer the rate at which the ids are generated, even when they look at some ids sample. The function implicitly uses a sequence to get the information about the next available number, and then uses [Feistel cipher](https://en.wikipedia.org/wiki/Feistel_cipher) to generate a randomly-looking non-repeating ID based off it.
 * `id_gen_timestampic()`: similar to `id_gen()`, but instead of generating randomly looking ids, prepends the "sequence" part of the id with the current timestamp.
