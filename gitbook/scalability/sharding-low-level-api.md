@@ -128,3 +128,36 @@ Earlier in [locating-a-shard.md](locating-a-shard.md "mention") article we disus
 <figure><img src="../.gitbook/assets/image.png" alt="" width="282"><figcaption></figcaption></figure>
 
 If you have such an ID in a variable, a call to `cluster.shard(id)` will parse it and return a shard instance which you can then use to send low-level SQL queries to that shard.
+
+## Working with Islands
+
+Sometimes you want to work with even lower primitive than a microshard, with an island itself.&#x20;
+
+This is helpful when your app has some background worker (or crawler) that needs to traverst through all records of a particular table, in all shards, and you want to control the processing parallelism: not more than 1 worker process per each island (to not overload the database with concurrent queries).
+
+### cluster.islands(): Get All Islands of the Cluster
+
+The method allows you to enumerate all islands of the cluster to e.g. spawn worker processes per each of them:
+
+```typescript
+const islands = await cluster.islands();
+for (const island of islands) {
+  await spawnWorkerIfNotRunningAlready(island.no);
+}
+```
+
+Since Ent Framework supports real-time reconfiguration, the list of islands may change after the call to `islands()`, so be careful to run the above code from time to time.
+
+### cluster.island(no): Get One Island by its Number
+
+Then, in each worker process, you may want to get an instance of an isand with the number corresponding to that worker:
+
+```typescript
+async function worker(islandNo: number) {
+  const island = await cluster.island(islandNo);
+  const shardsOfIsland = island.shards();
+  const master = island.master();
+  const aliveReplica = island.replica();
+  ...
+}
+```
