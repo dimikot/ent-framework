@@ -8,29 +8,7 @@ But there is also a lower level set of methods in `Cluster` class, for the follo
 * when you don't want to encode the shard number in an ID for some reason;
 * when you need to use transactions (`acquireConn()` API).
 
-The API described below is exposed by `Cluster` class:
-
-```typescript
-export const cluster = new Cluster({
-  islands: () => [ // <-- callback
-    {
-      no: 0,
-      nodes: [
-        { name: "abc-instance-1", host: "...", ... },
-        { name: "abc-instance-2", host: "...", ... },
-      ],
-    },
-    {
-      no: 1,
-      nodes: [
-        { name: "abc-instance-3", host: "...", ... },
-        { name: "abc-instance-4", host: "...", ... },
-      ],
-    },
-  ],
-  ...,
-});
-```
+The API described below is exposed by `Cluster` class, see [locating-a-shard.md](locating-a-shard.md "mention").
 
 ## cluster.shardByNo(): Get a Shard by its Number
 
@@ -145,3 +123,8 @@ When you insert a new row to the database, Ent Framework calls this method to ch
 
 ### cluster.shard(id): Get a Shard from the ID prefix
 
+Earlier in [locating-a-shard.md](locating-a-shard.md "mention") article we disussed, what format an ID should have to work in microsharding environment:
+
+<figure><img src="../.gitbook/assets/image.png" alt="" width="282"><figcaption></figcaption></figure>
+
+If you have such an ID in a variable, a call to `cluster.shard(id)` will parse it and return a shard instance which you can use then to send low-level SQL queries to that shard.

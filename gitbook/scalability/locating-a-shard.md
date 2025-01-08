@@ -1,5 +1,34 @@
 # Locating a Shard
 
+To enable microshardig support, we first need to configure the instance of `Cluster` class:
+
+```typescript
+export const cluster = new Cluster({
+  islands: () => [
+    {
+      no: 0,
+      nodes: [
+        { name: "abc-instance-1", host: "...", ... },
+        { name: "abc-instance-2", host: "...", ... },
+      ],
+    },
+    {
+      no: 1,
+      nodes: [
+        { name: "abc-instance-3", host: "...", ... },
+        { name: "abc-instance-4", host: "...", ... },
+      ],
+    },
+  ],
+  shards: {
+    nameFormat: "sh%04d",
+    discoverQuery:
+      "SELECT nspname FROM pg_namespace WHERE nspname ~ 'sh[0-9]+'",
+  },
+  ...,
+});
+```
+
 Assume we have the following call:
 
 ```typescript
