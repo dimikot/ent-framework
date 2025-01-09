@@ -185,5 +185,14 @@ Island clients are typically used to build "cross-shard" queries on a particular
 
 ```typescript
 const shards = island.shards();
-const query = shards
+const masters = await mapJoin(
+  shards,
+  async (shard) => shard.client(MASTER),
+);
+const query = masters
+  .map((client) => `
+    SELECT id FROM ${client.shardName}.users
+    WHERE created_at > ${ts}
+  `)
+  .join("\n  UNION ALL\n);
 ```
