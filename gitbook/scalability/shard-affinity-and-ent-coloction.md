@@ -23,9 +23,9 @@ This is the simplest strategy possible: all new Ents created are just placed to 
 
 Using the global shard works best for the Ents which have relatively low cardinality in the database (like workspaces, sometimes user accounts etc.). That Ent must also experience not too many writes (comparing to the number of reads), i.e. it should have no strict needs for horizontal scaling.
 
-## shardAffinity=\["fieldEdge1", ...]: Colocate With Parent
+## shardAffinity=\["parent1", "parent2", ...]: Colocate With Parent
 
-Another commonly used strategy is to place the newly created Ent to the same microshard as some of this Ent's parents have. By doing this, you tell Ent Framework that your child Ent is located "near" its parent.
+Another commonly used strategy is to place the newly created Ent to the same microshard as some of this Ent's parent have. By doing this, you tell Ent Framework that your child Ent is located "near" its parent (or parents).
 
 E.g. we may want to put all comments of a particular topic to the same microshard as this topic has:
 
@@ -54,9 +54,11 @@ export class EntComment extends BaseEnt(cluster, schema) {
 await EntComment.insert(vc, { topic_id: topicID });
 ```
 
+Sometimes Ents have nullable field edges. If you still want to use parent colocation in this case, you can provide multiple field names in `shardAffinity`: Ent Framework will try to infer the microshard number from them in order of appearance, from the first non-null field.
+
 Since Ent Framework does batching of the calls by microshards, having more children Ents in the same microshard significantly improves performance when e.g. doing `select()` calls.
 
-Also, if you have colocation based on some field edge (foreign key) field, Ent Framework is able to infer the microshards to query:
+Also, if you have colocation based on some parent pointing field edge (foreign key), Ent Framework is able to infer the microshards to query:
 
 ```typescript
 // The queries will be sent only to the microshards
@@ -74,4 +76,4 @@ I.e. the main reason to use colocation is that you don't need to have inverses (
 
 This strategy creates Ents in a randomly chosen microshard. It works best only for a small number of Ent classes, the ones that define "roots" of "colocation hierarchies" (like users).
 
-The idea is that you may e.g. defined EntWorkspace as having `shardAffinity=[]`, so it will be created in a random shard. Then, all other Ents that are "children" to EntWorkspace (e.g. EntUser), may have `shardAffinity` pointing to the parent's field edge (like `workspace_id`). Consequently, other may be colocated to their own parents (e.g. EntTopic colocated to EntUser, and EntComment colocated to EntTopic). This way, all the data related to the same EntWorkspace will appear in the same microshard, and no inverses will be needed. (Of course, it only works for relatively small workspaces.)
+The idea is that you may e.g. defined EntWorkspace as having `shardAffinity=[]`, so it will be created in a random shard. Then, all other Ents that are "children" to EntWorkspace (e.g. EntUser), may have `shardAffinity` pointing to the parent's field edge (like `workspace_id`). Consequently, other may be colocated to their own parents (e.g. EntTopic colocated to EntUser, and EntComment colocated to EntTopic). This way, all the data related to the same EntWorkspace will appear in the same microshard, and no inverses will be needed. (Of course, such approach only works for relatively small workspaces.)
