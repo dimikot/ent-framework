@@ -28,12 +28,13 @@
 
 ## Scalability
 
-* [Replication and Automatic Lag Tracking](scalability/replication-and-automatic-lag-tracking.md)
-* [Sharding and Microsharding](scalability/sharding-and-microsharding.md)
+* [Replication, Automatic Lag Tracking](scalability/replication-and-automatic-lag-tracking.md)
+* [Sharding, Microsharding](scalability/sharding-microsharding.md)
 * [Sharding Terminology](scalability/sharding-terminology.md)
 * [Locating a Shard](scalability/locating-a-shard.md)
 * [Sharding Low-Level API](scalability/sharding-low-level-api.md)
-* [Shard Affinity and Ent Coloction](scalability/shard-affinity-and-ent-coloction.md)
+* [Shard Affinity, Ent Colocation](scalability/shard-affinity-ent-colocation.md)
+* [Inverses, Cross Shard Foreign Keys](scalability/inverses-cross-shard-foreign-keys.md)
 
 ## Advanced
 
