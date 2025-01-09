@@ -191,8 +191,15 @@ const masters = await mapJoin(
 );
 const query = masters
   .map((client) => `
-    SELECT id FROM ${client.shardName}.users
-    WHERE created_at > ${ts}
-  `)
+    (SELECT id FROM ${client.shardName}.users
+    WHERE needs_processing
+    LIMIT 100)
+  `.trim())
   .join("\n  UNION ALL\n);
+const ids = await island.master().query({
+  query,
+  ...
+});
 ```
+
+Here, we ask the database to return us the users that "need to be processed" by the background job, from all shards of a particular island. From each shard, we return not more than 100 IDs. Considering that we have an index on the `WHERE` condition, such approach of crawling the users will be more effective than going "shard after shard".
