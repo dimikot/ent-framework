@@ -195,9 +195,9 @@ const query = masters
     WHERE needs_processing
     LIMIT 100)
   `.trim())
-  .join("\n  UNION ALL\n);
+  .join("\n  UNION ALL\n`);
 const ids = await island.master().query({
-  query,
+  query: [query],
   ...
 });
 ```
