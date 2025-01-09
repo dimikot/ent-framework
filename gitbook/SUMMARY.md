@@ -33,6 +33,7 @@
 * [Sharding Terminology](scalability/sharding-terminology.md)
 * [Locating a Shard](scalability/locating-a-shard.md)
 * [Sharding Low-Level API](scalability/sharding-low-level-api.md)
+* [Shard Affinity and Ent Coloction](scalability/shard-affinity-and-ent-coloction.md)
 
 ## Advanced
 
