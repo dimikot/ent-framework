@@ -61,6 +61,8 @@ const rows = await pgClient.query({
 
 Notice that `query()` API is pretty verbose: it is not meant to be used in the code directly, introduce your own wrapper if you find yourself sending raw SQL queries frequently. (But better use Ent Framework's calls which hide all of the complexity behind a graph-like language.)
 
+Before the query is executed, Ent Framework basically prepends it with `SET search_path TO sh0123` clause within the same "implicit transaction" of the "simple multi-query protocol". I.e. if you access some table without providing its schema name, then the table will be searched in the current shard's schema (`sh0123` in the above example).
+
 Some properties like `annotations`, `op` and `table` are used for instrumentation purposes only. It is highly recommended to pass them, since it will make the built-in Ent Framework logging meaningful.
 
 {% hint style="info" %}
@@ -160,4 +162,28 @@ async function worker(islandNo: number) {
   const aliveReplica = island.replica();
   ...
 }
+```
+
+### island.master(): Get a Client for Island Master Node
+
+Previously, we learned that the queries sent to a "shard client" are delivered in the context of that shard's PostgreSQL schema (i.e. they run as if they are prefixed with `SET search_path TO sh0123` clause).
+
+The queries sent to an "island client" are executed in the context of PostgreSQL schema `public`. In most of the cases, you'll want to override this and provide a particular schema name as a prefix of the table name:
+
+```typescript
+const master = island.master();
+await master.query({
+  query: ["SELECT email FROM sh0123.users WHERE id=?", userID],
+  //                         ^^^^^^
+  ...
+});
+```
+
+### island.shards(): Get the Currently Known Shards on an Island
+
+Island clients are typically used to build "cross-shard" queries on a particular island. The most common example is building a UNION ALL query that allows to load the data from multiple shards on the same island more effectively than going "shard after shard":
+
+```typescript
+const shards = island.shards();
+const query = shards
 ```
