@@ -1,6 +1,6 @@
 # Sharding Low-Level API
 
-In [locating-a-shard.md](locating-a-shard.md "mention") article we discussed, how Ent Framework automatically determines, which shard to use for a particular Ent, based on the Ent ID.
+In [locating-a-shard-id-format.md](locating-a-shard-id-format.md "mention") article we discussed, how Ent Framework automatically determines, which shard to use for a particular Ent, based on the Ent ID.
 
 But there is also a lower level set of methods in `Cluster` class, for the following use cases:
 
@@ -8,7 +8,7 @@ But there is also a lower level set of methods in `Cluster` class, for the follo
 * when you don't want to encode the shard number in an ID for some reason;
 * when you need to use transactions (`acquireConn()` API).
 
-The API described below is exposed by `Cluster` class, see [locating-a-shard.md](locating-a-shard.md "mention").
+The API described below is exposed by `Cluster` class, see [locating-a-shard-id-format.md](locating-a-shard-id-format.md "mention").
 
 ## cluster.shardByNo(): Get a Shard by its Number
 
@@ -125,7 +125,7 @@ When you insert a new row to the database, Ent Framework calls this method to ch
 
 ### cluster.shard(id): Get a Shard from the ID prefix
 
-Earlier in [locating-a-shard.md](locating-a-shard.md "mention") article we disussed, what format an ID should have to work in microsharding environment:
+Earlier in [locating-a-shard-id-format.md](locating-a-shard-id-format.md "mention") article we disussed, what format an ID should have to work in microsharding environment:
 
 <figure><img src="../.gitbook/assets/image.png" alt="" width="282"><figcaption></figcaption></figure>
 
