@@ -1,6 +1,6 @@
 # Inverses, Cross Shard Foreign Keys
 
-We already touched the topic of inverses and loading Ents across multiple microshards in [ent-api-select-by-expression.md](../getting-started/ent-api-select-by-expression.md "mention") article. We also noted that in many cases, it's better to colocate "related" Ents in one microshard: [shard-affinity-ent-colocation.md](shard-affinity-ent-colocation.md "mention").
+We have already touched the topic of inverses and loading Ents across multiple microshards in [ent-api-select-by-expression.md](../getting-started/ent-api-select-by-expression.md "mention") article. We also noted that in many cases, it's better to colocate "related" Ents in one microshard: [shard-affinity-ent-colocation.md](shard-affinity-ent-colocation.md "mention").
 
 Now, it's time to discuss how inverses work in details.
 
@@ -198,19 +198,40 @@ sh0456 - comment's shard:
 - comments(id:10456003 topic_id:10123002)
 ```
 
+Inverses are always inserted **before** the actual rows. This guarantees that there will be no situation when a row exists, but its corresponding inverse does not. I.e. there are always **not less** inverses in the cluster than the Ent rows.
 
+And to maintain the "not less" invariant, when an Ent is deleted, the corresponding inverses are deleted **after** it (not before). So even if the inverse deletion query fails, it will still be okay for us: we'll just have a "hanging inverse".
 
+## Children Ent Microshard Hints
 
+So, inverses allow Ent Framework to find all children Ents related to a particular parent ID, like all topics by a last commenter ID:
 
+```typescript
+const topics = await EntTopic.select(
+  vc,
+  { last_commentet_id: "10999001" },
+  100,
+);
+```
 
+This would send the following SQL queries to the database (pseudo-code):
 
+```sql
+SELECT id2 FROM sh0999.inverses
+  WHERE type='topic2last_commenters' AND id1='10999001'
+  INTO $id2s;
 
+FOR $shard IN shards_from_ids($id2s) LOOP
+  SELECT * FROM $shard.topics
+    WHERE last_commenter_id='10999001'
+    LIMIT 100;
+END LOOP;
+```
 
+(Of curse, as everything in Ent Framework, the above will be batched into compound SQL queries when multiple `select()` calls are happening in parallel.)
 
+Notice that, despite inverses hold the full ID of the child Ent in `id2` field, only the microshard number from `id2` is used in Ent Framework logic (see `shard_from_id()` in the above pseudo-code). I.e. `id2` is used to get "covering hints" about what microshards should be queried when loading the data.
 
+This is a really powerful approach. It solves the problem of cross-shard consistency. Since we have not less inverses than the children rows, Ent Framework just collects all unique microshards from those inverses `id2` fields and then queries them using a regular SELECT. If there were some hanging (excess) inverses in the database, it is not a big deal: the engine will just query a little bit more microshards than it needs to, but the SELECTs from those extra microshards will just come empty.
 
-
-
-
-
-
+It makes sense to delete the hanging inverses in background from time to time ("inverses fixer" infra), since they may accumulate slowly. Currently, Ent Framework doesn't have any logic to help with this, but in the future, such functionality may appear. Since inverses are treated as just covering hints, not cleaning them up is generally fine.
