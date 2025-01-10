@@ -136,10 +136,10 @@ Consider the following "family" Ents creation.
 //     topic_id: { name: "inverses", type: "comment2topics" },
 //   },
 //
-const userID = await EntUser.insert(vc, { ... });
+const creatorID = await EntUser.insert(vc, { ... });
 const commenterID = await EntUser.insert(vc, { ... });
 const topicID = await EntTopic.insert(vc, {
-  creator_id: userID,
+  creator_id: creatorID,
   last_commenter_id: commenterID,
   ...
 });
@@ -152,40 +152,49 @@ const commentID = await EntComment.insert(vc, {
 Internally, Ent Framework will run the following SQL queries (pseudo-code):
 
 ```sql
--- Microshard for the user is randomly chosen as sh0123.
-INSERT INTO sh0123.users(id) VALUES(id_gen())
-  RETURNING id INTO $userID;
+-- Microshard for the user is randomly chosen as sh0888.
+INSERT INTO sh0888.users(id) VALUES(id_gen())
+  RETURNING id INTO $creatorID;
 
 -- Microshard for anotjer user is randomly chosen as sh0999.
 INSERT INTO sh0999.users(id) VALUES(id_gen())
   RETURNING id INTO $commenterID;
 
--- Microshard for the topic is randomly chosen as sh0456.
-$topicID := sh0456.id_gen();
-INSERT INTO sh0123.inverses(type, id1, id2) VALUES
-  ('topic2creators', $userID, $topicID);
+-- Microshard for the topic is randomly chosen as sh0123.
+$topicID := sh0123.id_gen();
+INSERT INTO sh0888.inverses(type, id1, id2) VALUES
+  ('topic2creators', $creatorID, $topicID);
 INSERT INTO sh0999.inverses(type, id1, id2) VALUES
   ('topic2last_commenters', $commenterID, $topicID);
-INSERT INTO sh0456.topics(id, creator_id, last_commenter_id) VALUES
-  ($topicID, $userID, $commenterID);
+INSERT INTO sh0123.topics(id, creator_id, last_commenter_id) VALUES
+  ($topicID, $creatorID, $commenterID);
 
--- Microshard for the comment is randomly chosen as sh0789.
-$commentID := sh0789.id_gen();
-INSERT INTO sh0456.inverses(type, id1, id2) VALUES
+-- Microshard for the comment is randomly chosen as sh0456.
+$commentID := sh0456.id_gen();
+INSERT INTO sh0123.inverses(type, id1, id2) VALUES
   ('comment2topics', $topicID, $commentID);
-INSERT INTO sh0789.comments(id, topic_id) VALUES
+INSERT INTO sh0456.comments(id, topic_id) VALUES
   ($commentID, $topicID);
 ```
 
 So, the following rows will appear in the database tables:
 
 ```
-sh0123:
-- users(id:10123001)
-- inverses(type:topic2creators id1:10123001 id2:10456002)
+sh0888:
+- users(id:10888001)
+- inverses(type:topic2creators id1:10888001 id2:10123002)
+                               $creatorID       $topicID
 sh0999:
-- inverses(type:topic2last_commenters, id1:10999009, id2:10456002)
+- users(id:10999001)
+- inverses(type:topic2last_commenters id1:10999001 id2:10123002)
+                                      $commenterID     $topicID
+sh0123:
+- topics(id:10123002 creator_id:10888001 last_commenter_id:10999001)
+- inverses(type:comment2topics id1:10123002 id2:10456003)
+                               $topicID         $commentID
 
+sh0456:
+- comments(id:10456003 topic_id:10123002)
 ```
 
 
