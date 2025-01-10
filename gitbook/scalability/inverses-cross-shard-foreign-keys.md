@@ -137,9 +137,10 @@ Consider the following "family" Ents creation.
 //   },
 //
 const userID = await EntUser.insert(vc, { ... });
+const commenterID = await EntUser.insert(vc, { ... });
 const topicID = await EntTopic.insert(vc, {
   creator_id: userID,
-  last_commenter_id: "123",
+  last_commenter_id: commenterID,
   ...
 });
 const commentID = await EntComment.insert(vc, {
@@ -152,15 +153,21 @@ Internally, Ent Framework will run the following SQL queries (pseudo-code):
 
 ```sql
 -- Microshard for the user is randomly chosen as sh0123.
-INSERT INTO sh0123.users(id) VALUES(id_gen()) RETURNING id INTO $userID;
+INSERT INTO sh0123.users(id) VALUES(id_gen())
+  RETURNING id INTO $userID;
+
+-- Microshard for anotjer user is randomly chosen as sh0999.
+INSERT INTO sh0999.users(id) VALUES(id_gen())
+  RETURNING id INTO $commenterID;
 
 -- Microshard for the topic is randomly chosen as sh0456.
 $topicID := sh0456.id_gen();
 INSERT INTO sh0123.inverses(type, id1, id2) VALUES
-  ('topic2creators', $userID, $topicID),
-  ('topic2last_commenters', '123', $topicID);
+  ('topic2creators', $userID, $topicID);
+INSERT INTO sh0999.inverses(type, id1, id2) VALUES
+  ('topic2last_commenters', $commenterID, $topicID);
 INSERT INTO sh0456.topics(id, creator_id, last_commenter_id) VALUES
-  ($topicID, $userID, '123');
+  ($topicID, $userID, $commenterID);
 
 -- Microshard for the comment is randomly chosen as sh0789.
 $commentID := sh0789.id_gen();
@@ -169,6 +176,29 @@ INSERT INTO sh0456.inverses(type, id1, id2) VALUES
 INSERT INTO sh0789.comments(id, topic_id) VALUES
   ($commentID, $topicID);
 ```
+
+So, the following rows will appear in the database tables:
+
+```
+sh0123:
+- users(id:10123001)
+- inverses(type:topic2creators id1:10123001 id2:10456002)
+sh0999:
+- inverses(type:topic2last_commenters, id1:10999009, id2:10456002)
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
