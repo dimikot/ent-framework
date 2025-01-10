@@ -177,23 +177,24 @@ INSERT INTO sh0456.comments(id, topic_id) VALUES
   ($commentID, $topicID);
 ```
 
-So, the following rows will appear in the database tables:
+Notice that, because of `{ name: "inverses", type: "topic2creators" }` inverse specifier, Ent Framework knows that the inverses table name is `inverses`, and the value of the `type` field there is `"topic2creators"`. The You can choose your own values for both of those things: the above example is just a convention.
+
+As a result, the following rows will appear in the database tables:
 
 ```
-sh0888:
+sh0888 - creator's shard:
 - users(id:10888001)
-- inverses(type:topic2creators id1:10888001 id2:10123002)
-                               $creatorID       $topicID
-sh0999:
+- inverses(type:topic2creators  id1:10888001    id2:10123002)
+                                    $creatorID      $topicID
+sh0999 - commenter's shard:
 - users(id:10999001)
-- inverses(type:topic2last_commenters id1:10999001 id2:10123002)
-                                      $commenterID     $topicID
-sh0123:
+- inverses(type:topic2last_commenters  id1:10999001      id2:10123002)
+                                           $commenterID      $topicID
+sh0123 - topic's shard:
 - topics(id:10123002 creator_id:10888001 last_commenter_id:10999001)
-- inverses(type:comment2topics id1:10123002 id2:10456003)
-                               $topicID         $commentID
-
-sh0456:
+- inverses(type:comment2topics  id1:10123002  id2:10456003)
+                                    $topicID      $commentID
+sh0456 - comment's shard:
 - comments(id:10456003 topic_id:10123002)
 ```
 
