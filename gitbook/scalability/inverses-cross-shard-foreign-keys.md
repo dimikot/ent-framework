@@ -66,17 +66,6 @@ export class EntComment extends BaseEnt(
     });
   }
 }
-
-const userID = await EntUser.insert(vc, { ... });
-const topicID = await EntTopic.insert(vc, {
-  creator_id: userID,
-  last_commenter_id: null,
-  ...
-});
-const commentID = await EntComment.insert(vc, {
-  topic_id: topicID,
-  ...
-});
 ```
 
 Notice the following:
@@ -126,7 +115,60 @@ Tables `users`, `topics` and `comments` are not much special, except that their 
 
 Now, notice the `inverses` table. It is treated by Ent Framework in a special way.
 
+When you e.g. insert an EntTopic row, Ent Framework first chooses the target microshard randomly and then creates a row in `inverses` table in the parent's shard. It then inserts the row to the destination microshard. Thus, Ent Framework remembers, what are the children microshards (encoded in `inverses.id2`) for each parent ID (`inverses.id1`).
 
+## An Example of What's Actually Inserted
+
+Probably the simplest way to understand inverses is to look at a particular example, what's inserted and where when creating the Ents.
+
+Consider the following "family" Ents creation.
+
+```typescript
+//
+// Remember that we had the following inverses defined for EntTopic:
+//   inverses: {
+//     creator_id: { name: "inverses", type: "topic2creators" },
+//     last_commenter_id: { name: "inverses", type: "topic2last_commenters" },
+//   },
+//
+// And for EntComment:
+//   inverses: {
+//     topic_id: { name: "inverses", type: "comment2topics" },
+//   },
+//
+const userID = await EntUser.insert(vc, { ... });
+const topicID = await EntTopic.insert(vc, {
+  creator_id: userID,
+  last_commenter_id: "123",
+  ...
+});
+const commentID = await EntComment.insert(vc, {
+  topic_id: topicID,
+  ...
+});
+```
+
+Internally, Ent Framework will run the following SQL queries (pseudo-code):
+
+```sql
+-- Microshard for the user is randomly chosen as sh0123.
+INSERT INTO sh0123.users(id) VALUES(id_gen()) RETURNING id INTO $userID;
+
+-- Microshard for the topic is randomly chosen as sh0456.
+$topicID := sh0456.id_gen();
+INSERT INTO sh0123.inverses(type, id1, id2) VALUES
+  ('topic2creators', $userID, $topicID),
+  ('topic2last_commenters', '123', $topicID);
+INSERT INTO sh0456.topics(id, creator_id, last_commenter_id) VALUES
+  ($topicID, $userID, '123');
+
+-- Microshard for the comment is randomly chosen as sh0789.
+$commentID := sh0789.id_gen();
+INSERT INTO sh0456.inverses(type, id1, id2) VALUES
+  ('comment2topics', $topicID, $commentID);
+INSERT INTO sh0789.comments(id, topic_id) VALUES
+  ($commentID, $topicID);
+```
 
 
 
