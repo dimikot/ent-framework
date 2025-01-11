@@ -177,7 +177,11 @@ INSERT INTO sh0456.comments(id, topic_id) VALUES
   ($commentID, $topicID);
 ```
 
-Notice that, because of `{ name: "inverses", type: "topic2creators" }` inverse specifier, Ent Framework knows that the inverses table name is `inverses`, and the value of the `type` field there is `"topic2creators"`. The You can choose your own values for both of those things: the above example is just a convention.
+Notice that, because of `{ name: "inverses", type: "topic2creators" }` inverse specifier, Ent Framework knows that the inverses table name is `inverses`, and the value of the `type` field there is `"topic2creators"`.  You can choose your own values for both of those options: the above example is just a convention.
+
+Inverses are always inserted to the parent's shard (not to the child's shard) and **before** the actual row (`id_gen()` defined in `autoInsert` option is called in a separate database query). This guarantees that there will be no situation when there is a row in some shard, but its corresponding inverse does not exist in another shard. I.e. there are always **not less** inverses in the cluster than the Ent rows.
+
+And to maintain the "not less" invariant, when an Ent is deleted, the corresponding inverses are deleted **after** it (not before). So even if the inverse deletion query fails, it will still be okay for us: we'll just have a "hanging inverse".
 
 As a result, the following rows will appear in the database tables:
 
@@ -197,10 +201,6 @@ sh0123 - topic's shard:
 sh0456 - comment's shard:
 - comments(id:10456003 topic_id:10123002)
 ```
-
-Inverses are always inserted **before** the actual rows. This guarantees that there will be no situation when a row exists, but its corresponding inverse does not. I.e. there are always **not less** inverses in the cluster than the Ent rows.
-
-And to maintain the "not less" invariant, when an Ent is deleted, the corresponding inverses are deleted **after** it (not before). So even if the inverse deletion query fails, it will still be okay for us: we'll just have a "hanging inverse".
 
 ## Children Ent Microshard Hints
 
@@ -235,3 +235,54 @@ Notice that, despite inverses hold the full ID of the child Ent in `id2` field, 
 This is a really powerful approach. It solves the problem of cross-shard consistency. Since we have not less inverses than the children rows, Ent Framework just collects all unique microshards from those inverses `id2` fields and then queries them using a regular SELECT. If there were some hanging (excess) inverses in the database, it is not a big deal: the engine will just query a little bit more microshards than it needs to, but the SELECTs from those extra microshards will just come empty.
 
 It makes sense to delete the hanging inverses in background from time to time ("inverses fixer" infra), since they may accumulate slowly. Currently, Ent Framework doesn't have any logic to help with this, but in the future, such functionality may appear. Since inverses are treated as just covering hints, not cleaning them up is generally fine.
+
+## Unique Keys
+
+When `shardAffinity=[]`, the microshard is chosen randomly at insert time.
+
+But if the Ent has a unique key defined in its schema, _this randomness is not absolute_. The seed of the random number generator is assigned based on the value of the Ent's unique key, so all `insert()` calls with the same unique key will essentially choose the same microshard for insertion.
+
+Let's consider an example.
+
+```typescript
+export class EntTopic extends BaseEnt(
+  cluster, 
+  new PgSchema(
+    "topics",
+    {
+      id: { type: ID, autoInsert: "id_gen()" },
+      creator_id: { type: ID },
+      slug: { type: String },
+    },
+    ["slug"], // <-- unique key
+  ),
+) {
+  static override configure() {
+    return new this.Configuration({
+      shardAffinity: [],
+      ...
+    });
+  }
+}
+```
+
+Imagine you have a web server route which creates a new topic with a particular slug:
+
+```typescript
+app.post("/topics", async (req, res) => {
+  const topicID = await EntTopic.insert(req.vc, {
+    creator_id: req.vc.principal,
+    slug: String(req.body.slug),
+  });
+});
+```
+
+The user clicks the button in the browser, and the topic creation POST request is sent to the server.
+
+Now imagine that there is some network issue happened between the backend and the database after the INSERT query is sent, but before the response is received. Or the database is overloaded, so it accepted the INSERT query, but failed to respond within the allocated time. In this case, there will be a "non-idempotent query timeout": the backend will see the error, but it will not know, whether the INSERT query succeeded (and thus, the topic is created), or it failed internally.
+
+In case of an error, the user will likely press the button again, and it will cause another POST request to insert the topic with the same slug.
+
+If we chose the microshard trully randomly, then the 2nd INSERT would create the topic row in another shard, and there would be a possiblilty to create 2 topics with the same slug in 2 different microshard. This would be really bad: we would violate the unique key constraint across shards (there is nothing in inverses engine preventing from creating duplicates).
+
+This is why the microshard is chosen pseudo-randomly, based on the Ent's unique key (it it is defined). Thus, an attempt to create a duplicated Ent would fail with a unique key constraint error, and the app would be able to handle it. In the above example, `insert()` would've thrown an error, but you could use `insertIfNotExists()` call which would just return null; see [ent-api-insert.md](../getting-started/ent-api-insert.md "mention").
