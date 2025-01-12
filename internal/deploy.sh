@@ -7,3 +7,4 @@ cat gitbook/README.md | sed '1,/# / d' | sed 's/\.gitbook/gitbook\/.gitbook/' > 
 git add README.md
 
 internal/update-package-json.js
+internal/fix-svg-fonts.js
