@@ -3,14 +3,18 @@ name: Fix SVG Fonts
 on:
   push:
     branches:
-      - master
+      - main
 
 jobs:
   fix-fonts:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
       - uses: actions/setup-node@v4
         with:
           node-version: "18"
