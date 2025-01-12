@@ -1,4 +1,4 @@
-# Shard Affinity and Ent Coloction
+# Shard Affinity, Ent Colocation
 
 When designing your Ent graph, it's important to think in advance, how will sharding strategy look like for those Ents: what microshard will be chosen once a new Ent is created.&#x20;
 
@@ -17,13 +17,13 @@ export class EntTopic extends BaseEnt(cluster, schema) {
 
 You have 3 options described below.
 
-## shardAffinity=GLOBAL\_SHARD
+## Global Shard: shardAffinity=GLOBAL\_SHARD
 
 This is the simplest strategy possible: all new Ents created are just placed to "shard 0" (aka "global shard"). By doing this, you essentially disable sharding for the Ent.
 
 Using the global shard works best for the Ents which have relatively low cardinality in the database (like workspaces, sometimes user accounts etc.). That Ent must also experience not too many writes (comparing to the number of reads), i.e. it should have no strict needs for horizontal scaling.
 
-## shardAffinity=\["parent1", "parent2", ...]: Colocate With Parent
+## Colocate With Parent: shardAffinity=\["parent1", "parent2", ...]
 
 Another commonly used strategy is to place the newly created Ent to the same microshard as some of this Ent's parent have. By doing this, you tell Ent Framework that your child Ent is located "near" its parent (or parents).
 
@@ -72,7 +72,7 @@ const comments = await EntComment.select(
 
 I.e. the main reason to use colocation is that you don't need to have inverses (cross-shard foreign keys) defined in the Ent to query, if the call arguments includes knowledge about the parent Ent IDs.
 
-## shardAffinity=\[]: Random Shard on Insert
+## Random Shard on Insert: shardAffinity=\[]
 
 This strategy creates Ents in a randomly chosen microshard. It works best only for a small number of Ent classes, the ones that define "roots" of "colocation hierarchies" (like users).
 
