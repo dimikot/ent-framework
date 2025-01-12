@@ -75,7 +75,7 @@ The root of the problem here is clear: we think in terms of the lists, and the c
 Now let's see what happens if we stop thinking in terms of lists and, instead, switch to "per individual object" paradigm.
 
 ```typescript
-// Still data using just 3 SQL queries. But wait a second...
+// Still using just 3 SQL queries. But wait a second...
 app.get("/comments", async (req, res) => {
   const commentIDs = uniq(String(req.query.ids).split(","));
   res.json(
@@ -117,7 +117,7 @@ In fact, Ent Framework does similar batching not only for `loadX()`. It batches 
 
 Each Ent is an immutable object, which means that you can't change its fields after loading from the DB. But you can add helper methods to simplify things like loading.
 
-Let's simplify the above example even further by adding `topic()` and `creator()` helper methods into Ent classes directly.
+Let's optimize the above example even further by adding `topic()` and `creator()` helper methods into Ent classes directly.
 
 ```typescript
 class EntComment extends ... {
@@ -170,7 +170,7 @@ In traditional ORMs, such helper loading methods are added to the classes automa
 
 ## Batching vs. JOINs
 
-In traditional SQL and in many ORMs, people use JOINs to minimize the number of queries they send to the database engine. Despite JOINs have advantages, they are also problematic:
+In traditional SQL and in many ORMs, people use JOINs to minimize the number of queries they send to the database engine. Despite the JOINs having advantages, they are also problematic:
 
 1. One cannot do JOINs across microshards or machines.
 2. JOINs encourage people to write highly coupled code, similar to the 1st example on this page.

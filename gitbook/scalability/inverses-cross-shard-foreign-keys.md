@@ -211,7 +211,7 @@ So, inverses allow Ent Framework to find all children Ents related to a particul
 ```typescript
 const topics = await EntTopic.select(
   vc,
-  { last_commentet_id: "10999001" },
+  { last_commenter_id: "10999001" },
   100,
 );
 ```
