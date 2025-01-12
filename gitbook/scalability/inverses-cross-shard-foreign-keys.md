@@ -179,6 +179,8 @@ INSERT INTO sh0456.comments(id, topic_id) VALUES
 
 Notice that, because of `{ name: "inverses", type: "topic2creators" }` inverse specifier, Ent Framework knows that the inverses table name is `inverses`, and the value of the `type` field there is `"topic2creators"`.  You can choose your own values for both of those options: the above example is just a convention.
 
+<figure><img src="../.gitbook/assets/inverses1.svg" alt=""><figcaption></figcaption></figure>
+
 Inverses are always inserted to the parent's shard (not to the child's shard) and **before** the actual row (`id_gen()` defined in `autoInsert` option is called in a separate database query). This guarantees that there will be no situation when there is a row in some shard, but its corresponding inverse does not exist in another shard. I.e. there are always **not less** inverses in the cluster than the Ent rows.
 
 And to maintain the "not less" invariant, when an Ent is deleted, the corresponding inverses are deleted **after** it (not before). So even if the inverse deletion query fails, it will still be okay for us: we'll just have a "hanging inverse".
