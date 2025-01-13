@@ -38,6 +38,7 @@
 
 ## Advanced
 
+* [Database Schema Migrations](advanced/database-schema-migrations.md)
 * [Ephemeral (Symbol) Fields](advanced/ephemeral-symbol-fields.md)
 * [Custom Field Refactoring](advanced/custom-field-refactoring.md)
 
