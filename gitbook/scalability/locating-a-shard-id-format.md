@@ -1,4 +1,4 @@
-# Locating a Shard
+# Locating a Shard, ID Format
 
 To enable microshardig support, we first need to configure the instance of `Cluster` class:
 
@@ -71,7 +71,7 @@ const schema = new PgSchema(
 );
 ```
 
-Here, we use `id_gen()` function from pg-id library, which by default generates the IDs in the format we mentioned above:
+Here, we use `id_gen()` function from [pg-id](https://www.npmjs.com/package/@clickup/pg-id) library, which by default generates the IDs in the format we mentioned above:
 
 ```
 EssssRRRRRRRRRRRRRR
@@ -81,7 +81,7 @@ EssssRRRRRRRRRRRRRR
 
 ## Stored Functions in pg-id Library
 
-The complete list of `id_gen*()` functions in pg-id library are:
+The complete list of `id_gen*()` functions in [pg-id](https://www.npmjs.com/package/@clickup/pg-id) library are:
 
 * `id_gen()`: generates next globally-unique randomly-looking id. The main idea is to not let external people infer the rate at which the ids are generated, even when they look at some ids sample. The function implicitly uses a sequence to get the information about the next available number, and then uses [Feistel cipher](https://en.wikipedia.org/wiki/Feistel_cipher) to generate a randomly-looking non-repeating ID based off it.
 * `id_gen_timestampic()`: similar to `id_gen()`, but instead of generating randomly looking ids, prepends the "sequence" part of the id with the current timestamp.

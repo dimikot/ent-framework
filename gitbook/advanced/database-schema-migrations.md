@@ -17,4 +17,4 @@ So, database migration gets several imporant aspects, that no mainstream tools s
 1. Track database schema version per each microshard individually. I.e. if you add a column to some table, run the migration to apply it to all physical tables in microshards, and it fails in the middle, next time you run the migration process, it has to continue from where it left off.
 2. Apply the changes to multiple PostgreSQL nodes and microshards in a controlled-parallel way (otherwise they will take forever to finish). I.e. the migration tool must know the entire cluster configuration, not only one PostgreSQL node.
 
-To support the above in microsharded environment, it is recommended to use pg-mig tool to organize the migration for databases backed by Ent Framework.
+To support the above in microsharded environment, it is recommended to use [pg-mig](https://www.npmjs.com/package/@clickup/pg-mig) tool to organize the migration for databases backed by Ent Framework.

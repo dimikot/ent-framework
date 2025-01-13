@@ -6,7 +6,7 @@ Now, it's time to discuss how inverses work in details.
 
 ## Ents with Random Shard Affinity
 
-Let's first build a pretty artificial "family" of the Ents (EntUser—EntTopic—EntComment), where each Ent is created in a random shard at insert time. (In real life, you'll likely want most of your Ents to be colocated to their parents, but for the best illustration,  we'll make the opposite assumption).
+Let's first build a pretty artificial "family" of the Ents (EntUser—EntTopic—EntComment), where each Ent is created in a random shard at insert time. (In real life, you'll likely want most of your Ents to be [colocated](https://docs.ent-framework.net/scalability/shard-affinity-ent-colocation) to their parents, but for the best illustration,  we'll make the opposite assumption).
 
 ```typescript
 export class EntUser extends BaseEnt(
