@@ -93,10 +93,10 @@ The migration version file name has the following format (examples):
 mig/
   20231017204837.do-something.sh.up.sql
   20231017204837.do-something.sh.dn.sql
-  20231122204837.change-other-thing.sh.up.sql
-  20231122204837.change-other-thing.sh.dn.sql
   20241107201239.add-table-abc.sh0000.up.sql
   20241107201239.add-table-abc.sh0000.dn.sql
+  20241201204837.change-other-thing.sh.up.sql
+  20241201204837.change-other-thing.sh.dn.sql
   20251203493744.install-pg-extension.public.up.sql
   20251203493744.install-pg-extension.public.dn.sql
 ```
@@ -129,29 +129,23 @@ If multiple migration files match some schema, then only the file with the **lon
 E.g. imagine you have the following migration version files:
 
 ```
-20231017204837.do-something.sh.up.sql
-20231122204837.change-other-thing.sh.up.sql
-20241107201239.add-table-abc.sh0000.up.sql
-20251203493744.install-pg-extension.public.up.sql
+20231017204837.do-something.sh.up.sql             # .sh.
+20241107201239.add-table-abc.sh0000.up.sql        # .sh0000.
+20241201204837.change-other-thing.sh.up.sql       # .sh.
+20251203493744.install-pg-extension.public.up.sql # .public.
 ```
 
 Then, the following will happen in parallel:
 
-* For every `shNNNN` schema except `sh0000`, the version `do-something.sh` will be applied first, and then, if it succeeds, the `change-other-thing.sh` will be run. Notice that `sh0000` is excluded, becuse there exist other migration file versions targeting `sh0000` precisely (and "sh0000" prefix is longer than "sh").
+* For every `shNNNN` schema except `sh0000`, the version `do-something.sh` will be applied first, and then, if it succeeds, the `change-other-thing.sh` will be run. Notice that `sh0000` is excluded, because there exist other migration file versions targeting `sh0000` precisely (and "sh0000" prefix is longer than "sh").
 * For `sh0000` schema, `add-table-abc.sh0000` will be run.
 * For `pubic` schema, `install-pg-extension.public` will be run.
 
-All in all, the behavior here is pretty intuitive: if you want to target a concrete schema, just use its full name; if you want multiple schemas to be considered, use their common prefix.
+All in all, the behavior here is pretty intuitive: if you want to target a concrete schema, just use its full name; if you want multiple schemas to be considered, then use their common prefix.
 
-If the migration file application succeeds, then it will be remembered on the corresponding PostgreSQL host, in the corresponding schema (microshard) itself. So next time when you run the tool, it will understand that the migration version has already been applied, and won't try to apply it again.
+If the migration file application succeeds, it will be remembered on the corresponding PostgreSQL host, in the corresponding schema (microshard) itself. So next time when you run the tool, it will understand that the migration version has already been applied, and won't try to apply it again.
 
-When the tool runs, it prints a live-updating progress, which migration version file is in progress on which host in which schema (microshard). In the end, it prints the final versions map across all of the hosts and schemas.
-
-\
-\
-\
-\
-
+When the tool runs, it prints a live-updating progress about what migration version file is in progress on which host in which schema (microshard). In the end, it prints the final versions map across all of the hosts and schemas.
 
 \
 \
