@@ -48,7 +48,7 @@ All of the command line arguments are optional, the tool uses defaults from envi
 
 There are variables standard for `psql` tool:
 
-* `PGHOST`: database server hostname; when the cluster has multiple nodes in it, separate them here with commas.
+* `PGHOST`: database server hostname. When the cluster has multiple nodes in it, separate them here with commas. You may also include both master and replica hosts in the list: the tool is smart enough to only use the master nodes and ignore everything else.
 * `PGPORT`: database servers port.
 * `PGUSER`: database user.
 * `PGPASSWORD`: database password.
@@ -60,3 +60,98 @@ Other variables:
 
 ## Configuration File
 
+Instead of setting the environment variables, you can export the same exact values in `pg-mig.config.js` file by e.g. deriving them directly from the Ent Framework cluster configuration:
+
+```javascript
+"use strict";
+const cluster = require("ents/cluster").cluster;
+const islands = cluster.options.islands();
+const firstNode = islands[0].node[0];
+module.exports = {
+  PGHOST: islands
+    .map((island) => island.nodes.map(({ host }) => host)
+    .flat()
+    .join(","),
+  PGPORT: 5432, // we don't want to use pgbouncer port here
+  PGUSER: firstNode.user,
+  PGPASSWORD: firstNode.password,
+  PGDATABASE: firstNode.database,
+  PGSSLMODE: firstNode.ssl ? "prefer" : undefined,
+  PGMIGDIR: `${__dirname}/mig`,
+};
+```
+
+The file `pg-mig.config.js` is searched in all parent directories starting from the current working directory when `pg-mig` is run (typically you want to have it in the root of your project, near the other configuration files).
+
+## Migration Version Files
+
+When running in default mode, `pg-mig` tool reads (in order) the migration versions `*.up.sql` files from the migration directory and applies them all on the hosts passed (of course, checking whether the version file has already been applied before or not).
+
+The migration version file name has the following format (examples):
+
+```
+mig/
+  20231017204837.do-something.sh.up.sql
+  20231017204837.do-something.sh.dn.sql
+  20231122204837.change-other-thing.sh.up.sql
+  20231122204837.change-other-thing.sh.dn.sql
+  20241107201239.add-table-abc.sh0000.up.sql
+  20241107201239.add-table-abc.sh0000.dn.sql
+  20251203493744.install-pg-extension.public.up.sql
+  20251203493744.install-pg-extension.public.dn.sql
+```
+
+Here,
+
+* The 1st part is a UTC timestamp when the migration version file was created.
+* The 2nd part is a descriptive name of the migration (can be arbitrary). Think of it as of the commit title.
+* The 3rd part is the "schema name prefix" (microshard name prefix). The SQL operations in the file will be applied only to the schemas whose names start with that prefix.
+* The 4th part is either "up" ("up" migration) or "dn" ("down" migration). Up-migrations roll the database schema version forward, and down-migrations allow to undo the changes.
+
+It is your responsibility to create up- and down-migration SQL files. Basically, you provide the DDL SQL queries on how to roll the database schema forward and how to roll it backward.
+
+You can use any `psql`-specific instructions in `*.sql` files: they are fed to `psql` tool directly. E.g. you can use environment variables, `\echo`, `\ir` for inclusion etc. See [psql documentation](https://www.postgresql.org/docs/current/app-psql.html) for details.
+
+## Applying the Migrations
+
+To run the up migration, simply execute one of:
+
+```
+pnpm pg-mig
+npm run pg-mig
+yarn pg-mig
+```
+
+Technically, pg-mig doesn't know anything about microsharding; instead, it recognizes the databasde schemas. Each migration version will be applied (in order) to all PostgreSQL schemas (aka microshards) on all hosts. The schema names should start from the prefix provided in the migration version file name.&#x20;
+
+If multiple migration files match some schema, then only the file with the **longest prefix** will be used; in the above example, prefix "sh" effectively works as "sh\* except sh0000", because there are other migration version files with "sh0000" prefix.
+
+E.g. imagine you have the following migration version files:
+
+```
+20231017204837.do-something.sh.up.sql
+20231122204837.change-other-thing.sh.up.sql
+20241107201239.add-table-abc.sh0000.up.sql
+20251203493744.install-pg-extension.public.up.sql
+```
+
+Then, the following will happen in parallel:
+
+* For every `shNNNN` schema except `sh0000`, the version `do-something.sh` will be applied first, and then, if it succeeds, the `change-other-thing.sh` will be run. Notice that `sh0000` is excluded, becuse there exist other migration file versions targeting `sh0000` precisely (and "sh0000" prefix is longer than "sh").
+* For `sh0000` schema, `add-table-abc.sh0000` will be run.
+* For `pubic` schema, `install-pg-extension.public` will be run.
+
+All in all, the behavior here is pretty intuitive: if you want to target a concrete schema, just use its full name; if you want multiple schemas to be considered, use their common prefix.
+
+If the migration file application succeeds, then it will be remembered on the corresponding PostgreSQL host, in the corresponding schema (microshard) itself. So next time when you run the tool, it will understand that the migration version has already been applied, and won't try to apply it again.
+
+When the tool runs, it prints a live-updating progress, which migration version file is in progress on which host in which schema (microshard). In the end, it prints the final versions map across all of the hosts and schemas.
+
+\
+\
+\
+\
+
+
+\
+\
