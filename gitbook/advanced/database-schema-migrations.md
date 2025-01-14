@@ -155,6 +155,55 @@ With e.g. `--undo=20231017204837.do-something.sh` argument, the tool will run th
 
 Undoing migrations in production is not recommended (since the application code may rely on its new structure), although you can do it of course. The main use case for undoing the migrations is **during development**: you may want to test your DDL statements multiple times, or you may pull from Git and get someone else's migration before yours, so you'll need to undo your migration and then reapply it.
 
+## Creating a New Migration File
+
+With `--make=my-migration-name@sh` argument, pg-mig creates a new pair of empty files in the migration directory. E.g. if you run:
+
+```
+pg-mig --make=my-migration-name@sh
+```
+
+then it will create a pair of empty files which looks like `my-dir/20251203493744.my-migration-name.sh.up.sql` and `my-dir/20251203493744.my-migration-name.sh.dn.sql` which you can edit further.
+
+Of course, you can also create such a pair of files manually.
+
+New migration version files can only be appended in the end (lexicographically, or by timestamp, which is the same). If pg-mig detects that you try to apply migrations which conflict with the existing migration versions remembered in the database, it will print the error and refuse to continue. This is similar to "fast-forward" mode in Git, and we'll talk about it in details later in the article.
+
+## The Initial Migration
+
+When you start using pg-mig tool, run it with `--make` to create your initial migration:
+
+```
+pg-mig --make=initial@public
+```
+
+Since almose every PostgreSQL database has schema `public` pre-created, it's convenient to target this schema in your initial migration version. If you need microsharding support, then that initial (or the following) migration version may create the desired number of microshard schemas.
+
+If you use pg-mig in a brand new project, then just edit the created `*.initial.public.up.sql` and \``*.initial.public.dn.sql` files in your text editor and run `pg-mig` to apply the versions.
+
+```sql
+-- 20251203493744.initial.public.up.sql
+CREATE TABLE users(
+  id bigserial PRIMARY KEY,
+  email varchar(256) NOT NULL
+);
+```
+
+And the corresponding down-file:
+
+```sql
+-- 20251203493744.initial.public.dn.sql
+DROP TABLE users;
+```
+
+During the execution of the above files, pg-mig will set the corresponding shema as current; in the above example, with the implicit `SET search_path=public` query.
+
+For debugging purposes, while building the SQL DDL statements, it's convenient to undo and apply the version in one command line:
+
+```
+pg-mig --undo=20251203493744.initial.public; pg-mig
+```
+
 ## Dealing with Merge Conflicts
 
 Migration version files are applied in strict order per each schema, and the same way as Git commits, they form a dependency **append-only** chain.
