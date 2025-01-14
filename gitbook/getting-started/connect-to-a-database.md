@@ -60,8 +60,9 @@ export const cluster = new Cluster({
   },
 });
 
-// Pre-open min number of DB connections.
-setTimeout(() => cluster.prewarm(), 100);
+// Pre-open min number of DB connections and keep them open, ready for
+// serving the queries immediately (optional).
+cluster.prewarm();
 ```
 {% endcode %}
 
