@@ -161,18 +161,20 @@ Migration version files are applied in strict order per each schema, and the sam
 
 ### Happy Path: Version is Appended
 
+The scenario below will happen most of the times.
+
 Imagine that on your local dev environmant (e.g. on your laptop) you have already applied the following migration versions to particular schemas in your local database:
 
 ```
-20231017204837.do-something.sh.up.sql
-20241201204837.change-other-thing.sh.up.sql
-20241202001000.and-one-more.sh.up.sql
+20231017204837.do-something.sh
+20241201204837.change-other-thing.sh
+20241202001000.and-one-more-thing.sh
 ```
 
-Then, another developer pushes the code with a new version:
+Then, another developer pushes the code with a new version file:
 
 ```
-20241202001100.their-thing.sh.up.sql
+20241202002000.their-thing.sh.up.sql
 ```
 
 And you pull it to your local working copy:
@@ -180,22 +182,22 @@ And you pull it to your local working copy:
 ```
 20231017204837.do-something.sh.up.sql
 20241201204837.change-other-thing.sh.up.sql
-20241202001000.and-one-more.sh.up.sql
-20241202001100.their-thing.sh.up.sql    <-- new version pulled
+20241202001000.and-one-more-thing.sh.up.sql
+20241202002000.their-thing.sh.up.sql    <-- new version pulled
 ```
 
 Here, if you run pg-mig tool, it will happily apply that new version, since its timestamp comes after all of the versions you already have in your database.
 
 Since the changes in the database are relatively rare, in most of the cases, you'll experience this "happy" behavior.
 
-### Unhappy Path: Merge Conflict
+### Unhappy Path: Explicit Merge Conflict
 
 Now imagine you still had the same versions in your local database:
 
 ```
-20231017204837.do-something.sh.up.sql
-20241201204837.change-other-thing.sh.up.sql
-20241202001000.and-one-more.sh.up.sql
+20231017204837.do-something.sh
+20241201204837.change-other-thing.sh
+20241202001000.and-one-more-thing.sh  <-- you work on this
 ```
 
 But when you pulled, you got the new version file sitting in the middle:
@@ -203,17 +205,55 @@ But when you pulled, you got the new version file sitting in the middle:
 ```
 20231017204837.do-something.sh.up.sql
 20241201204837.change-other-thing.sh.up.sql
-20241202001100.middle-thing.sh.up.sql  <-- new version pulled
-20241202001000.and-one-more.sh.up.sql
+20241202000000.middle-thing.sh.up.sql  <-- new version pulled
+20241202001000.and-one-more-thing.sh.up.sql
 ```
 
 If you then run pg-mig tool locally, it will refuse to work:
 
 ```
 Migration timeline violation: you're asking to apply
-version 20241202001100.middle-thing.sh, although
-version 20241202001000.and-one-more.sh has already
+version 20241202000000.middle-thing.sh, although
+version 20241202001000.and-one-more-thing.sh has already
 been applied. Hint: make sure that you've rebased on
 top of the main branch, and new migration versions are
 still the most recent.
 ```
+
+So what you'll need to do is to undo your latest migration version and then rerun pg-mig:
+
+```
+pg-mig --undo=20241202001000.and-one-more.sh
+pg-mig
+```
+
+### Unhappy Path: Implicit Conflict
+
+Imagine you added a new version file:
+
+```
+20231017204837.do-something.sh.up.sql
+20241202001000.your-new-thing.sh.up.sql  <-- not yet pushed
+```
+
+You tested everything locally and are now ready to push to Git. But right before, you must pull from Git and ensure that your new verson file is still in the very end of the list of migration version files. Because if you don't do it, and some other developer appended another version file, the following trouble will appear:
+
+```
+20231017204837.do-something.sh.up.sql
+20241202001000.your-new-thing.sh.up.sql     <-- not yet pushed
+20241202002000.other-dev-thing.sh.up.sql    <-- just pulled
+```
+
+If you blindly push this, then there is a risk that anyone (or any environment) where `20231017204837.do-something.sh` and `20241202002000.other-dev-thing.sh` are already applied, will not be able to migrate anymore: they will get the error mentioned above.
+
+I.e. right before pushing, you must ensure that all migration version files you add within the new commits really appear in the end of the versions in Git. If not, then you'll need to rename your files using the latest timestamp:
+
+```
+mv 20241202001000.your-new-thing.sh.up.sql \
+  20241202002200.your-new-thing.sh.up.sql
+```
+
+In practice, the situation is not as bad as it sounds:
+
+1. If it breaks, it's easy to fix: just rename one file and push a new commit.
+2. Database changes are relatively rare, and deployments also don't typically happen immediately after each pushed commit (unless you are very lucky), so the chance of catching such an ordering conflict are low.
