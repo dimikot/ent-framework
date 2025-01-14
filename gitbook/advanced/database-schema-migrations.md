@@ -18,3 +18,45 @@ So, database migration gets several imporant aspects, that no mainstream tools s
 2. Apply the changes to multiple PostgreSQL nodes and microshards in a controlled-parallel way, otherwise they will take forever to finish. I.e. the migration tool must know the entire cluster configuration, not only one PostgreSQL node.
 
 To support the above in microsharded environment, it is recommended to use [pg-mig](https://www.npmjs.com/package/@clickup/pg-mig) tool to organize the migration for databases backed by Ent Framework.
+
+## The pg-mig Tool
+
+The **pg-mig** tool allows to create a PostgreSQL database schema (with tables, indexes, sequences, functions etc.) and apply it consistently across multiple PostgreSQL nodes (across multiple microshard schemas on multiple hosts). The behavior is transactional per each microshard per migration version ("all or nothing").
+
+In other words, pg-mig helps to keep your database clusters' schemas identical (each microshard schema will have exactly the same DDL structure as any other schema on all other hosts).
+
+## Usage
+
+```
+pg-mig
+  [--migdir=path/to/my-migrations/directory]
+  [--hosts=host1,host2,...]
+  [--port=5432]
+  [--user=user-which-can-apply-ddl]
+  [--pass=password]
+  [--db=my-database-name]
+  [--undo=20191107201239.my-migration-name.sh]
+  [--make=my-migration-name@sh]
+  [--list | --list=digest]
+  [--parallelism=8]
+  [--dry]
+```
+
+All of the command line arguments are optional, the tool uses defaults from environment variables or `pg-mig.config.js` file.
+
+## Environment Variables
+
+There are variables standard for `psql` tool:
+
+* `PGHOST`: database server hostname; when the cluster has multiple nodes in it, separate them here with commas.
+* `PGPORT`: database servers port.
+* `PGUSER`: database user.
+* `PGPASSWORD`: database password.
+* `PGDATABASE`: database name.
+
+Other variables:
+
+* `PGMIGDIR`: the default value for `--migdir` option.
+
+## Configuration File
+
