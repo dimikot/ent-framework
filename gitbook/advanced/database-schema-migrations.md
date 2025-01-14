@@ -25,6 +25,8 @@ The **pg-mig** tool allows to create a PostgreSQL database schema (with tables, 
 
 In other words, pg-mig helps to keep your database clusters' schemas identical (each microshard schema will have exactly the same DDL structure as any other schema on all other hosts).
 
+In case your project doesn't have microsharding and uses just 1 database, you can use pg-mig too: just tell it to target only 1 schema (e.g. `public`).
+
 ## Usage
 
 ```
@@ -81,7 +83,7 @@ module.exports = {
 };
 ```
 
-The file `pg-mig.config.js` is searched in all parent directories starting from the current working directory when `pg-mig` is run (typically you want to have it in the root of your project, near the other configuration files).
+The file `pg-mig.config.js` is searched in all parent folders starting from the current working directory when `pg-mig` is run (typically you want to have it in the root of your project, near the other configuration files).
 
 ## Migration Version Files
 
@@ -129,15 +131,15 @@ If multiple migration files match some schema, then only the file with the **lon
 E.g. imagine you have the following migration version files:
 
 ```
-20231017204837.do-something.sh.up.sql             # .sh.
-20241107201239.add-table-abc.sh0000.up.sql        # .sh0000.
-20241201204837.change-other-thing.sh.up.sql       # .sh.
-20251203493744.install-pg-extension.public.up.sql # .public.
+20231017204837.do-something.sh.up.sql              # .sh.
+20241107201239.add-table-abc.sh0000.up.sql         # .sh0000.
+20241201204837.change-other-thing.sh.up.sql        # .sh.
+20251203493744.install-pg-extension.public.up.sql  # .public.
 ```
 
 Then, the following will happen in parallel:
 
-* For every `shNNNN` schema except `sh0000`, the version `do-something.sh` will be applied first, and then, if it succeeds, the `change-other-thing.sh` will be run. Notice that `sh0000` is excluded, because there exist other migration file versions targeting `sh0000` precisely (and "sh0000" prefix is longer than "sh").
+* For every `shNNNN` schema (basically, all schemas starting with "sh" prefix) except `sh0000`, the version `do-something.sh` will be applied first, and then, if it succeeds, the `change-other-thing.sh` will be run. Notice that `sh0000` is excluded, because there exist other migration file versions targeting `sh0000` precisely (and "sh0000" prefix is longer than "sh").
 * For `sh0000` schema, `add-table-abc.sh0000` will be run.
 * For `pubic` schema, `install-pg-extension.public` will be run.
 
@@ -145,7 +147,73 @@ All in all, the behavior here is pretty intuitive: if you want to target a concr
 
 If the migration file application succeeds, it will be remembered on the corresponding PostgreSQL host, in the corresponding schema (microshard) itself. So next time when you run the tool, it will understand that the migration version has already been applied, and won't try to apply it again.
 
-When the tool runs, it prints a live-updating progress about what migration version file is in progress on which host in which schema (microshard). In the end, it prints the final versions map across all of the hosts and schemas.
+When the tool runs, it prints a live-updating information about what migration version file is in progress on which host in which schema (microshard). In the end, it prints the final versions map across all of the hosts and schemas.
 
-\
-\
+## Undoing the Migrations
+
+With e.g. `--undo=20231017204837.do-something.sh` argument, the tool will run the down-migration for the corresponding version on all nodes. If it succeeds, it will remember that fact on the corresponding node in the corresponding schema. Only the very latest migration version applied can be undone, and you can undo multiple versions one after another of course.
+
+Undoing migrations in production is not recommended (since the application code may rely on its new structure), although you can do it of course. The main use case for undoing the migrations is **during development**: you may want to test your DDL statements multiple times, or you may pull from Git and get someone else's migration before yours, so you'll need to undo your migration and then reapply it.
+
+## Dealing with Merge Conflicts
+
+Migration version files are applied in strict order per each schema, and the same way as Git commits, they form a dependency **append-only** chain.
+
+### Happy Path: Version is Appended
+
+Imagine that on your local dev environmant (e.g. on your laptop) you have already applied the following migration versions to particular schemas in your local database:
+
+```
+20231017204837.do-something.sh.up.sql
+20241201204837.change-other-thing.sh.up.sql
+20241202001000.and-one-more.sh.up.sql
+```
+
+Then, another developer pushes the code with a new version:
+
+```
+20241202001100.their-thing.sh.up.sql
+```
+
+And you pull it to your local working copy:
+
+```
+20231017204837.do-something.sh.up.sql
+20241201204837.change-other-thing.sh.up.sql
+20241202001000.and-one-more.sh.up.sql
+20241202001100.their-thing.sh.up.sql    <-- new version pulled
+```
+
+Here, if you run pg-mig tool, it will happily apply that new version, since its timestamp comes after all of the versions you already have in your database.
+
+Since the changes in the database are relatively rare, in most of the cases, you'll experience this "happy" behavior.
+
+### Unhappy Path: Merge Conflict
+
+Now imagine you still had the same versions in your local database:
+
+```
+20231017204837.do-something.sh.up.sql
+20241201204837.change-other-thing.sh.up.sql
+20241202001000.and-one-more.sh.up.sql
+```
+
+But when you pulled, you got the new version file sitting in the middle:
+
+```
+20231017204837.do-something.sh.up.sql
+20241201204837.change-other-thing.sh.up.sql
+20241202001100.middle-thing.sh.up.sql  <-- new version pulled
+20241202001000.and-one-more.sh.up.sql
+```
+
+If you then run pg-mig tool locally, it will refuse to work:
+
+```
+Migration timeline violation: you're asking to apply
+version 20241202001100.middle-thing.sh, although
+version 20241202001000.and-one-more.sh has already
+been applied. Hint: make sure that you've rebased on
+top of the main branch, and new migration versions are
+still the most recent.
+```
