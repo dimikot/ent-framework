@@ -114,7 +114,7 @@ It is your responsibility to create up- and down-migration SQL files. Basically,
 
 You can use any `psql`-specific instructions in `*.sql` files: they are fed to `psql` tool directly. E.g. you can use environment variables, `\echo`, `\ir` for inclusion etc. See [psql documentation](https://www.postgresql.org/docs/current/app-psql.html) for details.
 
-## Applying the Migrations
+## Apply the Migrations
 
 To run the up migration, simply execute one of:
 
@@ -149,13 +149,13 @@ If the migration file application succeeds, it will be remembered on the corresp
 
 When the tool runs, it prints a live-updating information about what migration version file is in progress on which host in which schema (microshard). In the end, it prints the final versions map across all of the hosts and schemas.
 
-## Undoing the Migrations
+## Undo the Migrations
 
 With e.g. `--undo=20231017204837.do-something.sh` argument, the tool will run the down-migration for the corresponding version on all nodes. If it succeeds, it will remember that fact on the corresponding node in the corresponding schema. Only the very latest migration version applied can be undone, and you can undo multiple versions one after another of course.
 
 Undoing migrations in production is not recommended (since the application code may rely on its new structure), although you can do it of course. The main use case for undoing the migrations is **during development**: you may want to test your DDL statements multiple times, or you may pull from Git and get someone else's migration before yours, so you'll need to undo your migration and then reapply it.
 
-## Creating a New Migration File
+## Create a New Migration Version File
 
 With `--make=my-migration-name@sh` argument, pg-mig creates a new pair of empty files in the migration directory. E.g. if you run:
 
@@ -167,7 +167,7 @@ then it will create a pair of empty files which looks like `my-dir/2025120349374
 
 Of course, you can also create such a pair of files manually.
 
-New migration version files can only be appended in the end (lexicographically, or by timestamp, which is the same). If pg-mig detects that you try to apply migrations which conflict with the existing migration versions remembered in the database, it will print the error and refuse to continue. This is similar to "fast-forward" mode in Git, and we'll talk about it in details later in the article.
+New migration version files can only be appended in the end of the list (lexicographically, or by timestamp, which is the same). If pg-mig detects that you try to apply some migrations conflicting with what's remembered in the database, it will print the error and refuse to continue. This is similar to "fast-forward" mode in Git, and we'll talk about it in details later in the article.
 
 ## The Initial Migration
 
@@ -178,6 +178,8 @@ pg-mig --make=initial@public
 ```
 
 Since almose every PostgreSQL database has schema `public` pre-created, it's convenient to target this schema in your initial migration version. If you need microsharding support, then that initial (or the following) migration version may create the desired number of microshard schemas.
+
+### In a New Project
 
 If you use pg-mig in a brand new project, then just edit the created `*.initial.public.up.sql` and \``*.initial.public.dn.sql` files in your text editor and run `pg-mig` to apply the versions.
 
@@ -200,11 +202,70 @@ During the execution of the above files, pg-mig will set the corresponding shema
 
 For debugging purposes, while building the SQL DDL statements, it's convenient to undo and apply the version in one command line:
 
-```
+```bash
 pg-mig --undo=20251203493744.initial.public; pg-mig
 ```
 
-## Dealing with Merge Conflicts
+### In an Existing Project
+
+If you plug in pg-mig to an existing project, to start using the tool for all further database migrations, just use `pg_dump` and put its output to the initial version file:
+
+```bash
+pg_dump --schema-only --schema=public your-db-name \
+  > mig/20251203493744.initial.public.up.sql  
+```
+
+If your database has multiple schemas, but no microsharding, you have 2 options:
+
+1. If the schemas are completely independent on each other, so the changes may apply in parallel, use `*.schema1.{up,down}.sql` and `*.schema2.{up,down}.sql` files.
+2. Otherwise (and it would be the most frequent case), just use `*.public.{up,down}.sql` version files targeting schema `public` . In most of PostgreSQL databases, schema `public` pre-exists and is mentioned in the default `search_path`, so targeting this schema in your migration version files will guarantee that the versions will be applied strictly sequentially, with no parallelism.
+
+## Use Standard psql Meta-Commands
+
+The migration version files you create are processed through the [standard `psql` tool](https://www.postgresql.org/docs/current/app-psql.html), so you can use its [meta-commands](https://www.postgresql.org/docs/current/app-psql.html) there. Below are several most useful examples (see `psql` documentation for more).
+
+### Include Other \*.sql Files
+
+You can include other `*.sql` files (even using relative paths):
+
+```sql
+-- mig/20231017204837.do-something.sh.up.sql
+\ir ../vendor/path/to/another/file.sql
+ALTER TABLE ...
+```
+
+### Echo Diagnostics
+
+Use `\echo` for debugging
+
+```sql
+-- mig/20231017204837.do-something.sh.up.sql
+\echo Running a dangerous query...
+ALTER TABLE ...
+```
+
+### Assign and Use Variables
+
+The `psql` tool allows to define macros and use them as variables:
+
+```sql
+-- mig/20231017204837.do-something.sh.up.sql
+SELECT 'hello' AS var1 \gset
+\echo :var1
+UPDATE my_table SET some=:'var1';
+```
+
+### Use Environment Variables
+
+If you assign e.g. `process.env.HOSTS = "{a,b,c}"` in your `pg-mig.config.js` file, you can use that value in all of the version files using the standard `psql` feature:
+
+```sql
+-- mig/20231017204837.initial.public.up.sql
+\set HOSTS `echo "$HOSTS"`
+SELECT my_function(:'HOSTS');
+```
+
+## Advanced: Merge Conflicts
 
 Migration version files are applied in strict order per each schema, and the same way as Git commits, they form a dependency **append-only** chain.
 
