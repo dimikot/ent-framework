@@ -147,6 +147,8 @@ All in all, the behavior here is pretty intuitive: if you want to target a concr
 
 If the migration file application succeeds, it will be remembered on the corresponding PostgreSQL host, in the corresponding schema (microshard) itself. So next time when you run the tool, it will understand that the migration version has already been applied, and won't try to apply it again.
 
+Each migration version file is applied atomically, in a single transaction. Also, it't the same exact transaction where pg-mig remembers that the version has been applied, so there is no chance that your version will run out of sync with the database.
+
 When the tool runs, it prints a live-updating information about what migration version file is in progress on which host in which schema (microshard). In the end, it prints the final versions map across all of the hosts and schemas.
 
 ## Undo the Migrations
@@ -222,7 +224,9 @@ If your database has multiple schemas, but no microsharding, you have 2 options:
 
 ## Use Standard psql Meta-Commands
 
-The migration version files you create are processed through the [standard `psql` tool](https://www.postgresql.org/docs/current/app-psql.html), so you can use its [meta-commands](https://www.postgresql.org/docs/current/app-psql.html) there. Below are several most useful examples (see `psql` documentation for more).
+The real power of pg-mig that many other migration tools don't have is that the migration version files are processed through the [standard `psql` tool](https://www.postgresql.org/docs/current/app-psql.html), so you can use its [meta-commands](https://www.postgresql.org/docs/current/app-psql.html) there. Each file is also applied atomically: "all or nothing", in a single transaction.
+
+Below are several examples (see `psql` documentation for more).
 
 ### Include Other \*.sql Files
 
