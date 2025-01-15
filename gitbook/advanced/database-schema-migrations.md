@@ -320,11 +320,12 @@ In a rare case when the migration fails, you'll be able to just rerun pg-mig: it
 
 ## Parallelism Limiting Options
 
-Here is the complete list of `-- $` psequdo comments pg-mig supports in the migration version files:
+Here is the complete list of `-- $` pseudo comments that pg-mig supports in the migration version files:
 
 * `$parallelism_per_host=N`: as mentioned above, this option forces the parallel migrations for schemas on the same host to wait for each other, not allowing to run more than N of then at the same time.
-* `$parallelism_global=N`: limits parallelism of this particular version within the same schema prefix across all hosts.
-* `$run_alone`: If set, no other migrations (including other schema prefixes!) will run on any other host while this one is running.
+* `$parallelism_global=N`: limits parallelism of this particular version _within the same schema prefix_ across all hosts.
+* `$delay=M`: introduces a delay (in ms) between each migration. You can use it with `$parallelism_global` to reduce load on the database even further.
+* `$run_alone=1`: if set to 1, no other migrations, _including other schema prefixes_, will run on any other host while this one is running. I.e. it introduces global ordering of the migration files application across schemas. This option is useful when you want to e.g. install a PostgreSQL extension used in other schemas, so you want all other schemas to wait until the installation finishes.
 
 ## Advanced: Merge Conflicts
 
