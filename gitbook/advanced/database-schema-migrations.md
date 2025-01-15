@@ -278,6 +278,29 @@ If you assign e.g. `process.env.HOSTS = "{a,b,c}"` in your `pg-mig.config.js` fi
 SELECT my_function(:'HOSTS');
 ```
 
+### More Meta-Commands
+
+See the [official psql documentation](https://www.postgresql.org/docs/current/app-psql.html) for more meta-commands.
+
+## Transactions, CREATE INDEX CONCURRENTLY
+
+Every migration version file is executed in a separate transactions, but sometimes you'll want to make an exception.
+
+E.g. it is highly discouraged to create indexes in transactions using the plain `CREATE INDEX` query, especially when the table is large. The query acquires a write lock on the table, so no data can be written to it until the index creation finishes, which may take many minutes.
+
+Luckily, PostgreSQL supports a non-blocking version of this query, `CREATE INDEX CONCURRENTLY`. It allows write when the index is creating. The query has its downsides though:
+
+1. It may be 2 times slower than the regular `CREATE INDEX`.
+2. In rare cases, it may fail and leave the index in a "broken" state. Nothing too bad will happen in terms of the database health though: you'll just need to drop that broken index and retry.
+3. It must run outside of `BEGIN...COMMIT` transaction block.
+
+```sql
+CREATE UNIQUE INDEX CONCURRENTLY users_email_uniq
+  ON users(email);
+```
+
+
+
 ## Advanced: Merge Conflicts
 
 Migration version files are applied in strict order per each schema, and the same way as Git commits, they form a dependency **append-only** chain.
