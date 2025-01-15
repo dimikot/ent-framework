@@ -294,12 +294,37 @@ Luckily, PostgreSQL supports a non-blocking version of this query, `CREATE INDEX
 2. In rare cases, it may fail and leave the index in a "broken" state. Nothing too bad will happen in terms of the database health though: you'll just need to drop that broken index and retry.
 3. It must run outside of `BEGIN...COMMIT` transaction block.
 
+Use the following up-migration file to deal with the downsides above:
+
 ```sql
-CREATE UNIQUE INDEX CONCURRENTLY users_email_uniq
-  ON users(email);
+-- $parallelism_per_host = 2
+COMMIT;
+DROP INDEX IF EXISTS users_email;
+CREATE UNIQUE INDEX CONCURRENTLY users_email ON users(email);
+BEGIN;
 ```
 
+And the down-migration file:
 
+```sql
+COMMIT;
+DROP INDEX CONCURRENTLY IF EXISTS users_email;
+BEGIN;
+```
+
+Here, we first tell pg-mig that it should not run this script with concurrency higher than `$parallelism_per_host=2` (for instance, if you have multiple microshard schemas `shNNNN` on that host, then it will apply the query not to all of them simultaneously, but slower). This is a good practice to not max out the database server CPU (PostgreSQL also has a built-in protection against running too many maintenance queries in parallel, but often times it's better to be explicit).
+
+Then, we close the transaction that pg-mig automatically opens for each migration version file, run `CREATE INDEX CONCURRENTLY` and, in the end, open a new transaction to let pg-mig commit the new version update fact to the database. It makes this migration version non-transactional, so there is a nonzero chance that it may fail. Also, as `CREATE INDEX CONCURRENTLY`  may legally fail as well and produce a "broken index", we use `DROP INDEX IF EXISTS` query before creating the index, to remove any leftovers.
+
+In a rare case when the migration fails, you'll be able to just rerun pg-mig: it will just continue from the place where it failed. (In fact, when using microsharding, it will only continue with the schemas that failed, so the rerun will be way quicker than the initial run).
+
+## Parallelism Limiting Options
+
+Here is the complete list of `-- $` psequdo comments pg-mig supports in the migration version files:
+
+* `$parallelism_per_host=N`: as mentioned above, this option forces the parallel migrations for schemas on the same host to wait for each other, not allowing to run more than N of then at the same time.
+* `$parallelism_global=N`: limits parallelism of this particular version within the same schema prefix across all hosts.
+* `$run_alone`: If set, no other migrations (including other schema prefixes!) will run on any other host while this one is running.
 
 ## Advanced: Merge Conflicts
 
