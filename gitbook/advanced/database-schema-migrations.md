@@ -93,6 +93,7 @@ The migration version file name has the following format (examples):
 
 ```
 mig/
+  before.sql
   20231017204837.do-something.sh.up.sql
   20231017204837.do-something.sh.dn.sql
   20241107201239.add-table-abc.sh0000.up.sql
@@ -101,6 +102,7 @@ mig/
   20241201204837.change-other-thing.sh.dn.sql
   20251203493744.install-pg-extension.public.up.sql
   20251203493744.install-pg-extension.public.dn.sql
+  after.sql
 ```
 
 Here,
@@ -109,6 +111,7 @@ Here,
 * The 2nd part is a descriptive name of the migration (can be arbitrary). Think of it as of the commit title.
 * The 3rd part is the "schema name prefix" (microshard name prefix). The SQL operations in the file will be applied only to the schemas whose names start with that prefix.
 * The 4th part is either "up" ("up" migration) or "dn" ("down" migration). Up-migrations roll the database schema version forward, and down-migrations allow to undo the changes.
+* There are 2 optional special files: `before.sql` and `after.sql`. They are executed on every PostgreSQL hosts once per each pg-mig run, in independent transactions. It is convent to run some common initialization or maintenance there, especially when working with microsharding (there will be an example provided later in Advanced section).
 
 It is your responsibility to create up- and down-migration SQL files. Basically, you provide the DDL SQL queries on how to roll the database schema forward and how to roll it backward.
 
@@ -131,17 +134,21 @@ If multiple migration files match some schema, then only the file with the **lon
 E.g. imagine you have the following migration version files:
 
 ```
+before.sql
 20231017204837.do-something.sh.up.sql              # .sh.
 20241107201239.add-table-abc.sh0000.up.sql         # .sh0000.
 20241201204837.change-other-thing.sh.up.sql        # .sh.
 20251203493744.install-pg-extension.public.up.sql  # .public.
+after.sql
 ```
 
-Then, the following will happen in parallel:
+Then, the following will happen in parallel on all hosts and for all microshards:
 
+* On every PostgreSQL host, `before.sql` will run. Until it succeeds, no other migration versions will even start running.
 * For every `shNNNN` schema (basically, all schemas starting with "sh" prefix) except `sh0000`, the version `do-something.sh` will be applied first, and then, if it succeeds, the `change-other-thing.sh` will be run. Notice that `sh0000` is excluded, because there exist other migration file versions targeting `sh0000` precisely (and "sh0000" prefix is longer than "sh").
 * For `sh0000` schema, `add-table-abc.sh0000` will be run.
 * For `pubic` schema, `install-pg-extension.public` will be run.
+* In the end, on each host, `after.sql` will run (in case the migration succeeds).
 
 All in all, the behavior here is pretty intuitive: if you want to target a concrete schema, just use its full name; if you want multiple schemas to be considered, then use their common prefix.
 
@@ -150,6 +157,8 @@ If the migration file application succeeds, it will be remembered on the corresp
 Each migration version file is applied atomically, in a single transaction. Also, it't the same exact transaction where pg-mig remembers that the version has been applied, so there is no chance that your version will run out of sync with the database.
 
 When the tool runs, it prints a live-updating information about what migration version file is in progress on which host in which schema (microshard). In the end, it prints the final versions map across all of the hosts and schemas.
+
+If you have multiple PostgreSQL hosts and/or multiple target schemas, you can control the level of parallelism with `--parallelism=N` command line option (defaults to 10).
 
 ## Undo the Migrations
 
