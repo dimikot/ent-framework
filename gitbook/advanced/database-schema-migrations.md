@@ -327,6 +327,10 @@ Here is the complete list of `-- $` pseudo comments that pg-mig supports in the 
 * `$delay=M`: introduces a delay (in ms) between each migration. You can use it with `$parallelism_global` to reduce load on the database even further.
 * `$run_alone=1`: if set to 1, no other migrations, _including other schema prefixes_, will run on any other host while this one is running. I.e. it introduces global ordering of the migration files application across schemas. This option is useful when you want to e.g. install a PostgreSQL extension used in other schemas, so you want all other schemas to wait until the installation finishes.
 
+## Advanced: Use With pg-microsharding Library
+
+Overall, there are many popular alternatives to pg-mig when it comes to managing a single database with no sharding. But when it comes to migrating the entire database cluster, or  working with microsharding, pg-mig starts shining.
+
 ## Advanced: Merge Conflicts
 
 Migration version files are applied in strict order per each schema, and the same way as Git commits, they form a dependency **append-only** chain.
