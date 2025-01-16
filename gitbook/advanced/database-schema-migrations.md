@@ -1,27 +1,29 @@
 # Database Schema Migrations
 
-As opposed to classical ORMs (like [Prisma](https://www.prisma.io) or [Drizzle](https://orm.drizzle.team)), Ent Framework does not have any built-in database migration tool, and it doesn't infer SQL tables schema for you from the TypeScript schema definition.
+As opposed to classical ORMs (like [Prisma](https://www.prisma.io) or [Drizzle](https://orm.drizzle.team)), Ent Framework does not include any built-in database migration tool, and it doesn't infer SQL tables schema for you from the TypeScript schema definition.
 
 In terms of the storage layer, Ent Framework operates at the lower level than the ORMs mentioned above. Ent abstraction is in fact very close to PostgreSQL layer. Such approach is the exact sweet spot and the exact trade-off between being flexible (e.g. to expose all bleeding edge PostgreSQL features without hiding them) and being useful in practice.
 
 Database migration is a complicated process with many details. You can use any existing tools (like Liquibase) to organize it, or you can plug in Ent Framework to your existing database (considering you are already doing migrations for that database somehow).
 
-There is one important aspect though: no mainstream solutions support microsharding out of the box.
+There is one important aspect though: the most popular solutions you may heard of do not support microsharding out of the box. They are targeting just the most common use case: a single database on a single host.
 
 ## Migrations in Microsharding Environment
 
 When working with [microsharding](../scalability/sharding-microsharding.md), you'll have hundreds of PostgreSQL schemas (with names like `sh01234`) living on multiple islands and PostgreSQL nodes. All those schemas (microshards) have exactly the same set of tables, indexes, stored functions etc. At the same time, you don't want to sacrifice any of the PosrgreSQL built-in features when adding microsharding to your project.
 
-So, database migration gets several imporant aspects, that no mainstream tools support well enough at the moment:
+So, database migration gets several important aspects:
 
-1. Track database schema version per each microshard individually. I.e. if you add a column to some table, run the migration to apply it to all physical tables in microshards, and it fails in the middle, next time you run the migration process, it has to continue from the microshard where it left off.
-2. Apply the changes to multiple PostgreSQL nodes and microshards in a controlled-parallel way, otherwise they will take forever to finish. I.e. the migration tool must know the entire cluster configuration, not only one PostgreSQL node.
+1. It should track database schema version per each microshard individually. I.e. imagine that you add a column to some table, run the migration to apply it to all physical tables in microshards, and it fails in the middle. Next time you run the migration process, it must continue from the microshard where it left off.
+2. It shoud apply the changes to multiple PostgreSQL nodes and microshards in a controlled-parallel way, otherwise the migration will take forever to finish. I.e. the migration tool must know the entire cluster configuration, not only one PostgreSQL node.
 
-To support the above in microsharded environment, it is recommended to use [pg-mig](https://www.npmjs.com/package/@clickup/pg-mig) tool to organize the migration for databases backed by Ent Framework.
+The [pg-mig](https://www.npmjs.com/package/@clickup/pg-mig) tool solves all of the above, and it helps to organize the migration for databases backed by Ent Framework.
+
+Below is the content of pg-mig tool README file.
 
 ## The pg-mig Tool
 
-The **pg-mig** tool allows to create a PostgreSQL database schema (with tables, indexes, sequences, functions etc.) and apply it consistently across multiple PostgreSQL nodes (across multiple microshard schemas on multiple hosts). The behavior is transactional per each microshard per migration version ("all or nothing").
+The pg-mig tool allows to create a PostgreSQL database schema (with tables, indexes, sequences, functions etc.) and apply it consistently _across multiple PostgreSQL nodes_, also _across multiple microshard schemas_ on multiple hosts. The behavior is transactional per each microshard per migration version ("all or nothing").
 
 In other words, pg-mig helps to keep your database clusters' schemas identical (each microshard schema will have exactly the same DDL structure as any other schema on all other hosts).
 
@@ -479,3 +481,18 @@ In practice, the situation is not as bad as it sounds:
 
 1. If it breaks, it's easy to fix: just rename one file and push a new commit.
 2. Database changes are relatively rare, and deployments also don't typically happen immediately after each pushed commit (unless you are very lucky), so the chance of catching such an ordering conflict are low.
+
+## Advanced: Migration Versions Digest
+
+Often times, when deploying the application code, we need to ensure that the database cluster schema is "good enough" for this code. Which means that all of the migrations have fully succeeded before the further code deployment (it's assumed that migrations produce backward compatible database schemas, otherwise it all makes not a lot of sense).
+
+To help with this check, pg-mig exposes the concept called "version digest". It's like a database schema version, but appended with a hashcode of the migration version files combined.
+
+Digest is a string, and by comparing 2 digests lexicographically, you may make a decision, which one is "better" (or, if you don't want "better/worse" comparison, you can also compare them for strict equality). If the database's digest is **greater or equal to** the application code's digest, then the code is compatible to the currently existing cluster schema, so the code can be deployed ("your database is ahead of the code").
+
+* Run `pg-mig --list=digest` to print the digest of the current migration files on disk (i.e. "code digest").
+* Use `loadDBDigest()` function exported by pg-mig Node library to extract the digest from the current databases used by the app (i.e. "database digest").
+
+Every time the whole migration process succeeds, the digest is saved to _all database nodes_, so it can be later retrieved with `loadDBDigest()`. If you have multiple nodes managed by pg-mig, and they happen to appear out of sync, then this function will take care of choosing the most "sane" digest from those nodes, to let you compare it with the "code digest", with no single point of failure.
+
+If you initiated an undo process earlier, and your database is currently in an "intermediate" state, then the digest loaded will be "lower" than any "code digest", so it will conflict with any code digest you're trying to deploy; you'll need to fix and finish the DB migration before you could proceed with any code deployment.
