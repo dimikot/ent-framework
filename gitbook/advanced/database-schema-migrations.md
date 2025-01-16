@@ -329,38 +329,53 @@ Here is the complete list of `-- $` pseudo comments that pg-mig supports in the 
 
 ## Advanced: Use With pg-microsharding Library
 
-Overall, there are many popular alternatives to pg-mig when it comes to managing a single database with no sharding. But when it comes to migrating the entire database cluster, or working with microsharding, pg-mig starts shining.
+Overall, there are many popular alternatives to pg-mig when it comes to managing a single database with no sharding. But when it comes to migrating the entire cluster with multiple nodes, or working with microsharding, pg-mig starts shining.
 
 The recommended library to manage the microshards schemas is [pg-microsharding](https://www.npmjs.com/package/@clickup/pg-microsharding). To couple it with pg-mig, create the following files:
 
-**mig/YYYYMMDDhhmmss.add\_microsharding.public.up.sql**
-
 ```sql
+-- mig/YYYYMMDDhhmmss.add_microsharding.public.up.sql
 CREATE SCHEMA microsharding;
 SET search_path TO microsharding;
 \ir ../pg-microsharding/sql/pg-microsharding-up.sql
 ```
 
-**mig/YYYYMMDDhhmmss.add\_microsharding.public.dn.sql**
-
 ```sql
+-- mig/YYYYMMDDhhmmss.add_microsharding.public.dn.sql
 DROP SCHEMA microsharding;
 ```
 
-Also, define before/after files:
-
-**mig/before.sql**
+Also, define before/after scripts:
 
 ```sql
+-- mig/before.sql
 SELECT microsharding.microsharding_migration_before();
 ```
 
-**mig/after.sql**
-
 ```sql
+-- mig/after.sql
 \set HOSTS `echo "$HOSTS"`
 SELECT microsharding.microsharding_migration_after(:'HOSTS');
 ```
+
+The `microsharding_migration_after()` function from pg-microsharding library creates so-called "debug views" for each sharded table in your cluster. For instance, it you have `sh0001.users`, `sh0002.users` etc. tables. then it will create a debug view `public.users` with the definition like:
+
+```sql
+CREATE VIEW public.users AS
+  SELECT * FROM sh0001.users
+  UNION ALL
+  SELECT * FROM sh0002.users
+  UNION ALL
+  ...;
+```
+
+Even more, if you pass the list of all PostgreSQL hosts, and those hosts can access each other without a password (e.g. they have  `/var/lib/postgresql/N/.pgpass` files), then those debug views will work across all shards on all nodes (using [foreign-data wrapper](https://www.postgresql.org/docs/current/postgres-fdw.html) functionality).
+
+So **for debugging purposes**, you'll be able to run queries across all microshards in your `psql` sessions. This is typically very convenient.
+
+Of course those debug views are not suitable for production traffic: cross-node communication in PostgreSQL, as well as query planning, work super-inefficiently. Do not even try, use application-level microshards routing, like e.g. [Ent Framework](https://docs.ent-framework.net) provides.
+
+As of `microsharding_migration_before()`, you must call it before any changes are applied to your microsharded tables. The function drops all of the debug views mentioned above. E.g. if you remove a column from a table, PostgreSQL would not allow you to do it it this column is mentioned in any of the views, so it's important to drop the views and re-create them afterwards.
 
 ## Advanced: Merge Conflicts
 
