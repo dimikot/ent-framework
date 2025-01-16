@@ -39,6 +39,7 @@ pg-mig
   [--user=user-which-can-apply-ddl]
   [--pass=password]
   [--db=my-database-name]
+  [--createdb]
   [--undo=20191107201239.my-migration-name.sh]
   [--make=my-migration-name@sh]
   [--list | --list=digest]
@@ -46,7 +47,7 @@ pg-mig
   [--dry]
 ```
 
-All of the command line arguments are optional, the tool uses defaults from environment variables or `pg-mig.config.js` file.
+All of the command line arguments are optional, the tool uses defaults from environment variables or `pg-mig.config.ts` (or `.js`) file.
 
 ## Environment Variables
 
@@ -60,32 +61,42 @@ There are variables standard for `psql` tool:
 
 Other variables:
 
-* `PGMIGDIR`: the default value for `--migdir` option.
+* `PGMIGDIR`: the default value for `--migdir` option, a directory with migration version files.
+* `PGCREATEDB`: if 1, assumes that `--createdb` flag is passed. It forces pg-mig to try creating the database if it doesn't exist, which is very convenient in dev (and test) environment. Also, it PostgreSQL servers are down or booting, this flag will tell pg-mig to wait for them.
 
 ## Configuration File
 
-Instead of setting the environment variables, you can export the same exact values in `pg-mig.config.js` file by e.g. deriving them directly from the Ent Framework cluster configuration:
+Instead of setting the environment variables, you can export the same exact values in `pg-mig.config.ts` file by e.g. deriving them directly from the Ent Framework cluster configuration:
 
 ```javascript
-"use strict";
-const cluster = require("ents/cluster").cluster;
-const islands = cluster.options.islands();
-const firstNode = islands[0].node[0];
-module.exports = {
-  PGHOST: islands
-    .map((island) => island.nodes.map(({ host }) => host)
-    .flat()
-    .join(","),
-  PGPORT: 5432, // we don't want to use pgbouncer port here
-  PGUSER: firstNode.user,
-  PGPASSWORD: firstNode.password,
-  PGDATABASE: firstNode.database,
-  PGSSLMODE: firstNode.ssl ? "prefer" : undefined,
-  PGMIGDIR: `${__dirname}/mig`,
-};
+import { cluster } from "ents/cluster";
+
+export default async function(action: "apply" | "undo" | string) {
+  const islands = cluster.options.islands();
+  const firstNode = islands[0].node[0];
+  return {
+    PGHOST: islands
+      .map((island) => island.nodes.map(({ host }) => host)
+      .flat()
+      .join(","),
+    PGPORT: 5432, // we don't want to use pgbouncer port here
+    PGUSER: firstNode.user,
+    PGPASSWORD: firstNode.password,
+    PGDATABASE: firstNode.database,
+    PGSSLMODE: firstNode.ssl ? "prefer" : undefined,
+    PGMIGDIR: `${__dirname}/mig`,
+    PGCREATEDB: process.env.NODE_ENV === "development",
+    after: async () => {
+      // Will be called after the migrations succeed. Here, you can e.g.
+      // upsert some initial objects in the database if they don't exist.
+    },
+  };
+}
 ```
 
-The file `pg-mig.config.js` is searched in all parent folders starting from the current working directory when `pg-mig` is run (typically you want to have it in the root of your project, near the other configuration files).
+The file `pg-mig.config.ts` is searched in all parent folders starting from the current working directory when `pg-mig` is run (typically you want to have it in the root of your project, near the other configuration files).
+
+You can export-default a regular function, an async function, or even a plain constant object.
 
 ## Migration Version Files
 
@@ -272,7 +283,7 @@ UPDATE my_table SET some=:'var1';
 
 ### Use Environment Variables
 
-If you assign e.g. `process.env.HOSTS = "{a,b,c}"` in your `pg-mig.config.js` file, you can use that value in all of the version files using the standard `psql` feature:
+If you assign e.g. `process.env.HOSTS = "{a,b,c}"` in your `pg-mig.config.ts` file, you can use that value in all of the version files using the standard `psql` feature:
 
 ```sql
 -- mig/20231017204837.initial.public.up.sql
