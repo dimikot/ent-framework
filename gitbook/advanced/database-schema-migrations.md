@@ -66,7 +66,7 @@ Other variables:
 
 ## Configuration File
 
-Instead of setting the environment variables, you can export the same exact values in `pg-mig.config.ts` file by e.g. deriving them directly from the Ent Framework cluster configuration:
+Instead of setting the environment variables, you can export the same exact values in `pg-mig.config.ts` file by e.g. deriving them directly from the [Ent Framework](https://ent-framework.org/) cluster configuration:
 
 ```javascript
 import { cluster } from "ents/cluster";
@@ -386,7 +386,7 @@ Even more, if you pass the list of all PostgreSQL hosts, and those hosts can acc
 
 So **for debugging purposes**, you'll be able to run queries across all microshards in your `psql` sessions. This is typically very convenient.
 
-Of course those debug views are not suitable for production traffic: cross-node communication in PostgreSQL, as well as query planning, work super-inefficiently. Do not even try, use application-level microshards routing, like e.g. [Ent Framework](https://docs.ent-framework.net) provides.
+Of course those debug views are not suitable for production traffic: cross-node communication in PostgreSQL, as well as query planning, work super-inefficiently. Do not even try, use application-level microshards routing, like e.g. [Ent Framework](https://ent-framework.org/) provides.
 
 As of `microsharding_migration_before()`, you must call it before any changes are applied to your microsharded tables. The function drops all of the debug views mentioned above. E.g. if you remove a column from a table, PostgreSQL would not allow you to do it it this column is mentioned in any of the views, so it's important to drop the views and re-create them afterwards.
 
