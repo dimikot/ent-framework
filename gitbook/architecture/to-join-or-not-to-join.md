@@ -119,3 +119,36 @@ Does it hurt your sense of engineering perfection? Does it smell to you?
 
 Such things are more related not to real resources utilization (the difference is marginal), but to the design and architecture smells.
 
+## Round Trip Latency Consideration
+
+To be fair, there is still one benefit in using type 3 JOINs: when you fetch comments, topics and users all at once, you only have 1 round-trip to the database server:
+
+```sql
+-- Traditional ORM's way: 1 round-trip.
+SELECT *
+FROM comments
+JOIN topics ON topics.id = comments.topic_id
+JOIN users authors ON authors.id = comments.author_id
+JOIN users creators ON creators.id = topics.creator_id
+```
+
+I.e. you send 1 request and get 1 response (with duplicated data, but anyways).
+
+If your backend-to-database network connection is slow (like one query takes 50 ms, which happens in commerical and highly vendor-lock-in prone solutions like Vercel and other players promote), then such consideration is significant.
+
+So, in slow networks, JOINs win over the Ent Framework's automatic batching approach:
+
+```sql
+-- Ent Framework's way: 3 round-trips.
+SELECT * FROM comments WHERE id IN(...);
+SELECT * FROM topics WHERE id IN(...);
+SELECT * FROM users WHERE id IN(...);
+```
+
+What's the catch? The fact is that in real life (and since 1990x), your network to the database is **not** slow. Quite the opposite, it is very fast, and you have sub-millisecond latency. Otherwise your entire backend becomes just so painfully slow in all other places that you can't manage it.
+
+Databases are designed to serve queries, do it fast, and with low latency at high concurrency. This is what the databases are for. Let's use the microscope for science and not to hammer nails.
+
+* False assumption: 50 ms database query is a norm; JOINs are to minimize round trips and solve [N+1 Selects](../getting-started/n+1-selects-solution.md) problem; take my money dear Vercel & Co.
+* Reality: you have troubles with your app design if the query latency is longer than 1-2 ms; round trip time does not affect latency much in case the queries are batched.
+

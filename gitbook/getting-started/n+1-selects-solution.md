@@ -70,7 +70,7 @@ Look at this spaghetti mess. The code appears very coupled.
 
 The root of the problem here is clear: we think in terms of the lists, and the code encourages us to "accumulate" lists manually.
 
-## Ent Framework Approach: Automatic Batching
+### Ent Framework Approach: Automatic Batching
 
 Now let's see what happens if we stop thinking in terms of lists and, instead, switch to "per individual object" paradigm.
 
