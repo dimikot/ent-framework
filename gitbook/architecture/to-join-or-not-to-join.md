@@ -9,7 +9,7 @@ Ent Framework design discourages people to use SQL JOINs. Instead, it relies on 
 
 In web development, JOINs are generally abused heavily. There are 3 main usecases when people use JOINs traditionaly, and only 2 of them are legit.
 
-### Statistical Queries and OLAP
+### Type 1: Statistical Queries and OLAP
 
 When you have a large database, you sometimes need to pull some statistical information out of it. E.g. to answer a question, how many users registered and performed some action within a time frame, or how much money did the service earen, etc. Often times, building an SQL query with JOINs and running it over a replica database is the easiest solution.
 
@@ -17,13 +17,13 @@ This use case is not so much frequent though. And although it's a fully legit us
 
 What distinguishes such a use case that you run a small number of very heavy queries (OLAP pattern).
 
-### Precise Query Optimization
+### Type 2: Precise Query Optimization
 
 Sometimes you just want to squeeze the maximum performance from your database when running an OLTP load (i.e. when running a large number of very fast queries). I.e. you use JOINs for computational performance reasons: instead of transmitting 2 large lists from the database and intersecting them at the client (throwing away the absolute most of the transferred rows), you ask the database server to do it internally utilizing indexes.
 
 But again, although it's a fully legit use case for JOINs, the need for it is relatively rare.
 
-### Parent-Children Relationships Loading and N+1 Selects Problem
+### Type 3: Parent-Children Loading and N+1 Selects Problem
 
 And here coms the most frequent use cases when JOINs are used (actually, abused) in all mainstream ORMs. It is not related to slow queries, and not related to intersecting large lists throwing away non-matching items. The use case is purely about loading some objects and then their parents (or children), i.e. loading a data from a graph-like structure.
 
@@ -80,7 +80,7 @@ Such an API has 2 fundamental flaws when using traditional ORMs without query bu
 
 ## Painful Boilerplate Analogy
 
-So the 3rd use case of JOINs above is not quite legit: people use it to "duct tape" the real problem in a boilerplatish way. This reminds the early days of Web, when people were emitting their HTML as plain text, escaping values in every place:
+That type 3 of JOINs above is not quite what JOINs are designed for: people use it to "duct tape" the real problem in a boilerplatish way. This reminds the early days of Web, when people were emitting their HTML as plain text, escaping values in every place:
 
 ```html
 <-- PHP code from 1990x, beware: your eyes will bleed! -->
@@ -88,4 +88,34 @@ So the 3rd use case of JOINs above is not quite legit: people use it to "duct ta
 <?php echo htmlspecialchars($last); ?>!</p>
 ```
 
-Thousands of projects were written this way, and they are still there.
+Thousands of projects were written this way, and they are still there. Type 3 of JOINs is not much different conceptually.
+
+Also, think about the data duplication such JOINs produce over the wire. Consider the following query:
+
+```sql
+SELECT
+  comments.id,
+  comments.text,
+  users.id AS author_id,
+  users.name AS author_name
+FROM comments
+JOIN users ON users.id = comments.author_id
+```
+
+and the resulting data which is sent from the database server:
+
+| id | text    | author\_id | author\_name |
+| -- | ------- | ---------- | ------------ |
+| 1  | hello   | 42         | Alice        |
+| 2  | my      | 42         | Alice        |
+| 3  | dear    | 42         | Alice        |
+| 4  | friend  | 101        | Bob          |
+| 5  | bye now | 101        | Bon          |
+
+Does it hurt your sense of engineering perfection? Does it smell to you?
+
+1. The author\_id+author\_name pair of values is repeated 3 times in the payload for the first 3 comments, and then repeated 2 times for the last 2 comments. Imagine now that `users` table has way more columns.
+2. Another smell is that "author\_" prefix: although being minor, it's clearly a naming boilerplate. You need to introduce some naming mapping convention between the column names in the JOIN result and in your ORM objects (be it glueing parts with "\_" or with "." or whatever).
+
+Such things are more related not to real resources utilization (the difference is marginal), but to the design and architecture smells.
+
