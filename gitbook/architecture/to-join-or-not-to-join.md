@@ -73,8 +73,19 @@ async function loadCommentWithDetails(id: string) {
 }
 ```
 
-Such an API has 2 fundamental flaws:
+Such an API has 2 fundamental flaws when using traditional ORMs without query built-in query batching:
 
 1. If you need to load 100 comment — what would you even do? Try using `Promise.all()` with `loadCommentWithDetails()` for 100 IDs, an you'll get 100 database queries with JOINs.
 2. "Load comments with details" — with what exact details? In one place of the code you'll need authors and topics, and in another one, you may only need the direct comment creator. Would you create a separate function with boilerplate for that?
 
+## Painful Boilerplate Analogy
+
+So the 3rd use case of JOINs above is not quite legit: people use it to "duct tape" the real problem in a boilerplatish way. This reminds the early days of Web, when people were emitting their HTML as plain text, escaping values in every place:
+
+```html
+<-- PHP code from 1990x, beware: your eyes will bleed! -->
+<p>Hellow, <?php echo htmlspecialchars($first); ?>
+<?php echo htmlspecialchars($last); ?>!</p>
+```
+
+Thousands of projects were written this way, and they are still there.
