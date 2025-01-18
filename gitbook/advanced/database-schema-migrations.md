@@ -23,6 +23,10 @@ Below is the content of pg-mig tool README file.
 
 ## pg-mig: PostgreSQL schema migration tool with microsharding and clustering support
 
+See also [Full API documentation](https://github.com/clickup/pg-mig/blob/master/docs/globals.md).
+
+<div align="left"><img src="https://github.com/clickup/pg-mig/actions/workflows/ci.yml/badge.svg?branch=main" alt="" width="188"></div>
+
 The pg-mig tool allows to create a PostgreSQL database schema (with tables, indexes, sequences, functions etc.) and apply it consistently _across multiple PostgreSQL nodes_, also _across multiple microshard schemas_ on multiple hosts. The behavior is transactional per each microshard per migration version ("all or nothing").
 
 In other words, pg-mig helps to keep your database clusters' schemas identical (each microshard schema will have exactly the same DDL structure as any other schema on all other hosts).
