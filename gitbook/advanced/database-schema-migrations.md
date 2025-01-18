@@ -10,7 +10,7 @@ There is one important aspect though: the most popular solutions you may heard o
 
 ## Migrations in Microsharding Environment
 
-When working with [microsharding](../scalability/sharding-microsharding.md), you'll have hundreds of PostgreSQL schemas (with names like `sh01234`) living on multiple islands and PostgreSQL nodes. All those schemas (microshards) have exactly the same set of tables, indexes, stored functions etc. At the same time, you don't want to sacrifice any of the PosrgreSQL built-in features when adding microsharding to your project.
+When working with [microsharding](https://docs.ent-framework.net/scalability/sharding-microsharding), you'll have hundreds of PostgreSQL schemas (with names like `sh01234`) living on multiple islands and PostgreSQL nodes. All those schemas (microshards) have exactly the same set of tables, indexes, stored functions etc. At the same time, you don't want to sacrifice any of the PosrgreSQL built-in features when adding microsharding to your project.
 
 So, database migration gets several important aspects:
 
@@ -27,7 +27,7 @@ See also [Full API documentation](https://github.com/clickup/pg-mig/blob/master/
 
 <div align="left"><img src="https://github.com/clickup/pg-mig/actions/workflows/ci.yml/badge.svg?branch=main" alt="" width="188"></div>
 
-The pg-mig tool allows to create a PostgreSQL database schema (with tables, indexes, sequences, functions etc.) and apply it consistently _across multiple PostgreSQL nodes_, also _across multiple microshard schemas_ on multiple hosts. The behavior is transactional per each microshard per migration version ("all or nothing").
+The [pg-mig](https://www.npmjs.com/package/@clickup/pg-mig) tool allows to create a PostgreSQL database schema (with tables, indexes, sequences, functions etc.) and apply it consistently _across multiple PostgreSQL nodes_, also _across multiple microshard schemas_ on multiple hosts. The behavior is transactional per each microshard per migration version ("all or nothing").
 
 In other words, pg-mig helps to keep your database clusters' schemas identical (each microshard schema will have exactly the same DDL structure as any other schema on all other hosts).
 
