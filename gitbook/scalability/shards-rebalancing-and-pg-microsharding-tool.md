@@ -1,0 +1,257 @@
+# Shards Rebalancing and pg-microsharding Tool
+
+Ent Framework by itself does not include a tool that allows to create new microshards or move them from one island to another. As we earlier discussed in [locating-a-shard-id-format.md](locating-a-shard-id-format.md "mention"), for the engine, a microshard is just a PostgreSQL schema located on some island. You, as a user, define the naming convention to be used for such schemas:
+
+```typescript
+export const cluster = new Cluster({
+  shards: {
+    nameFormat: "sh%04d",
+    discoverQuery:
+      "SELECT nspname FROM pg_namespace WHERE nspname ~ 'sh[0-9]+'",
+  },
+  ...
+});
+```
+
+The above means that your microshard schemas are named like `sh0000`, `sh0123` etc., and also you provided a query that enumerates all microshard schemas available on a particular island.
+
+To manage the actual schemas, an external tool needs to be used.
+
+Below is the README content of [pg-microsharding](https://www.npmjs.com/package/@clickup/pg-microsharding) tool.
+
+## pg-microsharding: Microshards Support for PostgreSQL
+
+See also [TypeScript API documentation](https://github.com/clickup/pg-microsharding/blob/master/docs/globals.md).
+
+[![CI run](https://github.com/clickup/pg-microsharding/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/clickup/pg-microsharding/actions/workflows/ci.yml/badge.svg?branch=main)
+
+The [pg-microsharding](https://www.npmjs.com/package/@clickup/pg-microsharding) CLI tool enables microshard schemas management across multiple PostgreSQL servers. You can do the following:
+
+* Add and remove microshard schemas.
+* Activate and deactivate schemas.
+* Enumerate active microshard schemas.
+* View the entire cluster layout: what microshard schemas are where, of what size, and how many reads/writes do the experience.
+* Move a microshard from one PostgreSQL server to another with no downtime.
+* Automatically rebalance microshards among multiple servers, so that each server will become of approximately the same size.
+* Weighted rebalancing: when one server looks overloaded, you can "dissolve out" some shards from it to other servers to achieve equal load.
+
+Each microshard is a PostgreSQL schema with numeric suffix. Microshard schemas have the same set of tables with same names; it's up to the higher-level tools to keep the schemas of all those tables in sync (e.g. see [pg-mig](https://www.npmjs.com/package/@clickup/pg-mig) tool).
+
+## Usage
+
+```
+pg-microsharding list | ls
+  [--weight-sql='SELECT returning weight with optional unit']
+  [--verbose]
+  [--dsn=DSN | --dsns=DNS1,DSN2,...]
+
+pg-microsharding allocate
+  --shard=N | --shards=N-M
+  --migrate-cmd='shell command to run migrations'
+  --activate={yes | no}
+  [--dsn=DSN | --dsns=DNS1,DSN2,...]
+
+pg-microsharding factor
+  --shard=N | --shards=N,M,... | --shards=DSN-PREFIX
+  --factor=P|+P.Q|-P.Q|"*P.Q"
+  [--dsn=DSN | --dsns=DNS1,DSN2,...]
+
+pg-microsharding move
+  --shard=N
+  --from=DSN
+  --to=DSN
+  --activate-on-destination={yes | no}
+  [--deactivate-sql='SQL $1 SQL']
+
+pg-microsharding rebalance
+  --activate-on-destination={yes | no}
+  [--deactivate-sql='SQL $1 SQL']
+  [--weight-sql='SELECT returning weight with optional unit']
+  [--decommission=DSN1,DSN2,...]
+  [--parallelism=N]
+  [--dsn=DSN | --dsns=DNS1,DSN2,...]
+
+pg-microsharding cleanup
+  [--dsn=DSN | --dsns=DNS1,DSN2,...]
+```
+
+## Environment Variables
+
+The tool receives parameters from command line option, but allows to set defaults for most of them using environment variables.
+
+Some variables are standard for psql command:
+
+* `PGUSER`: default database user
+* `PGPASSWORD`: default database password
+* `PGHOST`: default database host (or multiple hosts, comma-separated)
+* `PGPORT`: default database port
+* `PGDATABASE`: default database name
+* `PGSSLMODE`: default SSL mode (e.g. "prefer")
+
+Custom variables of the tool itself:
+
+* `DSNS` or `PGDSNS` or `PGHOST`: default value for `--dsns` option, comma-separated list of DSNs (see below)
+* `MIGRATE_CMD`: default value for `--migrate-cmd` option
+* `WEIGHT_SQL`: default value for `--weight-sql` option
+* `DEACTIVATE_SQL`: default value for `--deactivate-sql` option
+
+## Configuration File: pg-microsharding.config.ts
+
+Instead of setting the environment variables, you can export the same exact values in `pg-microsharding.config.ts` file by e.g. deriving them directly from the [Ent Framework](https://ent-framework.org/) cluster configuration:
+
+```javascript
+import { cluster } from "ents/cluster";
+
+export default async function(action: "apply" | "undo" | string) {
+  const islands = cluster.options.islands();
+  return {
+    PGDSNS: islands
+      .map((island) => island.nodes.map(({ host }) => host)
+      .flat()
+      .join(","),
+    PGPORT: 5432, // we don't want to use pgbouncer port here
+    PGUSER: firstNode.user,
+    PGPASSWORD: firstNode.password,
+    PGDATABASE: firstNode.database,
+    PGSSLMODE: firstNode.ssl ? "prefer" : undefined,
+    MIGRATE_CMD: "yarn -s pg-mig",
+  };
+}
+```
+
+The file `pg-microsharding.config.ts` is searched in all parent folders starting from the current working directory when `pg-microsharding` is run (typically you want to have it in the root of your project, near the other configuration files).
+
+You can export-default a regular function, an async function, or even a plain constant object.
+
+## DSN and Addressing Databases
+
+Option `--dsns`, if required, should be a comma separated list of DSNs.
+
+Also, you may pass duplicated DSNs and even DSNs of replicas: the tool will filter them out and remain only master DSNs in the list.
+
+DSN format examples (parts defaults are from environment variables):
+
+* `postgresql://user:pass@hostname/db?options` (all parts are optional)
+* `hostname:port/db` (all parts except the hostname are optional
+
+## Command Line Tool
+
+The `pg-microsharding` library consists of 2 parts:
+
+1. A CLI tool allowing you to manipulate with microshards.
+2. A set of PostgreSQL stored functions to call them from your app.
+
+### Show Cluster Layout: pg-microsharding list
+
+```bash
+pg-microsharding list
+```
+
+This action prints the list of all PostgreSQL islands (pointed by DNSn), microshards and some statistics.
+
+In `--verbose` mode, also prints detailed statistics anout insert/update/delete, index scans and seqscans.
+
+### Allocate New Microshards: pg-microsharding allocate
+
+```typescript
+pg-microsharding allocate --shards=301-399 --activate=yes
+```
+
+This action allows you to create more microshard schemas in the cluster. The microshards are created on PostgreSQL the host pointed by the 1st DSN, so after it's done, run `pg-microsharding rebalance` to spread that new schemas across other nodes.
+
+Each microshard can either be "active" or "inactive". When you create them, you tell the tool, should the microshards become active immediately (and thus, visible to `microsharding_list_active_shards()` API) or not. You can always activate the schemas later using the same exact command (it is idempotent).
+
+### Move One Microshard: pg-microsharding move
+
+```bash
+pg-microsharding move \
+  --shard=42 --from=host1 --to=host2 \
+  --activate-on-destination=yes
+```
+
+Microshards can be moved from one PostgreSQL node to another. There is no need to stop writes while moving microshards: the tool uses PostgreSQL logical replication to stream each microshard table's data, and in the very end, acquires a quick exclusive lock to finalize the move.
+
+If you're unsure, you can practice with the move without activating the microshard on the destination (and without deactivating it on the source) by passing `--activate-on-destination=no` option. This is like a "dry-run" mode, where the tool does all the work, except the very last step. The moved schema on the destination won't be activated, and it will also be renamed using some long descriptive prefix (including the move date).
+
+### Clean Old Moved Copies: pg-microsharding cleanup
+
+```bash
+pg-microsharding cleanup
+```
+
+When you move one or more microshards, pg-microsharding doesn't delete the old copy from the source host. Instead, it renames the schema (using some long descriptive prefix with date) and deactivates it.
+
+Later, when you are sure that everything went well, you can remove such "backup" copies by running the cleanup action. It is interactive: it will tell you, what it wants to delete, and ask for an explicit confirmation.
+
+### Rebalance All Islands: pg-microsharding rebalance
+
+```bash
+pg-microsharding rebalance --activate-on-destination=yes
+```
+
+### Evacuate All Microshards from an Island
+
+```bash
+pg-microsharding rebalance \
+  --decommission=host1 --activate-on-destination=yes
+```
+
+This mode of "rebalance" action allows you to remove a PostgreSQL host from the cluster, or even upgrade PostgreSQL to the next major version with no downtime. It moves all the microshards from the provided DSN, so the host becomes "empty". After the decommissioning is done, you can remove the host from the cluster or upgrade PostgreSQL, then rebalance the microshards back (rebalancing works fine across different major PostgreSQL versions).
+
+### Tweak Island Weights: pg-microsharding factor
+
+```bash
+pg-microsharding factor --shards=host1 --factor="*1.2"
+```
+
+Imagine you have 10 PostgreSQL islands with rebalanced microshards, and you see on your monitoring charts that some island is loaded more than all other islands. E.g. it may experience higher CPU load, higher disk throughput etc.
+
+Such situation typically happens, because one microshard became too large, or there is a customer data in some microshard that causes more load than the data of an average customer. In case you don't want to investigate this case too much, you can "duct tape" it by artificially "dissolving" a fraction of microshards from that overloaded island to other islands.
+
+When you run `pg-microsharding factor --factor="*1.2"`, the tool artificially increases the "weight" of each microshard on the provided host (in this example, the increase is by 1.2, i.e. by 20%). This information is then remembered in the microshards themselves (and is displayed in `list` action), so you can run rebalancing and "dissolve" some of the microshards among other hosts. As a result, your target island will become less loaded (on average), and by repeating this step several times, you can achieve a more fair load distribution.
+
+The "weight increase factor" is technically stored as a SQL comment on the microshard schema, and it travels along with the microshard when you move it.
+
+## PostgreSQL Stored Functions API
+
+This is the second part of pg-microsharding tool: a set of stored functions you add to your database.
+
+### Installing into the Database
+
+Run the following SQL files in your up- and down-migrations to install (or upgrade) and uninstall the tool:
+
+* sql/pg-microsharding-up.sql: to install/upgrade the library
+* sql/pg-microsharding-down.sql: to uninstall
+
+E.g.:
+
+```sql
+-- mig/20250628100000.add-pg-microsharding.public.up.sql
+CREATE SCHEMA microsharding;
+SET search_path TO microsharding;
+\ir ../pg-microsharding/sql/pg-microsharding-up.sql
+```
+
+```sql
+-- mig/20250628100000.add-pg-microsharding.public.dn.sql
+SET search_path TO microsharding;
+\ir ../pg-microsharding/sql/pg-microsharding-down.sql
+DROP SCHEMA microsharding;
+```
+
+In the above example, we create a separtate schema for the library, but it is not mandatory: you can also install it into schema `public` (all of the API functions have `microsharding_` prefix).
+
+### List Active Shards: microsharding.list\_active\_shards()
+
+This function returns the list of active microshard schemas in the current PostgreSQL database. When using the tool with [Ent Framework](https://ent-framework.org/), mention it in your `Cluster` object:
+
+```typescript
+export const cluster = new Cluster({
+  shards: {
+    nameFormat: "sh%04d",
+    discoverQuery:
+      "SELECT unnest FROM unnest(microsharding.microsharding_list_active_shards())",
+  },
+  ...
+});
+```
