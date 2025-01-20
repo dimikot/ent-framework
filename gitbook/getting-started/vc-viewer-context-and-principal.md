@@ -126,7 +126,7 @@ import { getServerVC } from "@/ents/getServerVC";
 
 export default async function Home() {
   const vc = await getServerVC(); // <---
-  return session ? (
+  return !vc.isGuest() ? (
     <div>Your vc.principal={vc.principal}.</div>
   ) : (
     <div>Please sign in to continue.</div>
