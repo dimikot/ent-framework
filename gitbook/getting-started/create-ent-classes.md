@@ -13,6 +13,7 @@ const schema = new PgSchema(
   {
     id: { type: ID, autoInsert: "nextval('users_id_seq')" },
     email: { type: String },
+    is_admin: { type: Boolean, autoInsert: "false" },
   },
   ["email"]
 );
@@ -104,7 +105,7 @@ const schema = new PgSchema(
 export class EntComment extends BaseEnt(cluster, schema) {
   static override configure() {
     return new this.Configuration({
-      shardAffinity: ["topic_id"],
+      shardAffinity: GLOBAL_SHARD,
       privacyInferPrincipal: async (_vc, row) => row.creator_id,
       privacyLoad: [
         new AllowIf(new CanReadOutgoingEdge("topic_id", EntTopic)),
@@ -117,4 +118,4 @@ export class EntComment extends BaseEnt(cluster, schema) {
 ```
 {% endcode %}
 
-Since we have no microshards yet, `shardAffinity` basically does nothing. But if we had some, then it would tell Ent Framework, which microshard should it insert `EntComment` rows to when they are created (in the example above, it will save them to the same microshard as the owner's `EntTopic`).
+Since we have no microshards yet, `shardAffinity` basically does nothing. We'll talk about microsharding in [locating-a-shard-id-format.md](../scalability/locating-a-shard-id-format.md "mention").

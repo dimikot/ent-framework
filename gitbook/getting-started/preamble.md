@@ -14,14 +14,18 @@ Below, we'll show some Ent Framework usage examples. We will progress from the s
 
 ### Code Structure
 
-The examples in this tutorial will be located in the following files:
+The examples in this tutorial will approximately follow [examles/next-example](https://github.com/dimikot/ent-framework/tree/main/examples/next-example) `src` folder structure:
 
-* core/
-  * vcMiddleware.ts
-  * app.ts
 * ents/
+  * cluster.sql
   * cluster.ts
-  * EntUser.ts
   * EntComment.ts
   * EntTopic.ts
-* entry.ts
+  * EntUser.ts
+  * getServerVC.ts
+* app/
+  * api/
+    * auth/\[...nextauth]
+      * route.ts
+    * topics/
+      * route.ts
