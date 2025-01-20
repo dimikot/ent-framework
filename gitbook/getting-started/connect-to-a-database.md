@@ -3,8 +3,7 @@
 To start simple, create a PostgreSQL database and several tables there. You can also use you existing database:
 
 ```bash
-$ export PGDATABASE=postgresql://postgres:postgres@127.0.0.1/postgres
-$ psql -f ents/cluster.sql
+$ psql postgresql://postgres:postgres@127.0.0.1/postgres -f ents/cluster.sql
 ```
 
 {% code title="ents/cluster.sql" %}
