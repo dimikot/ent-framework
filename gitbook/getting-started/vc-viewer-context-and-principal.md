@@ -122,15 +122,12 @@ For instance, in a server component:
 
 {% code title="app/page.tsx" %}
 ```typescript
-import { getServerSession } from "next-auth";
+import { getServerVC } from "@/ents/getServerVC";
 
 export default async function Home() {
-  const session = await getServerSession(); // <---
+  const vc = await getServerVC(); // <---
   return session ? (
-    <div>
-      Welcome, {session.user?.name}!<br />
-      Your vc.principal={vc.principal}.
-    </div>
+    <div>Your vc.principal={vc.principal}.</div>
   ) : (
     <div>Please sign in to continue.</div>
   );
