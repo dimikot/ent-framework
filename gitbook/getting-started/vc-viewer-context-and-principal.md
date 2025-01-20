@@ -61,13 +61,13 @@ You can also use `getServerSession()` from inside of your API route handlers.
 
 ## Build a Request VC Accessor Function
 
-The same way as `getServerSession()` gives us access to the user's session, let's build a function that returns us a VC instance for that user. Technically, this function should work exactly the same way as `getServerSession()`: it will even use `session.user.email` field from there.
+The same way as `getServerSession()` gives us access to the user's session, let's build a function that returns a VC instance for that user. Technically, this function should work exactly the same way as `getServerSession()`: it will even use `session.user.email` field from there.
 
 And in case the user is not authenticated yet, we still need a "guest VC" to be returned by this function. Such VC can still access some "public" Ents (depending on their privacy rules).
 
-The VC instance should be "memoized" per the HTTP request, so if it's called multiple time, it should return the same object. This is critical: otherwise, many Ent Framework features (like queries batching and caching) will just not work as they should.
+The VC instance should be "memoized" per the HTTP request, so if the VC accessor function is called multiple time, it should return the same object. This is critical: otherwise, many Ent Framework features (like queries batching and caching) will just not work as they should.
 
-Different frameworks have different ways of attaching a property to the request object. In Next, the easiest way so far is to use `WeakMap` and `headers()` API function. (In Expres, you would likely just assign a value to `req.vc` in some middleware.)
+Different frameworks have different ways of attaching a property to the request object. In Next, the easiest way so far is to use `WeakMap` and `headers()` API function. (In Express, you would likely just assign a value to `req.vc` in some middleware.)
 
 {% code title="ents/getServerVC.ts" %}
 ```typescript
@@ -110,7 +110,7 @@ export async function getServerVC(): Promise<VC> {
 ```
 {% endcode %}
 
-We will discuss what `loadByX()` is in the next sections. In short, it loads an Ent from the database and throws an e**X**ception (this is what "X" stands for) if it doesn't exist.
+We will discuss what `loadByX()` is in the next sections. In short, it **loads** an Ent **by** unique key and throws an e**X**ception (this is what "X" stands for) if it doesn't exist.
 
 Here comes the catch: `loadByX()` requires to pass a VC whose principal is the user loading the data. And to derive that VC, we need to call `EntUser#loadByX()`. In our case, it's obviously a "chicken and egg" problem, so we just derive a new VC in "god mode" with `vc.toOmniDangerous()` and allow Ent Framework to bypass privacy checks for the very 1st `EntUser` loaded.
 
