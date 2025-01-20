@@ -6,6 +6,7 @@ import {
   CanReadOutgoingEdge,
   OutgoingEdgePointsToVC,
   Require,
+  GLOBAL_SHARD,
 } from "ent-framework";
 import { cluster } from "./cluster";
 import { EntTopic } from "./EntTopic";
@@ -25,7 +26,7 @@ const schema = new PgSchema(
 export class EntComment extends BaseEnt(cluster, schema) {
   static override configure() {
     return new this.Configuration({
-      shardAffinity: ["topic_id"],
+      shardAffinity: GLOBAL_SHARD,
       privacyInferPrincipal: async (_vc, row) => row.creator_id,
       privacyLoad: [
         new AllowIf(new CanReadOutgoingEdge("topic_id", EntTopic)),

@@ -13,7 +13,7 @@ const schema = new PgSchema(
   {
     id: { type: ID, autoInsert: "nextval('users_id_seq')" },
     email: { type: String },
-    is_admin: { type: Boolean },
+    is_admin: { type: Boolean, autoInsert: "false" },
   },
   ["email"]
 );

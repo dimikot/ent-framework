@@ -22,7 +22,7 @@ const schema = new PgSchema(
 export class EntOrganizationUser extends BaseEnt(cluster, schema) {
   static override configure() {
     return new this.Configuration({
-      shardAffinity: ["organization_id"],
+      shardAffinity: GLOBAL_SHARD,
       privacyInferPrincipal: async (_vc, row) => row.user_id,
       privacyLoad: [new AllowIf(new CanReadOutgoingEdge("user_id", EntUser))],
       privacyInsert: [],
