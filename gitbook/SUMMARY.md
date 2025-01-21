@@ -42,6 +42,7 @@
 * [Database Schema Migrations](advanced/database-schema-migrations.md)
 * [Ephemeral (Symbol) Fields](advanced/ephemeral-symbol-fields.md)
 * [Custom Field Refactoring](advanced/custom-field-refactoring.md)
+* [Cluster Maintenance Queries](advanced/cluster-maintenance-queries.md)
 
 ## Architecture
 

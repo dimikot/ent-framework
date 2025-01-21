@@ -94,3 +94,5 @@ Terminology:
 Notice that we define the layout of the cluster using a callback. Ent Framework will call it from time to time to refresh the view of the cluster, so in this callback, you can read the data from some centralized configuration database (new nodes may be added, or empty nodes may be removed with no downtime). This is called "dynamic real-time reconfiguration".
 
 [PgClientPool](https://github.com/clickup/ent-framework/blob/main/docs/classes/PgClientPool.md) class accepts several options, one of them is the standard [node-postgres PoolConfig](https://node-postgres.com/apis/pool) interface. For simplicity, when we define a cluster shape in `islands`, we just return a list of such configs, to be passed into `createClient()` lambda.
+
+As of `prewarm()` call, it's explained in Advanced section.
