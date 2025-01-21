@@ -173,6 +173,8 @@ Microshards can be moved from one PostgreSQL node to another. There is no need t
 
 If you're unsure, you can practice with the move without activating the microshard on the destination (and without deactivating it on the source) by passing `--activate-on-destination=no` option. This is like a "dry-run" mode, where the tool does all the work, except the very last step. The moved schema on the destination won't be activated, and it will also be renamed using some long descriptive prefix (including the move date).
 
+At any moment, you can abort the move with ^C. It is safe: half-moved data will remain on the destination, but the microshard schema will remaim invisible there for e.g. `microsharding_list_active_shards()` API (see below). If you then rerun the `move` action, it will start from scratch.
+
 ### Clean Old Moved Copies: pg-microsharding cleanup
 
 ```bash
@@ -188,6 +190,14 @@ Later, when you are sure that everything went well, you can remove such "backup"
 ```bash
 pg-microsharding rebalance --activate-on-destination=yes
 ```
+
+This action runs multiple "move" sub-actions in parallel, utilizing [tmux](https://github.com/tmux/tmux/wiki) panes. Notice that tmux is required: it allows to resume the rebalancing if your SSH console on the server gets disconnected (in this case, just run the `rebalance` action again, and you'll "jump into" the existing session).
+
+Before running the moves, the action calculates weights of each shard (by default, the weight is the microshard tables size in bytes, mutuplied by per-shard "weight factor"; see below). Then, it estimates, which microshards need to be moved to what islands, to achieve a more or less uniform distribution. The algorithm is complicated: among other heuristics, it tries to make sure that each island gets approximately the same number of microshards with comparable sizes (e.g. if you allocate 100 new empty microshards, then rebalancing will spread them across islands uniformly).
+
+Once the rebalancing plan is ready, the tool will print it to you and ask for your confirmation. You can always run `pg-microsharding rebalance` and then press ^C to just see, what _would_ happen if you rebalance.
+
+At any time, you can abort the rebalancing with ^C in any of the tmux panes. It is as safe as aborting the `move` action.
 
 ### Evacuate All Microshards from an Island
 
