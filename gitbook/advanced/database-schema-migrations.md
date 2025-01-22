@@ -359,7 +359,7 @@ SET search_path TO microsharding;
 
 ```sql
 -- mig/YYYYMMDDhhmmss.add_microsharding.public.dn.sql
-DROP SCHEMA microsharding;
+DROP SCHEMA microsharding CASCADE;
 ```
 
 Also, define before/after scripts:
@@ -517,7 +517,7 @@ To help with this check, pg-mig exposes the concept called "version digest". It'
 
 Digest is a string, and by comparing 2 digests lexicographically, you may make a decision, which one is "better" (or, if you don't want "better/worse" comparison, you can also compare them for strict equality). If the database's digest is **greater or equal to** the application code's digest, then the code is compatible to the currently existing cluster schema, so the code can be deployed ("your database is ahead of the code").
 
-* Run `pg-mig --list=digest` to print the digest of the current migration files on disk (i.e. "code digest"), like `20250114061047.1552475c743aac017bf0252d540eb033859c6e`.
+* Run `pg-mig --list=digest` to print the digest of the current migration files on disk (i.e. "code digest"), like `20250114061047.1552475c743aac01`.
 * Use `loadDBDigest()` function exported by pg-mig Node library to extract the digest from the current databases used by the app (i.e. "database digest"). E.g. you can call it from your app's `/health` endpoint to allow querying the current database version digest from a deployment script or pipeline.
 
 Every time the whole migration process succeeds, the digest is saved to _all database nodes_, so it can be later retrieved with `loadDBDigest()`. If you have multiple nodes managed by pg-mig, and they happen to appear out of sync, then this function will take care of choosing the most "sane" digest from those nodes, to let you compare it with the "code digest", with no single point of failure.
