@@ -36,6 +36,7 @@
 * [Shard Affinity and Ent Colocation](scalability/shard-affinity-ent-colocation.md)
 * [Inverses and Cross Shard Foreign Keys](scalability/inverses-cross-shard-foreign-keys.md)
 * [Shards Rebalancing and pg-microsharding Tool](scalability/shards-rebalancing-and-pg-microsharding-tool.md)
+* [Connection Pooling](scalability/connection-pooling.md)
 
 ## Advanced
 
