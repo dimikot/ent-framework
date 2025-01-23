@@ -287,12 +287,12 @@ UPDATE my_table SET some=:'var1';
 
 ### Use Environment Variables
 
-If you assign e.g. `process.env.HOSTS = "{a,b,c}"` in your `pg-mig.config.ts` file, you can use that value in all of the version files using the standard `psql` feature:
+If you assign e.g. `process.env.VAR = "a,b,c"` (or return it) in your `pg-mig.config.ts` file, you can use that value in all of the version files using the standard `psql` feature:
 
 ```sql
 -- mig/20231017204837.initial.public.up.sql
-\set HOSTS `echo "$HOSTS"`
-SELECT my_function(:'HOSTS');
+\set HOSTS `echo "$VAR"`
+SELECT my_function(:'VAR');
 ```
 
 ### More Meta-Commands
@@ -361,7 +361,22 @@ SELECT microsharding.microsharding_migration_before();
 ```sql
 -- mig/after.sql
 \set HOSTS `echo "$HOSTS"`
-SELECT microsharding.microsharding_migration_after(:'HOSTS');
+SELECT microsharding.microsharding_migration_after(:'PGHOST');
+```
+
+Make sure that you also define `PGHOST` environment variable as a comma-separated list of cluster hosts in your `pg-mig.config.ts` :
+
+```typescript
+export default async function(action: "apply" | "undo" | string) {
+  ...
+  return {
+    PGHOST: islands
+      .map((island) => island.nodes.map(({ host }) => host)
+      .flat()
+      .join(","),
+    ...
+  };
+}
 ```
 
 ### Microsharding Debug Views
