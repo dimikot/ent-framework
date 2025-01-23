@@ -4,4 +4,7 @@ When `min` client option is provided in the [cluster configuration](../getting-s
 
 At the same time, having many persistent connection in some databases is expensive as well. For instance, PostgreSQL architecture implies that there is one independent OS process behind every single active connection. So setting PostgreSQL config's [max\_connections](https://www.postgresql.org/docs/current/runtime-config-connection.html) to a value larger than \~100 (varies depending on the number of CPU cores on the server and available memory) is not the best idea.
 
-Imagine you have one database server and 20 Node app processes running in your cluster. If each app opens 5 persistent connections to the database, you'll exhaust that 100 cap mentioned above, and it's not even considered a large cluster.
+Imagine you have one database server and 20 Node app processes running in your cluster. If each app opens 5 persistent connections to the database, you'll have 20\*5 = 100 database processes, idle most of the time, which exhausts that 100 cap mentioned above. And it's not even considered a large cluster.
+
+<figure><img src="../.gitbook/assets/connections-direct.svg" alt="" width="333"><figcaption></figcaption></figure>
+
