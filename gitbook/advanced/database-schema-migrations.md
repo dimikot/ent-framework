@@ -348,24 +348,13 @@ Here is the complete list of `-- $` pseudo comments that pg-mig supports in the 
 
 Overall, there are many popular alternatives to pg-mig when it comes to managing a single database with no sharding. But when it comes to migrating the entire cluster with multiple nodes, or working with microsharding, pg-mig starts shining.
 
-The recommended library to manage the microshards schemas is [pg-microsharding](https://www.npmjs.com/package/@clickup/pg-microsharding). To couple it with pg-mig, create the following files:
-
-```sql
--- mig/YYYYMMDDhhmmss.add_microsharding.public.up.sql
-CREATE SCHEMA microsharding;
-SET search_path TO microsharding;
-\ir ../pg-microsharding/sql/pg-microsharding-up.sql
-```
-
-```sql
--- mig/YYYYMMDDhhmmss.add_microsharding.public.dn.sql
-DROP SCHEMA microsharding CASCADE;
-```
-
-Also, define before/after scripts:
+The recommended library to manage the microshards schemas is [pg-microsharding](https://www.npmjs.com/package/@clickup/pg-microsharding). To couple it with pg-mig, create the following before/after scripts:
 
 ```sql
 -- mig/before.sql
+CREATE SCHEMA IF NOT EXISTS microsharding;
+SET search_path TO microsharding;
+\ir ../pg-microsharding/sql/pg-microsharding-up.sql
 SELECT microsharding.microsharding_migration_before();
 ```
 
