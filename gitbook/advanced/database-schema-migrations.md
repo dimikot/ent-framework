@@ -2,11 +2,11 @@
 
 As opposed to classical ORMs (like [Prisma](https://www.prisma.io) or [Drizzle](https://orm.drizzle.team)), Ent Framework does not include any built-in database migration tool, and it doesn't infer SQL tables schema for you from the TypeScript schema definition.
 
-In terms of the storage layer, Ent Framework operates at the lower level than the ORMs mentioned above. Ent abstraction is in fact very close to PostgreSQL layer. Such approach is the exact sweet spot and the exact trade-off between being flexible (e.g. to expose all bleeding edge PostgreSQL features without hiding them) and being useful in practice.
+In terms of the storage layer, Ent Framework operates at a lower level than the ORMs mentioned above. Ent abstraction is in fact very close to PostgreSQL layer. Such approach is the exact sweet spot and the exact trade-off between being flexible (e.g. to expose all bleeding edge PostgreSQL features without hiding them) and being useful in practice.
 
 Database migration is a complicated process with many details. You can use any existing tools (like Liquibase) to organize it, or you can plug in Ent Framework to your existing database (considering you are already doing migrations for that database somehow).
 
-There is one important aspect though: the most popular solutions you may heard of do not support microsharding out of the box. They are targeting just the most common use case: a single database on a single host.
+There is one important aspect though: the most popular solutions you may have heard of do not support microsharding out of the box. They are targeting just the most common use case: a single database on a single host.
 
 ## Migrations in Microsharding Environment
 
@@ -342,7 +342,7 @@ Here is the complete list of `-- $` pseudo comments that pg-mig supports in the 
 * `$parallelism_per_host=N`: as mentioned above, this option forces the parallel migrations for schemas on the same host to wait for each other, not allowing to run more than N of then at the same time.
 * `$parallelism_global=N`: limits parallelism of this particular version _within the same schema prefix_ across all hosts.
 * `$delay=M`: introduces a delay (in ms) between each migration. You can use it with `$parallelism_global` to reduce load on the database even further.
-* `$run_alone=1`: if set to 1, no other migrations, _including other schema prefixes_, will run on any other host while this one is running. I.e. it introduces global ordering of the migration files application across schemas. This option is useful when you want to e.g. install a PostgreSQL extension used in other schemas, so you want all other schemas to wait until the installation finishes.
+* `$run_alone=1`: if set to 1, no other migrations, _including other schema prefixes_, will run on any other host while this one is running. I.e. it introduces a global ordering of the migration files application across schemas. This option is useful when you want to e.g. install a PostgreSQL extension used in other schemas, so you want all other schemas to wait until the installation finishes.
 
 ## Advanced: Use With pg-microsharding Library
 
