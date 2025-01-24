@@ -44,6 +44,7 @@
 * [Ephemeral (Symbol) Fields](advanced/ephemeral-symbol-fields.md)
 * [Custom Field Refactoring](advanced/custom-field-refactoring.md)
 * [Cluster Maintenance Queries](advanced/cluster-maintenance-queries.md)
+* [Logging and Diagnostic Tools](advanced/logging-and-diagnostic-tools.md)
 
 ## Architecture
 
