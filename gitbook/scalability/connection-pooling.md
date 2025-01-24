@@ -22,3 +22,14 @@ A classical solution for this is to inject a so-called "connection pooler" (like
 
 <figure><img src="../.gitbook/assets/connections-pgbouncer.svg" alt="" width="477"><figcaption></figcaption></figure>
 
+Now, you can have thousands (ane even tens of thousands) persistent incoming connections per database, and if they are mostly idle (which is the case), then it will all work the right way.
+
+Often times, when the database server is installed on a regular machine, people setup the connection pooler (such as PgBouncer) on the same machine, just to protect the database from overloading with the number of connections (processes). If you use AWS RDS or Aurora, then it may make sense to setup PgBouncer on a separate set of the machines (or containers) in the cluster, in the same availability zone as the RDS/Aurora databases. Despite Aurora is more tolerant to the number of incoming connections than vanilla PostgreSQL, it still does not handle tens of thousands of them, so a separate connection pooler is always preferred.
+
+## Ent Framework and PgBouncer
+
+Generally, Ent Framework doesn't care, what you put to the nodes configuration, be it a direct PostgreSQL connection or a reference to some connection pooler like PgBouncer. If you use a pooler, then make sure to:
+
+1. Set it up in "transaction pooling" mode. In this mode, if a transaction is started in some connection, then the pooler makes sure that all of the queries within this transaction are proxied to the same PostgreSQL server connection as the transaction `BEGIN` statement itself.
+2. Prefer PgBouncer. This is because PgBouncer sometimes emits its own error codes (related to connections or queries time out, disconnects etc.), which Ent Framework understands in addition to the vanilla PostgreSQL client library error codes. This improves the engine behavior in case it loses a node due to network errors or a restart, and speeds up the master/replica rediscovery process.
+
