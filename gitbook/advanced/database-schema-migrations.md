@@ -360,7 +360,7 @@ SELECT microsharding.microsharding_migration_before();
 
 ```sql
 -- mig/after.sql
-\set HOSTS `echo "$HOSTS"`
+\set PGHOST `echo "$PGHOST"`
 SELECT microsharding.microsharding_migration_after(:'PGHOST');
 ```
 
