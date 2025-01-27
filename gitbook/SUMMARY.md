@@ -43,6 +43,7 @@
 * [Database Schema Migrations](advanced/database-schema-migrations.md)
 * [Ephemeral (Symbol) Fields](advanced/ephemeral-symbol-fields.md)
 * [Custom Field Refactoring](advanced/custom-field-refactoring.md)
+* [Loaders and Custom Batching](advanced/loaders-and-custom-batching.md)
 * [Cluster Maintenance Queries](advanced/cluster-maintenance-queries.md)
 * [Logging and Diagnostic Tools](advanced/logging-and-diagnostic-tools.md)
 
