@@ -10,6 +10,33 @@ But there is also a lower level set of methods in `Cluster` class, for the follo
 
 The API described below is exposed by `Cluster` class, see [locating-a-shard-id-format.md](locating-a-shard-id-format.md "mention").
 
+```typescript
+export const cluster = new Cluster({
+  islands: () => [
+    {
+      no: 0,
+      nodes: [
+        { name: "abc-writer-1", host: "...", ... },
+        { name: "abc-reader-2", host: "...", ... },
+      ],
+    },
+    {
+      no: 1,
+      nodes: [
+        { name: "abc-writer-3", host: "...", ... },
+        { name: "abc-reader-4", host: "...", ... },
+      ],
+    },
+  ],
+  shards: {
+    nameFormat: "sh%04d",
+    discoverQuery:
+      "SELECT unnest FROM unnest(microsharding.microsharding_list_active_shards())",
+  },
+  ...,
+});
+```
+
 ## cluster.shardByNo(): Get a Shard by its Number
 
 This is the simplest way to get an instance of `Shard` class (representing a microshard) by its number:
