@@ -40,7 +40,7 @@
 
 ## Advanced
 
-* [Database Schema Migrations](advanced/database-schema-migrations.md)
+* [Database Migrations and pg-mig Tool](advanced/database-schema-migrations.md)
 * [Ephemeral (Symbol) Fields](advanced/ephemeral-symbol-fields.md)
 * [Custom Field Refactoring](advanced/custom-field-refactoring.md)
 * [Loaders and Custom Batching](advanced/loaders-and-custom-batching.md)
