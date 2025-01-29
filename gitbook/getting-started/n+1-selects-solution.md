@@ -113,6 +113,8 @@ SELECT * FROM users WHERE id IN(...);
 In fact, Ent Framework does similar batching not only for `loadX()`. It batches all other calls too, including inserts, updates, deletes and even more complicated expression-based multi-row selects.
 {% endhint %}
 
+To learn more about batching, "parallel Promises", and how event loop works in Node, check out [loaders-and-custom-batching.md](../advanced/loaders-and-custom-batching.md "mention") article.
+
 ## Helper Loading Methods
 
 Each Ent is an immutable object, which means that you can't change its fields after loading from the DB. But you can add helper methods to simplify things like loading.

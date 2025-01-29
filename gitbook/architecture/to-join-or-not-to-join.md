@@ -160,3 +160,5 @@ Databases are designed to serve queries, do it fast, and with low latency at hig
 * False assumption: 50 ms database query is a norm; JOINs are to minimize round trips and solve [N+1 Selects](../getting-started/n+1-selects-solution.md) problem; take my money dear Vercel & Co.
 * Reality: you have troubles with your app design if the query latency is longer than 1-2 ms; round trip time does not affect latency much in case the queries are batched.
 
+To learn more about batching, "parallel calls", and how event loop works in Node, check out [loaders-and-custom-batching.md](../advanced/loaders-and-custom-batching.md "mention") article.
+
