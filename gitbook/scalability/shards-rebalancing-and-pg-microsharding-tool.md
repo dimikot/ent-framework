@@ -222,6 +222,8 @@ When you run `pg-microsharding factor --factor="*1.2"`, the tool artificially in
 
 The "weight increase factor" is technically stored as a SQL comment on the microshard schema, and it travels along with the microshard when you move it.
 
+
+
 ## PostgreSQL Stored Functions API
 
 This is the second part of pg-microsharding tool: a set of stored functions you add to your database.
@@ -265,3 +267,36 @@ export const cluster = new Cluster({
   ...
 });
 ```
+
+### Microsharding Debug Views
+
+The `microsharding_migration_after()` function creates so-called "debug views" for each sharded table in your cluster. For instance, it you have `sh0001.users`, `sh0002.users` etc. tables. then it will create a debug view `public.users` with the definition like:
+
+```sql
+-- This is what pg-microsharding creates automatically.
+CREATE VIEW public.users AS
+  SELECT * FROM sh0001.users
+  UNION ALL
+  SELECT * FROM sh0002.users
+  UNION ALL
+  ...;
+```
+
+Even more, if you pass the list of all PostgreSQL hosts, and those hosts can access each other without a password (e.g. they have  `/var/lib/postgresql/N/.pgpass` files), then those debug views will work **across all shards on all nodes, including the remote ones** (using [foreign-data wrapper](https://www.postgresql.org/docs/current/postgres-fdw.html) functionality).
+
+So **for debugging purposes**, you'll be able to run queries across all microshards in your `psql` sessions. This is typically very convenient.
+
+Of course those **debug views are not suitable for production traffic**: cross-node communication in PostgreSQL, as well as query planning, work not enough inefficiently. Do not even try, use application-level microshards routing, like e.g. [Ent Framework](https://ent-framework.org/) provides.
+
+```
+$ psql
+postgres=# SELECT shard, email FROM users
+  WHERE created_at > now() - '1 hour'::interval;
+-- Prints all recent users from all microshards, including
+-- the microshards on other PosgreSQL nodes! Use for
+-- debugging purposes only.
+```
+
+As of `microsharding_migration_before()`, you must call it before any changes are applied to your microsharded tables. The function drops all of the debug views mentioned above. E.g. if you remove a column from a table, PostgreSQL would not allow you to do it it this column is mentioned in any of the views, so it's important to drop the views and re-create them afterwards.
+
+Typically, you just call `microsharding_migration_before()` in your pre-migration sequence and then call `microsharding_migration_after()` in your post-migration steps.
