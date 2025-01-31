@@ -27,7 +27,7 @@ Loader class allows you to build your own batching logic, for the cases when Ent
 Let's first build a very simple Loader, similar to what the built-in `loadNullable()` uses internally.
 
 ```typescript
-class SimpleTopicLoader {
+class TopicSimpleLoader {
   private ids = new Set<string>();
   private results = new Map<string, EntTopic>();
 
@@ -58,7 +58,7 @@ The main beauty of Loaders is that your code still looks like you're working wit
 
 ```typescript
 async function getTopic(vc: VC, id: string) {
-  const topic = await vc.loader(SimpleTopicLoader).load(id);
+  const topic = await vc.loader(TopicSimpleLoader).load(id);
   return topic;
 }
 ...
@@ -81,7 +81,7 @@ Overall, Loader is not a rocket science: it just splits the lifetime of `.load()
 
 ## Real Life Loader Example
 
-Once you understand, how `SimpleTopicLoader` above works, we can move on to a more realistic example.
+Once you understand, how the above code works, we can move on to a more realistic example.
 
 Imagine that in your `topics` table, you have `tags text[]` field, which is an array of strings:
 
@@ -102,7 +102,7 @@ In your app utility library API, you often times query for topics with one parti
 
 ```typescript
 async function loadTopicsByTag(vc: VC, tag: string) {
-  return EntTopic.select(vc, { $literal: ["? = ANY(tags)"] }, 100);
+  return EntTopic.select(vc, { $literal: ["? = ANY(tags)", tag] }, 100);
 }
 ```
 
@@ -117,7 +117,52 @@ const topicGroups = await mapJoin(
 
 If someone runs this, then Ent Framework will build a large UNION ALL clause with individual SELECTs, which will be far from efficient. I.e. we need a better batching strategy for this particular case.
 
-Let's build a Loader for this use case:
+Let's build a Loader:
 
 ```typescript
+class TopicsTagLoader {
+  private tags = new Set<string>();
+  private results = new Map<string, EntTopic[]>();
+
+  constructor(private vc: VC) {}
+
+  onCollect(tag: string): void {
+    this.tags.add(tag);
+  }
+
+  async onFlush(): Promise<void> {
+    const topics = await EntTopic.select(
+      this.vc,
+      { tags: { $overlap: [...this.tags] } },
+      Number.MAX_SAFE_INTEGER, // limit
+    );
+    for (const topics of topic) {
+      for (const tag of topics.tags) {
+        if (!this.results.has(tag)) {
+          this.results.set(tag, []);
+        }
+        this.results.get(tag)!.push(topic);
+      }
+    }
+  }
+  
+  onReturn(tag: string): EntTopic[] {
+    return this.results.get(tag) ?? [];
+  }
+}
 ```
+
+Now, you can rewrite `loadTopicsByTag()`, so anyone can use it without thinking about parallel calls:
+
+```typescript
+async function loadTopicsByTag(vc: VC, tag: string) {
+  return vc.loader(TopicsTagLoader).load(tag);
+}
+
+// Now, this works well, only one SQL query:
+const topicGroups = await mapJoin(
+  ["tag1", "tag2", ...100 other tags], 
+  async (tag) => loadTopicsByTag(vc, tag),
+);
+```
+
