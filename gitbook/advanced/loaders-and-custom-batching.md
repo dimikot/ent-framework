@@ -38,10 +38,9 @@ class SimpleTopicLoader {
   }
 
   async onFlush(): Promise<void> {
-    const ids = [...this.ids];
     const topics = await EntTopic.select(
       this.vc,
-      { id: ids },
+      { id: [...this.ids] },
       Number.MAX_SAFE_INTEGER, // limit
     );
     for (const topics of topic) {
@@ -77,3 +76,5 @@ Each Loader is a class with at least the following methods:
 * Also, you may defined a constructor, to receive and store a VC. VC is passed to each Loader, for the cases when your `onFlush()` logic requires it. (Your Loader may work with any other I/O service, not necessarily with Ent Framework. E.g. you may read from Redis or DynamoDB directly.)
 
 So, you can see that the arguments type of `onCollect()` and `onReturn()` methods become the argument types of \``` .load(..)` `` exactly, and the return type of `onReturn()` becomes the return type of `.load()`. The engine uses TypeScript inference, and it will warn you in case some types mismatch somewhere.
+
+Overall, Loader is not a rocket science: it just splits the lifetime of `.load()` call into 2 phases: `onCollect` and `onReturn`, effectively deferring the response to the caller up to the moment when `onFlush` has a chance to trigger. From the point of view of the caller code, imagine it as a short interruption between calling `.load()` and getting the results back.
