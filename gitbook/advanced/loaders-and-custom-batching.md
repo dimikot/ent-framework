@@ -78,3 +78,46 @@ Each Loader is a class with at least the following methods:
 So, you can see that the arguments type of `onCollect()` and `onReturn()` methods become the argument types of \``` .load(..)` `` exactly, and the return type of `onReturn()` becomes the return type of `.load()`. The engine uses TypeScript inference, and it will warn you in case some types mismatch somewhere.
 
 Overall, Loader is not a rocket science: it just splits the lifetime of `.load()` call into 2 phases: `onCollect` and `onReturn`, effectively deferring the response to the caller up to the moment when `onFlush` has a chance to trigger. From the point of view of the caller code, imagine it as a short interruption between calling `.load()` and getting the results back.
+
+## Real Life Loader Example
+
+Once you understand, how `SimpleTopicLoader` above works, we can move on to a more realistic example.
+
+Imagine that in your `topics` table, you have `tags text[]` field, which is an array of strings:
+
+```sql
+CREATE TABLE topics(
+  id bigserial PRIMARY KEY,
+  tags text[] NOT NULL DEFAULT '{}',
+  slug varchar(64) NOT NULL UNIQUE,
+  creator_id bigint NOT NULL,
+  subject text DEFAULT NULL
+);
+CREATE INDEX topics_tags ON topics USING gin(tags);
+```
+
+PostgreSQL has reach support for arrays, JSON and GIN indexes to quickly SELECT from the fields of such types, so no surprise we want to use this little denormalization here.
+
+In your app utility library API, you often times query for topics with one particular tag:
+
+```typescript
+async function loadTopicsByTag(vc: VC, tag: string) {
+  return EntTopic.select(vc, { $literal: ["? = ANY(tags)"] }, 100);
+}
+```
+
+You prevent an engineer from abusing this API though:
+
+```typescript
+const topicGroups = await mapJoin(
+  ["tag1", "tag2", ...100 other tags], 
+  async (tag) => loadTopicsByTag(vc, tag),
+);
+```
+
+If someone runs this, then Ent Framework will build a large UNION ALL clause with individual SELECTs, which will be far from efficient. I.e. we need a better batching strategy for this particular case.
+
+Let's build a Loader for this use case:
+
+```typescript
+```
