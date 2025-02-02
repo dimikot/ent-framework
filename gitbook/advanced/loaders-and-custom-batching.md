@@ -1,8 +1,10 @@
 # Loaders and Custom Batching
 
-One of the key features of Ent Framework is a holistic [n+1-selects-solution.md](../getting-started/n+1-selects-solution.md "mention"). When you run the calls addressing a single row in the database (read or write), the engine batches that calls into compound SQL queries, which allows to save a lot on round trip time.
+One of the key features of Ent Framework is a holistic [n+1-selects-solution.md](../getting-started/n+1-selects-solution.md "mention"). When you address a single row in the database (read or write), the engine batches that calls into compound SQL queries, which allows to save a lot on round trip time.
 
-The core of that idea lies in Meta's [DataLoader](https://github.com/graphql/dataloader) pattern, which initially was invented for just one case, loading an object by its ID. Ent Framework generalizes DataLoader to _all_ read and write operations.
+The core of that idea lies in Meta's [DataLoader](https://github.com/graphql/dataloader) pattern, which initially was invented for just one case: loading an object by its ID. Ent Framework generalizes DataLoader to _all_ read and write operations.
+
+In Ent Framework, this layer of abstraction is called Loader. It's an advanced concept. You'll rarely need to create your own Loaders, but once you do, your Loader will inevitably appear on the critical path of your app, since it's a performance optimization pattern.
 
 ## Node Event Loop
 
@@ -187,12 +189,10 @@ class EntTopic extents BaseEnt(...) {
   }
   
   async render() {
-    const viewCount = await this.viewCount();
-    const comments = await EntComment.select(
-      this.vc,
-      { topic_id: this.id },
-      10,
-    );
+    const [viewCount, comments] = await Promise.all([
+      this.viewCount(),
+      EntComment.select(this.vc, { topic_id: this.id }, 10),
+    ]);
     const commentWidgets = await mapJoin(
       comment,
       async (comment) => comment.render(),
@@ -200,17 +200,24 @@ class EntTopic extents BaseEnt(...) {
     return `${topic.title}: ${viewCount}\n` + commentWidgets.join("\n");
   }
 }
+
+class EntComment extents BaseEnt(...) {
+  ...
+  async render() {
+    const creator = await EntUser.loadX(this.vc, this.author_id);
+    return `${creator.name}: ${comment.message}`;
+  }
+}
 ```
 
 And then in your code, you have the following logic:
 
 ```typescript
-const topics = await EntTopic.select(vc, { ... }, 10);
 const widgets = await mapJoin(topics, async (topic) => topic.render());
 ```
 
-In [#node-event-loop](loaders-and-custom-batching.md#node-event-loop "mention") section above we discussed, how Ent Framework batching works together with Node event loop machinery. If only `viewCount()` was querying the counter from Ent Framework as well, then we'd have just 3 queries to the database:
+In [#node-event-loop](loaders-and-custom-batching.md#node-event-loop "mention") section above, we discussed, how Ent Framework batching works together with Node event loop machinery. If only `viewCount()` was querying the counter from Ent Framework as well, then we'd have just 3 queries to the database:
 
-1. `SELECT * FROM topics ...`
-2. `SELECT * FROM topic_view_counts ...`
-3. `SELECT * FROM comments ...`
+1. `SELECT * FROM topic_view_counts ...`
+2. `SELECT * FROM comments ...`
+3. `SELECT * FROM users ...`
