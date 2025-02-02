@@ -173,3 +173,24 @@ The main purpose of Loader is to do bathing for individual single-row queries, s
 ## Loader for Other Databases
 
 Overall, Ent Framework already has good enough internal batching mechanism, so you won't use Loaders for your man database frequently.
+
+More often, Loader is useful for external API calls or for querying the external databases.
+
+Assume that you have `viewCount()` method in EntTopic which queries Redis for the counter value:
+
+```typescript
+class EntTopic extents BaseEnt(...) {
+  ...
+  async viewCount() {
+    const count = redis.get(this.id);
+    return parseInt(count) || 0;
+  }
+}
+```
+
+And then in your code, you have the following logic:
+
+```typescript
+const topics = await EntTopic.select(vc, { ... }, 100);
+const views = await mapJoin(topics, async (topic) => topic.render());
+```
