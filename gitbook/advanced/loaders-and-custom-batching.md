@@ -176,7 +176,7 @@ Overall, Ent Framework already has good enough internal batching mechanism, so y
 
 More often, Loader is useful for external API calls or for querying the external databases.
 
-Assume that you have `viewCount()` method in EntTopic which queries Redis for the counter value:
+Assume that you have `viewCount()` method in EntTopic which queries Redis for the counter value. There is also a `render()` method that returns a text representation of the topic with comments.
 
 ```typescript
 class EntTopic extents BaseEnt(...) {
@@ -185,12 +185,32 @@ class EntTopic extents BaseEnt(...) {
     const count = redis.get(this.id);
     return parseInt(count) || 0;
   }
+  
+  async render() {
+    const viewCount = await this.viewCount();
+    const comments = await EntComment.select(
+      this.vc,
+      { topic_id: this.id },
+      10,
+    );
+    const commentWidgets = await mapJoin(
+      comment,
+      async (comment) => comment.render(),
+    );
+    return `${topic.title}: ${viewCount}\n` + commentWidgets.join("\n");
+  }
 }
 ```
 
 And then in your code, you have the following logic:
 
 ```typescript
-const topics = await EntTopic.select(vc, { ... }, 100);
-const views = await mapJoin(topics, async (topic) => topic.render());
+const topics = await EntTopic.select(vc, { ... }, 10);
+const widgets = await mapJoin(topics, async (topic) => topic.render());
 ```
+
+In [#node-event-loop](loaders-and-custom-batching.md#node-event-loop "mention") section above we discussed, how Ent Framework batching works together with Node event loop machinery. If only `viewCount()` was querying the counter from Ent Framework as well, then we'd have just 3 queries to the database:
+
+1. `SELECT * FROM topics ...`
+2. `SELECT * FROM topic_view_counts ...`
+3. `SELECT * FROM comments ...`
