@@ -218,6 +218,6 @@ const widgets = await mapJoin(topics, async (topic) => topic.render());
 
 In [#node-event-loop](loaders-and-custom-batching.md#node-event-loop "mention") section above, we discussed, how Ent Framework batching works together with Node event loop machinery. If only `viewCount()` was querying the counter from Ent Framework as well, then we'd have just 3 queries to the database:
 
-1. `SELECT * FROM topic_view_counts ...`
+1. `SELECT * FROM view_counts ...`
 2. `SELECT * FROM comments ...`
 3. `SELECT * FROM users ...`
