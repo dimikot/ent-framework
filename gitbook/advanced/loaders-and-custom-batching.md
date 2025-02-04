@@ -223,4 +223,10 @@ In [#node-event-loop](loaders-and-custom-batching.md#node-event-loop "mention") 
 
 On the picture above, the horizontal line denotes the "spin" of event loop (more precisely, it's a barrier between one I/O macrotask and another). We can see that `view_counts` and `comments` queries run in parallel, and after they both resolve, the batched `users` query starts to run. I.e. batching for `users` works fine: no matter how many comments there are, there will be just one SQL query to that table.
 
-But the reality is that `viewCound()` calls into Redis, and Redis client doesn't support query batching by default, it uses _pipelining_, a different concept). Thus, the sequence of "event loop spins" (aka I/O macrotasks) is this:
+But the reality is that `viewCount()` calls into Redis, and Redis client doesn't support query batching by default (it uses _pipelining_, a different concept). Thus, individual `redis.get()` calls will resolve independently on each other, in different macrotasks, so the sequence of "event loop spins" (aka I/O macrotasks) will be this:
+
+<figure><img src="../.gitbook/assets/loader-other-db-2.svg" alt="" width="496"><figcaption><p>redis.get() calls resolbe in different macrotasks...</p></figcaption></figure>
+
+So, Ent Framework batching got completely broken: since tens of `redis.get()` invocations resolve in different macrotasks, the consequent `EntUser.loadX()` calls are also scheduled independently.
+
+To fix it, we need to make sure that all high-cardinlal calls to other I/O subsystems and databases (like Redis) pass through some Loader. I.e., you may want to build a `RedisGetLoader` or some other similar abstraction. Typically, it's anyway better for performance: you get batching in the places where you used to send individual queries.
