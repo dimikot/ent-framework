@@ -227,6 +227,7 @@ But the reality is that `viewCount()` calls into Redis, and Redis client doesn't
 
 <figure><img src="../.gitbook/assets/loader-other-db-2.svg" alt="" width="496"><figcaption><p>redis.get() calls resolbe in different macrotasks...</p></figcaption></figure>
 
-So, Ent Framework batching got completely broken: since tens of `redis.get()` invocations resolve in different macrotasks, the consequent `EntUser.loadX()` calls are also scheduled independently.
+So, Ent Framework batching got completely broken: since tens of `redis.get()` invocations resolve in different macrotasks, the consequent `EntUser.loadX()` calls are also scheduled independently: the engine can only batch the calls issued within the same macrotask.
 
-To fix it, we need to make sure that all high-cardinlal calls to other I/O subsystems and databases (like Redis) pass through some Loader. I.e., you may want to build a `RedisGetLoader` or some other similar abstraction. Typically, it's anyway better for performance: you get batching in the places where you used to send individual queries.
+To fix it, we need to make sure that all high-frequent calls to other I/O subsystems and databases (like Redis) pass through some Loader. I.e., you may want to build a `RedisGetLoader` or some other similar abstraction, turning multiple Redis [GET](https://redis.io/docs/latest/commands/get/) calls into one [MGET](https://redis.io/docs/latest/commands/mget/) call. Typically, it's even better for performance: you get batching in the places where you used to send individual queries.
+
