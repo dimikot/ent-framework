@@ -46,6 +46,7 @@
 * [Loaders and Custom Batching](advanced/loaders-and-custom-batching.md)
 * [Cluster Maintenance Queries](advanced/cluster-maintenance-queries.md)
 * [Logging and Diagnostic Tools](advanced/logging-and-diagnostic-tools.md)
+* [Composite Primary Keys](advanced/composite-primary-keys.md)
 
 ## Architecture
 
