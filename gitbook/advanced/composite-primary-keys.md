@@ -50,7 +50,7 @@ export class EntMembership extends BaseEnt(cluster, schema) {
 
 This Ent schema doesn't have an `id` property, and thus, Ent Framework understands that it should use the Ent's unique key `group_id, user_id` instead.
 
-So, it's that simple: if you don't define `id` field in the schema, then your schema's unique key becomes the primary key. (There is no way to define both a composite primary key and a different unique key in an Ent class.)
+So, it's that simple: if you don't define `id` field in the schema, then your schema's unique key becomes the primary key.&#x20;
 
 Despite not defining an `id` field in the schema, your Ent instances will have it!
 
@@ -68,6 +68,8 @@ await membership.deleteOriginal();
 ```
 
 Basically, if you don't have an `id` field in the schema, Ent Framework will create it for you and put a PostgreSQL unique key tuple in it. Tuples are a standard PostgreSQL syntax, and they look like: `(100001001,100001002)`.
+
+There is no way to define both a composite primary key and a different unique key in an Ent class. It's also impossible to have more than 1 unique key in a particular Ent schema. But it doesn't mean you can't define more right in your database itself (at SQL table level) and then use them in custom `select()` queries: of course you can. It is just considered an anti-pattern for most of the cases.
 
 ## Single-Column Custom Primary Key
 
@@ -122,3 +124,5 @@ const reloaded = EntMembership.loadX(vc, "test@example.com");
 // All other Ent calls work too.
 await membership.deleteOriginal();
 ```
+
+Still, it's highly discouraged to do such things when you add a new table to your service. Better follow the best practices and add a regular `id` field. You can still use a custom primary key, but then you lose an ability to use other field(s) as a separate unique key in your schema.
