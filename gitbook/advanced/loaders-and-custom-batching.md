@@ -168,7 +168,7 @@ const topicGroups = await mapJoin(
 );
 ```
 
-## Loader for INSERT/UPDATE Queries
+## Loader for INSERT/UPDATE/DELETE Queries
 
 The main purpose of Loader is to do bathing for individual single-row queries, so they work perfectly not only for reads from the database, but also for writes. This abstraction is agnostic on the type of the operation: the only requirement is that it must be _idempotent_: calling it once is no different from calling it several times successively.
 
