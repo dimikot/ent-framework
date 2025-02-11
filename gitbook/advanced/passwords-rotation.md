@@ -100,7 +100,7 @@ You can have a background code that reloads the config properties from some serv
 ```typescript
 setInterval(async () => {
   config.islands = await enumerateFromAWSParameterStore();
-  config.secrers = await enumerateAndLoadFromAWSSecretsManager();
+  config.secrets = await enumerateAndLoadFromAWSSecretsManager();
 }, 10000);
 // In real code, you'll likely want some logging and try-catch around.
 ```
