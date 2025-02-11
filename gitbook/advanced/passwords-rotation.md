@@ -1,6 +1,6 @@
 # Passwords Rotation
 
-If your company regularly undergoes security audits (like SOC 2), you know how challenging it is to rotate database passwords while keeping the service running without downtime.
+If your company regularly undergoes security audits (like SOC2), you know how challenging it is to rotate database passwords while keeping the service running without downtime.
 
 The goal of password rotation is to ensure that, at any given time, two login-password pairs exist in the database—"previous" and "current"—both functional. When rotating the password, you assign the new password to the "previous" login and then swap them. On startup, the app always uses the "current" login-password pair.
 
