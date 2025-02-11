@@ -1,12 +1,12 @@
 # Passwords Rotation
 
-If your company is regularly passing through some security audit (like SOC2), you must know, how painful it is to rotate database passwords and keep the service off downtime at the same time.
+If your company regularly undergoes security audits (like SOC 2), you know how challenging it is to rotate database passwords while keeping the service running without downtime.
 
-The idea of passwords rotation is that, at any given moment of time, there should exist 2 login+password pairs in the database ("previous" and "current"), both working. When you want to change the password, you set the new one in the "previous" login, and then exchange them. At the app's boot time, it always uses the "current" login+password pair.
+The goal of password rotation is to ensure that, at any given time, two login-password pairs exist in the database—"previous" and "current"—both functional. When rotating the password, you assign the new password to the "previous" login and then swap them. On startup, the app always uses the "current" login-password pair.
 
-Alternatively, you may have just 1 login, but then you still have the "previous" and the "current" passwords for it. The app needs to be able to probe both: in case one password stopped working, then it must quickly reconnect using another one.
+Alternatively, you can use a single login while maintaining "previous" and "current" passwords for it. The app must be able to check both passwords and, if one stops working, quickly reconnect using the other. This approach would only work if your connection pooler (like PgBouncer) uses a "pass-through" mode (see [auth\_query](https://www.pgbouncer.org/config.html#auth_query) feature) and doesn't have a separate userlist.txt config with login-password pairs (otherwise, it's impossible to update the password for the same login transactionally and simultaneously in multiple places).
 
-Ent Framework supports both models:
+Ent Framework supports both approaches:
 
 ```typescript
 import type { PoolConfig } from "pg";
@@ -39,7 +39,7 @@ export const cluster = new Cluster<PgClientPool, PgClientPoolOptions>({
 });
 ```
 
-If the engine sees that there are more than 1 islands in the cluster having the same name, it will probe all connection parameters for them sequentially, until it finds the working ones. Then, it will remember, which island is best, so next time a reconnect happens, it will start the probing from it (and most likely, it'll immediately hit the success).
+If the engine sees that there are more than one island in the cluster having the same name, it will probe all connection config for the duplicates sequentially, until it finds the working one. Then, it will remember, which config is best, so next time a reconnect happens, it will start the probing from it (and most likely, it'll immediately hit the success).
 
 ## Config Hot Reloading
 
@@ -58,13 +58,16 @@ config = {
   secrets: [
     { login: "app_20380902123218", password: "<password1>" },
     { login: "app_20381002121152", password: "<password2>" },
+    // Can also be the same login, but typically, you rotate
+    // BOTH login and password, such that the passwords for
+    // the existing logins are immutable.
   },
 }
 ```
 
-Here, we define 3 islands with 2 PostgreSQL nodes in each (one master and one replica; Ent Framework will decide on its own, what is which). We also define several login+password pairs to probe. The tool that is used to rotate the password must guarantee that at any given time, at least 1 login+password pair in this list is working.
+Here, we define 3 islands with 2 PostgreSQL nodes on each (one master and one replica; Ent Framework will decide on its own, which is what). We also define several login+password pairs to probe. The tool that you use to rotate the password must guarantee that at any given time, at least 1 login+password pair in this list is working.
 
-Given that config structure, let's build an Ent Framework Cluster instance:
+Given the config structure above, let's build an Ent Framework `Cluster` instance:
 
 ```typescript
 import type { PoolConfig } from "
