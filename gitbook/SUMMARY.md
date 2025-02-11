@@ -47,6 +47,7 @@
 * [Cluster Maintenance Queries](advanced/cluster-maintenance-queries.md)
 * [Logging and Diagnostic Tools](advanced/logging-and-diagnostic-tools.md)
 * [Composite Primary Keys](advanced/composite-primary-keys.md)
+* [Passwords Rotation](advanced/passwords-rotation.md)
 
 ## Architecture
 
