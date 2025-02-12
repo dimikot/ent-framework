@@ -100,14 +100,12 @@ If you use Amazon's RDS or Aurora, it provides you with 2 hostnames:
 * **Writer** (master) endpoint. When there is an outage on the master node, RDS automatically promotes one of the replicas to be a new master, and changes the writer endpoint routing to point to the new master.
 * **Reader** (random replica) endpoint. If there are multiple replicas in the cluster, RDS routes the connections to a "random" replica (i.e. it's unpredictable, to which one).
 
-From the first glance, it looks like having just 2 endpoints is a pretty useful feature.
-
-Unfortunately, it all falls apart when it comes to the replication lag tracking problem.
+From the first glance, it looks like having just 2 endpoints is a pretty useful feature. There are several downsides though:
 
 * **Writer endpoint switch latency**: if there is a master outage, then, even after the new master is promoted in the cluster, the writer endpoint switches to it not immediately: there is some artificial latency,
 * **Reader endpoint routing is unpredictable**: often times, one replica can already be "in sync" with the master (relative to the current user; we'll talk about it a bit later), whilst another replica is not yet. The engine like Ent Framework needs to know exactly, which replica does it connect to, to properly track its replication lag and metrics.
 
-So, when working with Ent Framework, it's highly **discouraged** to use the automatically routed reader and writer endpoints. Instead, you'd better tell the engine the exact list of nodes in the cluster, and let it decide the rest.
+So, although you can use writer and reader endpoints in your `Cluster` instance (especially when you don't need Ent Framework's built-in mechanism for replication lag tracking), it's discouraged. Instead, you'd better tell the engine the exact list of nodes in the cluster, and let it decide the rest.
 
 In Ent Framework, you can even modify the list of nodes in real time, without restarting the Node app. I.e. if you have a periodic timer loop that reads the up-to-date list of cluster nodes and returns it to Ent Framework, it will work straight away and with no downtime. Nodes may appear and disappear from the cluster, and the master may switch roles with replicas: Ent Framework will take care of it all and do the needed transparent retries.
 
