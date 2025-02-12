@@ -169,7 +169,15 @@ pg-microsharding move \
   --activate-on-destination=yes
 ```
 
-Microshards can be moved from one PostgreSQL node to another. There is no need to stop writes while moving microshards: the tool uses PostgreSQL logical replication to stream each microshard table's data, and in the very end, acquires a quick exclusive lock to finalize the move.
+Microshards can be moved from one PostgreSQL node to another. There is no need to stop writes while moving microshards: the tool uses PostgreSQL logical replication to stream each microshard table's data, and in the very end, acquires a quick write lock to finalize the move.
+
+There are many aspects and corner cases addressed in the move action, here are some of them:
+
+* The move is fast even for large microshards. The tool internally uses the same approach for data copying as `pg_dump`. First recreates the tables structure on the destination, except most of the indexes and foreign key constraints (only the primary key indexes or REPLICA IDENTITY indexes are created at this stage, since they are required for the logical replication to work). Then, it copies the data, utilizing the built-in PostgreSQL tablesync worker; this process is fast, since it inserts the data in bulk and doesn't update indexes. In the end, the tool creates the remaining indexes and foreign key constraints (this is where you may want to increase [maintenance\_work\_mem](https://www.postgresql.org/docs/current/runtime-config-resource.html) for the role you pass to pg-microsharding, since it directly affects the indexes creation time). Overall, this approach speeds up the copying by \~10x comparing to the naive way of using logical subscriptions.
+* At each long running step, the tool shows a descriptive progress information: how many tuples are copied so far, what is the elapsed %, how much time is left, what are the SQL queries it executes (dynamically updatable block in console) etc.
+* It also shows replication lag statistics for all physical replicas of the source and the destination, plus the logical replication lag of the temporary subscription.
+* In the end, the tool activates the microshard on the destination and deactivates on the source, but it does it only when the replication lag in seconds dropped below some reasonable threshold (defaults to 20 seconds, but you can pass a lower value to be on a safe side). So the write lock is guaranteed to be acquired for only a brief moment.
+* The tool runs it all in an automatically created tmux session. If you accidentally disconnect, then just connect back and rerun the same command line: instead of running another move action, if will jump you back in the existing session.
 
 If you're unsure, you can practice with the move without activating the microshard on the destination (and without deactivating it on the source) by passing `--activate-on-destination=no` option. This is like a "dry-run" mode, where the tool does all the work, except the very last step. The moved schema on the destination won't be activated, and it will also be renamed using some long descriptive prefix (including the move date).
 
