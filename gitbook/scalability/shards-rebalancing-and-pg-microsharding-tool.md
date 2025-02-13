@@ -217,16 +217,26 @@ Before running the moves, the action calculates weights of each shard (by defaul
 
 Once the rebalancing plan is ready, the tool will print it to you and ask for your confirmation. You can always run `pg-microsharding rebalance` and then press ^C to just see, what _would_ happen if you rebalance.
 
+After rebalancing, the result may look like:
+
+<figure><img src="../.gitbook/assets/pg-microsharding-rebalance-after.png" alt="" width="375"><figcaption></figcaption></figure>
+
 At any time, you can abort the rebalancing with ^C in any of the tmux panes. It is as safe as aborting the `move` action.
 
-### Evacuate All Microshards from an Island
+### Evacuate All Microshards from an Island (Decommissioning)
 
 ```bash
 pg-microsharding rebalance \
-  --decommission=host1 --activate-on-destination=yes
+  --decommission=host2 --activate-on-destination=yes
 ```
 
-This mode of "rebalance" action allows you to remove a PostgreSQL host from the cluster, or even upgrade PostgreSQL to the next major version with no downtime. It moves all the microshards from the provided DSN, so the host becomes "empty". After the decommissioning is done, you can remove the host from the cluster or upgrade PostgreSQL, then rebalance the microshards back (rebalancing works fine across different major PostgreSQL versions).
+This mode of "rebalance" action allows you to remove a PostgreSQL host from the cluster, or even upgrade PostgreSQL to the next major version with no downtime. It moves all the microshards from the provided DSN, so the host becomes "empty".&#x20;
+
+E.g. after decommissioning, the result may look like (notice that one node became empty):
+
+<figure><img src="../.gitbook/assets/pg-microsharding-decommission.png" alt="" width="375"><figcaption></figcaption></figure>
+
+Now, you can remove the host from the cluster or upgrade PostgreSQL, then rebalance the microshards back (rebalancing works fine across different major PostgreSQL versions).
 
 ### Tweak Island Weights: pg-microsharding factor
 
