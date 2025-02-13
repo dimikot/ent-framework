@@ -149,17 +149,25 @@ pg-microsharding list
 
 This action prints the list of all PostgreSQL islands (pointed by DNSn), microshards and some statistics.
 
-In `--verbose` mode, also prints detailed statistics anout insert/update/delete, index scans and seqscans.
+In `--verbose` mode, also prints detailed statistics about insert/update/delete, index scans and seqscans.
+
+<div align="center"><figure><img src="../.gitbook/assets/pg-microsharding-list.png" alt="" width="563"><figcaption></figcaption></figure></div>
 
 ### Allocate New Microshards: pg-microsharding allocate
 
 ```typescript
-pg-microsharding allocate --shards=301-399 --activate=yes
+pg-microsharding allocate --shards=301-309 --activate=yes
 ```
 
 This action allows you to create more microshard schemas in the cluster. The microshards are created on PostgreSQL the host pointed by the 1st DSN, so after it's done, run `pg-microsharding rebalance` to spread that new schemas across other nodes.
 
 Each microshard can either be "active" or "inactive". When you create them, you tell the tool, should the microshards become active immediately (and thus, visible to `microsharding_list_active_shards()` API) or not. You can always activate the schemas later using the same exact command (it is idempotent).
+
+The tool runs `--migrate-cmd` command right after creating the inactive microshards, assuming that your migration tool will initialize them properly.
+
+<figure><img src="../.gitbook/assets/pg-microsharding-allocate.png" alt=""><figcaption></figcaption></figure>
+
+<figure><img src="../.gitbook/assets/pg-microsharding-allocate-list.png" alt="" width="375"><figcaption></figcaption></figure>
 
 ### Move One Microshard: pg-microsharding move
 
@@ -183,6 +191,8 @@ If you're unsure, you can practice with the move without activating the microsha
 
 At any moment, you can abort the move with ^C. It is safe: half-moved data will remain on the destination, but the microshard schema will remaim invisible there for e.g. `microsharding_list_active_shards()` API (see below). If you then rerun the `move` action, it will start from scratch.
 
+<figure><img src="../.gitbook/assets/pg-microsharding-move.png" alt=""><figcaption></figcaption></figure>
+
 ### Clean Old Moved Copies: pg-microsharding cleanup
 
 ```bash
@@ -202,6 +212,8 @@ pg-microsharding rebalance --activate-on-destination=yes
 This action runs multiple "move" sub-actions in parallel, utilizing [tmux](https://github.com/tmux/tmux/wiki) panes. Notice that tmux is required: it allows to resume the rebalancing if your SSH console on the server gets disconnected (in this case, just run the `rebalance` action again, and you'll "jump into" the existing session).
 
 Before running the moves, the action calculates weights of each shard (by default, the weight is the microshard tables size in bytes, mutuplied by per-shard "weight factor"; see below). Then, it estimates, which microshards need to be moved to what islands, to achieve a more or less uniform distribution. The algorithm is complicated: among other heuristics, it tries to make sure that each island gets approximately the same number of microshards with comparable sizes (e.g. if you allocate 100 new empty microshards, then rebalancing will spread them across islands uniformly).
+
+<figure><img src="../.gitbook/assets/pg-microsharding-rebalance-plan.png" alt="" width="563"><figcaption></figcaption></figure>
 
 Once the rebalancing plan is ready, the tool will print it to you and ask for your confirmation. You can always run `pg-microsharding rebalance` and then press ^C to just see, what _would_ happen if you rebalance.
 
@@ -229,8 +241,6 @@ Such situation typically happens, because one microshard became too large, or th
 When you run `pg-microsharding factor --factor="*1.2"`, the tool artificially increases the "weight" of each microshard on the provided host (in this example, the increase is by 1.2, i.e. by 20%). This information is then remembered in the microshards themselves (and is displayed in `list` action), so you can run rebalancing and "dissolve" some of the microshards among other hosts. As a result, your target island will become less loaded (on average), and by repeating this step several times, you can achieve a more fair load distribution.
 
 The "weight increase factor" is technically stored as a SQL comment on the microshard schema, and it travels along with the microshard when you move it.
-
-
 
 ## PostgreSQL Stored Functions API
 
