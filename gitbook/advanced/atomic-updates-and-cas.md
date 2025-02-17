@@ -1,0 +1,9 @@
+# Atomic Updates and CAS
+
+Ent Framework does not expose transactions in its top-level APIs: it's a trade-off made towards supporting automatic queries batching and built-in microsharding. Of course, each individual write to the database is still transactional, but you can't have a notion of "all or nothing" when updating multiple Ents. (Those Ents may also reside in different microshards, so a robust transactional update for them is impossible even in theory.)
+
+Except when you build a billing solution or a banking app, transactions are rarely needed in practice: probably in less than 1% of cases. Occasionally, you may want to transactionally update multiple Ents still, or (more often) update a single Ent in "read-modify-write" fashion, when it's guaranteed that there are no concurrent writes happened in between. To do this, you have the following options:
+
+1. Use [PgClient's low level API](../scalability/sharding-low-level-api.md), `acquireConn()` and `release()`. It exposes the vanilla [node-postgres](https://www.npmjs.com/package/pg) client object, which you can use directly: run transactions, streaming operations etc. You'll have to write raw SQL in this case though.
+2. Incapsulate your multi-table update logic in a PostgreSQL stored procedure or in a [PostgreSQL trigger](https://www.postgresql.org/docs/17/sql-createtrigger.html). (In fact, out of the 1% mentioned above, probably 80% can be covered with a native PostgreSQL trigger.) Ent Framework is very friendly to allowing the developer use built-in underlying database's features. The main idea is that both stored functions and triggers are atomic in PostgreSQL, so if you call them, you'll get the transactional behavior without using `BEGIN...COMMIT` statements. Of course, it's possible only for Ents living in the same microshard.
+3. For "read-modify-write" cases, use Ent Framework's `$cas` feature which is described below.
