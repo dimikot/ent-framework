@@ -45,6 +45,7 @@
 * [Atomic Updates and CAS](advanced/atomic-updates-and-cas.md)
 * [Custom Field Refactoring](advanced/custom-field-refactoring.md)
 * [Loaders and Custom Batching](advanced/loaders-and-custom-batching.md)
+* [VC Flavors](advanced/vc-flavors.md)
 * [Cluster Maintenance Queries](advanced/cluster-maintenance-queries.md)
 * [Logging and Diagnostic Tools](advanced/logging-and-diagnostic-tools.md)
 * [Composite Primary Keys](advanced/composite-primary-keys.md)
