@@ -246,6 +246,48 @@ There is no magic here: to propagate the minimal read-after-write consistency si
 
 Notice one important thing: since there are no JOINs in Ent Framework, we read data from different microshards and track their timelines independently. That allows to assemble a read-after-write consistent snapshot from multiple microshards when reading.
 
+## Forced Master
+
+Besides the automatic replication lag tracking, you can also tell Ent Framework explicitly that you want to use only the master nodes for some particular calls.
+
+```typescript
+const topic = await EntTopic.loadX(
+  vc.withTransitiveMasterFreshness(),
+  topicID,
+);
+const comments = await EntComment.select(
+  topic.vc,
+  { topic_id: topic.id },
+  100,
+);
+```
+
+Calling to `vc.withTransitiveMasterFreshness()` derives you a new VC that, when used, will force the utilization of a "special" timeline. All the Ents loaded in this VC will be read from the corresponding island's master node. This mechanism is called "VC freshness"; in our case, `vc.freshness` equals to `MASTER` (the default freshness is `null` meaning "use timelines tracking engine").
+
+Also, in the example above, `topic.vc` keeps master freshness, so any other Ents loaded with it will be read from master nodes as well. This is why it's called "transitive": once enabled on a VC, the freshness propagates to the further loaded Ents if you use your Ent's `vc` property. Be careful to not abuse the VC master freshness, otherwise you may introduce bottlenecks in your app's performance.
+
+## Forced Replica
+
+You can ask Ent Framework to always use a replica for a particular call:
+
+```typescript
+const topic = await EntTopic.loadX(
+  vc.withOneTimeStaleReplica(),
+  topicID,
+);
+const comments = await EntComment.select(
+  topic.vc, // <-- it does NOT remember withOneTimeStaleReplica()!
+  { topic_id: topic.id },
+  100,
+);
+```
+
+Notice that the replica freshness is _not transitive (_"one time"_)_: in the example above, you tell Ent Framework to load EntTopic with it, but `topic.vc` will have a regular (default) freshness. I.e.  comments will be loaded using the regular timelines engine (from a replica if there were no recent writes to EntComment, or from master if there were).
+
+To highlight that you may likely read out-of-date rows from the database (replica is always lagging behind master), the method is named `withOneTimeStaleReplica()`: notice the word "stale".
+
+If you try to write some Ent using a VC with `STALE_REPLICA` freshness, then an interesting thing will happen: the write will still go to the master node, but the Ent's timeline won't remember that. This is convenient when you want to have some "insignificant write in background": i.e. you need your write to not affect the further reads going to replicas.
+
 ## Conclusion
 
 In the examples above, we called `serializeTimelines()` and `deserializeTimelines()` methods manually on every endpoint. In real projects though, you most likely don't want to call them explicitly, since it produces too much boilerplate in the code.
