@@ -25,6 +25,54 @@ Overall, query caching works the way you expect it to work. As a concept, readin
 
 Notice that the VC caches are very short-lived: they are not stored externally (no files, no Redis etc.) and exist in Node process memory only.
 
+## Enable Query Cache in a Next App
+
+Earlier in [vc-flavors.md](vc-flavors.md "mention"), we updated our `getServerVC()` function example to attach additional flavors to the per-request VC. Let's modify it further to enable query caching.
+
+```typescript
+import { VC } from "ent-framework";
+import { getServerSession } from "next-auth";
+import { headers } from "next/headers";
+import { EntUser } from "./EntUser";
+
+const vcStore = new WeakMap<object, VC>();
+
+export async function getServerVC(): Promise<VC> {
+  const [heads, session] = await Promise.all([headers(), getServerSession()]);
+  let vc = vcStore.get(heads);
+  if (!vc) {
+    vc = VC.createGuestPleaseDoNotUseCreationPointsMustBeLimited();
+    if (session?.user?.email) {
+      const vcOmni = vc.toOmniDangerous();
+      let user = await EntUser.loadByNullable(vcOmni, {
+        email: session.user.email,
+      });
+      if (!user) {
+        // User did not exist: upsert the Ent.
+        await EntUser.insertIfNotExists(vcOmni, {
+          email: session.user.email,
+          is_admin: false,
+        });
+        user = await EntUser.loadByX(vcOmni, {
+          email: session.user.email,
+        });
+      }
+      // Thanks to EntUser's privacyInferPrincipal rule, user.vc is
+      // automatically assigned to a new derived VC with principal
+      // equals to user.id. We also attach flavors here and enable
+      // the built-in query caching.
+      vc = user.vc.withFlavor(
+        new VCWithQueryCache({ maxQueries: 1000 }), // <--
+        new VCEmail(user.email),
+        user.is_admin ? new VCAdmin() : undefined,
+      );
+    }
+    vcStore.set(heads, vc);
+  }
+  return vc;
+}
+```
+
 ## Custom Caches
 
 In addition to built-in query caching, you may utilize your own in-VC caches with `VC#cache()` API. This is convenient when Ent Framework's built-in capabilities are not enough, or you want to cache the data related to other databases.
@@ -73,3 +121,11 @@ myMethod() {
 Here, `$MY_STORE` symbol will play the same identification role as `MyStore` class itself in the previous example.
 
 Overall, `cache()` call does nothing more than "memoizing" an instance of your store container in a particular VC. It's up to you, how to utilize that store instance, be it a key-value container or something else.
+
+## Privacy Rules Caching
+
+At this point, it won't be a surprise for you that Ent Framework privacy checking layer (see [privacy-rules.md](../getting-started/privacy-rules.md "mention")) uses the VC caching engine described above. In particular, once some Ent ID is determined to be readable in a VC (`privacyLoad` rules), then all future checks within that VC are bypassed. The same applies to `privacyUpdate` and `privacyDelete`. Since Ents and VCs are immutable, we can safely rely on that machinery.
+
+In practice, the caching for privacy rules works quite effectively: you'll rarely see too many additional database requests that Ent Framework issues for privacy checking.
+
+Privacy caching also enables one interesting feature: if you, say, load an Ent in a VC and then soft-delete it (by setting its `deleted_at` field to the current time or to `true`, depending on your business logic), then you will still be able to reload that Ent in the same VC, even if its privacy rules block reading of soft-deleted rows. This is because when you read an Ent, you have already "proven" that you have access to it, so Ent Framework will bypass all the further checks related to the same VC.
