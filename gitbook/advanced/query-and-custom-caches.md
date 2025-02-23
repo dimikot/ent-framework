@@ -70,6 +70,6 @@ myMethod() {
 }
 ```
 
-Here, `$MU_STORE` symbol will play the same identification role as `MyStore` class played in the previous example.
+Here, `$MY_STORE` symbol will play the same identification role as `MyStore` class itself in the previous example.
 
-Overall, `cache()` call does nothing more than "memoizing" an instance of your store container in a particular VC. It's up to you, how to use that store instance.
+Overall, `cache()` call does nothing more than "memoizing" an instance of your store container in a particular VC. It's up to you, how to utilize that store instance, be it a key-value container or something else.
