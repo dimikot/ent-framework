@@ -31,6 +31,14 @@ export class EntUser extends BaseEnt(cluster, schema) {
 ```
 {% endcode %}
 
+If your app uses UUID type for ID fields, just replace `nextval('users_id_seq')` with something like:
+
+```typescript
+autoInsert: "gen_random_uuid()"
+```
+
+(Read more about ID formats and microsharding aspects in [locating-a-shard-id-format.md](../scalability/locating-a-shard-id-format.md "mention") article.)
+
 Each Ent may also have one optional "unique key" (possible composite) which is treated by the engine in a specific optimized way. In the above example, it's `email`.
 
 {% code title="ents/EntTopic.ts" %}
