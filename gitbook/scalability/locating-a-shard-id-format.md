@@ -110,3 +110,46 @@ Luckily, previsely for UUID version 4, there is a solution: you can just amend t
 Here, as in the previous examples, `1` is environment number (e.g. production) and `0246` is microshard number.
 
 This trick doesn't cut too much of the UUID's entropy, but allows to use UUIDs in microsharded environment.
+
+## Why Using Database Generated IDs?
+
+Let's get back to the previous example of an ID field definition:
+
+```typescript
+const schema = new PgSchema(
+  "users",
+  {
+    id: { type: ID, autoInsert: "id_gen()" },
+    ...
+  },
+  ...
+);
+```
+
+Also, the corresponding SQL table schema in every microshard is:
+
+```sql
+CREATE TABLE users(
+  id bigint PRIMARY KEY DEFAULT id_gen(),
+  ...
+)
+```
+
+### id\_gen() is Mentioned in Two Places
+
+Technically, you don't have to include `DEFAULT id_gen()` clause in your SQL table definition. For Ent Framework to operate, it's fully enough to define just `autoInsert="id_gen()"`.
+
+But we strongly advise to have both. Otherwise, you won't be able to e.g. connect to a node with `psql` and run `INSERT INTO users ...` safely, without thinking of IDs generation. It will also be hard to build database triggers if they insert `users` rows.&#x20;
+
+### autoInsert is a String Property, not a Callback
+
+You probably wondered, why Ent Framework doesn't support `autoInsert` being a TypeScript callback? Why do we always ask the database to generate IDs and do not support application code ID generation (especially for UUIDs)?
+
+There are several reasons for this.
+
+1. As mentioned above, the best practice is to have the `autoInsert` expression defined in both Ent Framework schema and in the SQL table definition. Thus, we need an approach available in both TypeScript and SQL worlds, which is using an SQL expression as a string. (BTW, for non-ID fields, other available values for `autoInsert` are: `"now()"`, `"NULL"` or even `"'{}'"` for e.g. an empty array.)
+2. When building batched INSERTs, Ent Framework uses the expression from `autoInsert` directly in the batched SQL queries.
+3. If an Ent class has `beforeInsert` triggers, Ent Framework runs the expressions from `autoInsert` in a separate query, so the generated IDs are available in `beforeInsert` triggers, even though the row is not yet inserted into the table. This allows to build "eventually consistent" logic without transactions. See more details about this in [triggers.md](../getting-started/triggers.md "mention") article.
+
+
+
