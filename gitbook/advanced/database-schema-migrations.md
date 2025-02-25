@@ -379,7 +379,7 @@ export default async function(action: "apply" | "undo" | string) {
 }
 ```
 
-The `microsharding_migration_after()` function from pg-microsharding creates so-called "debug views", which are giant `UNION ALL` actoss all tables in all shards on all PostgreSQL nodes.  This allows to query the sharded tables for the data, as if they are not sharded. Of course, it is slow and should only be used for debugging purposes (don't use the debug views from your app). See more details in pg-microsharding documentation.
+The `microsharding_migration_after()` function from pg-microsharding creates so-called "debug views", which are giant `UNION ALL` across all tables in all shards on all PostgreSQL nodes.  This allows to query the sharded tables for the data, as if they are not sharded. Of course, it is slow and should only be used for debugging purposes (don't use the debug views from your app). See more details in pg-microsharding documentation.
 
 ## Advanced: Merge Conflicts
 
