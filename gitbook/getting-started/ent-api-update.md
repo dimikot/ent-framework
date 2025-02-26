@@ -39,6 +39,10 @@ WITH rows(id, subject) AS (VALUES(
   RETURNING rows.id
 ```
 
+{% hint style="info" %}
+All `update*()` functions also support a special `$cas` property; read more about it in [atomic-updates-and-cas.md](../advanced/atomic-updates-and-cas.md "mention") advanced article.
+{% endhint %}
+
 ## **ent.updateReturningX({ field: "...", ... }): Ent**
 
 Updates the row in the database,  then **loads the Ent back** using `loadX()` and returns it to you. In case there was no such row in the database, throws `EntNotFound` error (this is what "X" stands for, "eXception").
@@ -73,4 +77,33 @@ Same as `updateOriginal()`, but updates only the fields which are different in t
 ## **ent.updateChangedReturningX({ field: "...", ... }): Ent**
 
 This is probably the longest method name in Ent API. Acts similarly to `updateChanged()`, but returns the modified Ent back (or the original Ent if no fields were actully changed).
+
+## Using $literal Instead of Fields
+
+In addition to updating particular fields by their names, you can also pass an arbitrary SQL piece containing one more comma separated `field = value` expressions:
+
+```typescript
+await topic.updateOriginal(vc, {
+  subject: "some",
+  $literal: [
+    "tags = ARRAY(SELECT DISTINCT unnest FROM unnest(array_append(tags, ?)))",
+    "my-tag",
+  ]
+});
+```
+
+In the final SQL query generated, what you pass in `$literal` will appear as it is:
+
+```sql
+UPDATE topics
+SET
+  subject = 'some',
+  tags = ARRAY(SELECT DISTINCT unnest FROM unnest(array_append(tags, 'my-tag')))
+WHERE id = 1004200047373526525
+```
+
+There are several downsides of this approach though:
+
+1. Calls of this kind can't be batched, so if you run multiple of them in parallel, Ent Framework will send independent queries.
+2. The syntax is engine-specific; e.g. the above example works for PostgreSQL only.
 
