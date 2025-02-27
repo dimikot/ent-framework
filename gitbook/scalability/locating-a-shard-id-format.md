@@ -127,7 +127,7 @@ CREATE TABLE users(
 )
 ```
 
-(In case you want to UUID IDs, use the built-in PostgreSQL type `uuid`.)
+(In case you want IDs as UUID, use the built-in PostgreSQL type `uuid` instead of `bigint`.)
 
 ### id\_gen() is Mentioned in Two Places
 
