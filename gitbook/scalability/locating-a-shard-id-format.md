@@ -137,13 +137,13 @@ But we strongly advise to have both. Otherwise, you won't be able to e.g. connec
 
 ### autoInsert is a String Property, not a Callback
 
-You probably wondered, why Ent Framework doesn't support `autoInsert` being a TypeScript callback? Why do we always ask the database to generate IDs and do not support application code ID generation (especially for UUIDs)?
+You probably wondered, why doesn't Ent Framework support `autoInsert` being a TypeScript callback? Why do we always ask the _database_ to generate IDs, why don't we support application code ID generation (especially for UUIDs)?
 
 There are several reasons for this.
 
-1. As mentioned above, the best practice is to have the `autoInsert` expression defined in both Ent Framework schema and in the SQL table definition. Thus, we need an approach available in both TypeScript and SQL worlds, which is using an SQL expression as a string. (BTW, for non-ID fields, other available values for `autoInsert` are: `"now()"`, `"NULL"` or even `"'{}'"` for e.g. an empty array.)
+1. As mentioned above, the best practice is to have the `autoInsert` expression defined in both Ent Framework schema and in the SQL table definition. Thus, we need an approach available in both TypeScript and SQL worlds; that is using an SQL expression as a string. (BTW, for non-ID fields, other available values for `autoInsert` are: `"now()"`, `"NULL"` or even `"'{}'"` for e.g. an empty array.)
 2. When building batched INSERTs, Ent Framework uses the expression from `autoInsert` directly in the batched SQL queries.
-3. If an Ent class has `beforeInsert` triggers, Ent Framework runs the expressions from `autoInsert` in a separate query, so the generated IDs are available in `beforeInsert` triggers, even though the row is not yet inserted into the table. This allows to build "eventually consistent" logic without transactions. See more details about this in [triggers.md](../getting-started/triggers.md "mention") article.
+3. If an Ent class has `beforeInsert` triggers, Ent Framework runs the expressions from `autoInsert` in a separate query, so the generated IDs are available in `beforeInsert` triggers early, even though the row is not yet inserted into the table. This allows to build "eventually consistent" logic without transactions. See more details about this in [triggers.md](../getting-started/triggers.md "mention") article.
 
 
 
