@@ -102,6 +102,8 @@ Here, as in the previous examples, `1` is environment number (e.g. production), 
 
 Notice that `id_gen_uuid()` replaces the first several digits in the string representation of UUID with the information regarding environment and microshard numbers. This trick doesn't cut too much of the UUID's entropy (UUID is 16 bytes; compare it to 8 bytes of `bigint`), but allows to use UUIDs in microsharded environment.
 
+Also, you need to use type `String` and not `ID` for the fields that hold an UUID data. This applies to `id` property and to all "foreign key like" fields.
+
 ## Why Using Database Generated IDs?
 
 Let's get back to the previous example of an ID field definition:
