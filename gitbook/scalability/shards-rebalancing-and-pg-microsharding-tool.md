@@ -94,6 +94,8 @@ Custom variables of the tool itself:
 * `MIGRATE_CMD`: default value for `--migrate-cmd` option
 * `WEIGHT_SQL`: default value for `--weight-sql` option
 * `DEACTIVATE_SQL`: default value for `--deactivate-sql` option
+* `PARALLELISM`: default value for `--parallelism` option
+* `MAX_REPLICATION_LAG_SEC`: default value for `--max-replication-lag-sec` option
 
 ## Configuration File: pg-microsharding.config.ts
 
@@ -119,7 +121,7 @@ export default async function(action: "apply" | "undo" | string) {
 }
 ```
 
-The file `pg-microsharding.config.ts` is searched in all parent folders starting from the current working directory when `pg-microsharding` is run (typically you want to have it in the root of your project, near the other configuration files).
+Unless `--skip-config` flag is passed, the file `pg-microsharding.config.ts` is searched in all parent folders starting from the current working directory when `pg-microsharding` is run (typically you want to have it in the root of your project, near the other configuration files).
 
 You can export-default a regular function, an async function, or even a plain constant object.
 
@@ -174,7 +176,8 @@ The tool runs `--migrate-cmd` command right after creating the inactive microsha
 ```bash
 pg-microsharding move \
   --shard=42 --from=host1 --to=host2 \
-  --activate-on-destination=yes
+  --activate-on-destination=yes \
+  --max-replication-lag-sec=20
 ```
 
 Microshards can be moved from one PostgreSQL node to another. There is no need to stop writes while moving microshards: the tool uses PostgreSQL logical replication to stream each microshard table's data, and in the very end, acquires a quick write lock to finalize the move.
@@ -251,6 +254,12 @@ Such situation typically happens, because one microshard became too large, or th
 When you run `pg-microsharding factor --factor="*1.2"`, the tool artificially increases the "weight" of each microshard on the provided host (in this example, the increase is by 1.2, i.e. by 20%). This information is then remembered in the microshards themselves (and is displayed in `list` action), so you can run rebalancing and "dissolve" some of the microshards among other hosts. As a result, your target island will become less loaded (on average), and by repeating this step several times, you can achieve a more fair load distribution.
 
 The "weight increase factor" is technically stored as a SQL comment on the microshard schema, and it travels along with the microshard when you move it.
+
+### Replication Lag Prevention
+
+The tool tries hard to not affect the replication lag of the destination nodes when moving or rebalancing microshards. It waits until the lag drops below `--max-replication-lag-sec` seconds before running heavy operations (or until the user presses Shift+S to force-continue).
+
+Also, if you want the tool to pause explicitly and wait until the user presses Shift+S before activating the shard on the destination node, you can use the `--wait` option.
 
 ## PostgreSQL Stored Functions API
 
