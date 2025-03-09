@@ -276,7 +276,9 @@ To manually install or upgrade the library's stored functions in the database wi
 pg-microsharding install
 ```
 
-Otherwise, run run the following SQL files in your up- and down-migrations to install (or upgrade) and uninstall the tool:
+<figure><img src="../.gitbook/assets/pg-microsharding-install.png" alt="" width="563"><figcaption></figcaption></figure>
+
+Otherwise, run the following SQL files in your up- and down-migrations to install (or upgrade) and uninstall the tool:
 
 * sql/pg-microsharding-up.sql: to install/upgrade the library
 * sql/pg-microsharding-down.sql: to uninstall
