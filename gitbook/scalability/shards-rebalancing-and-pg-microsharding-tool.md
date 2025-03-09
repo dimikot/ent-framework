@@ -40,6 +40,9 @@ Each microshard is a PostgreSQL schema with numeric suffix. Microshard schemas h
 ## Usage
 
 ```
+pg-microsharding install
+  [--dsn=DSN | --dsns=DNS1,DSN2,...]
+
 pg-microsharding list | ls
   [--weight-sql='SELECT returning weight with optional unit']
   [--verbose]
@@ -267,7 +270,13 @@ This is the second part of pg-microsharding tool: a set of stored functions you 
 
 ### Installing into the Database
 
-Run the following SQL files in your up- and down-migrations to install (or upgrade) and uninstall the tool:
+To manually install or upgrade the library's stored functions in the database without a migration tool, run the `install` action:
+
+```bash
+pg-microsharding install
+```
+
+Otherwise, run run the following SQL files in your up- and down-migrations to install (or upgrade) and uninstall the tool:
 
 * sql/pg-microsharding-up.sql: to install/upgrade the library
 * sql/pg-microsharding-down.sql: to uninstall
