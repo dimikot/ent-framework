@@ -88,7 +88,7 @@ beforeInsert: [
 ...
 ```
 
-Here we assume that you have a `addToKafka()` function which accepts the Ent class name and the Ent ID. After the write to Kafka succeeds, you proceed with saving the Ent to the database. Using this apprpach, you can e.g. implement eventually-consistent pipelining of the Ent data to some other storage using an external bus (like Kafka or Redis Streams), despite this system "bus+PostgreSQL" being not transactionally safe as a wole.
+Here we assume that you have a `addToKafka()` function which accepts the Ent class name and the Ent ID. After the write to Kafka succeeds, you proceed with saving the Ent to the database. Using this apprpach, you can e.g. implement eventually-consistent pipelining of the Ent data to some other storage using an external bus (like Kafka or Redis Streams), despite this system "bus+PostgreSQL" being not transactionally safe as a whole.
 
 ### beforeUpdate Triggers
 
@@ -122,6 +122,22 @@ In the trigger functions, Ent Framework gives you the following arguments:
 * `oldRow`: the row with Ent fields right before the update. This object is immutable.
 * `input`: properties passed to `update*()` method as they are. Notice that it includes **not** all Ent fields, but only the fields you are mutating (in other words, all properties of `input` object are _optional_ in their TypeScript typing). You need to  modify this object if you want the trigger to make changes in the Ent before the update happens.
 * `newRow`: the result of applying `input` over `oldRow` . This is an immutable object.
+
+### Immutable Fields
+
+Using `beforeUpdated`, you can force some Ent field to be _immutable_, so any `update*()` call will not change it:
+
+```typescript
+...
+beforeUpdate: [
+  function SlugIsImmutable(vc, { oldRow, input }) => {
+    input.slug = oldRow.slug;
+  },
+],
+...
+// This value won't be saved.
+await topic.updateReturningX({ slug: "new-value" });
+```
 
 ### beforeDelete Triggers
 
