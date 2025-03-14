@@ -1,6 +1,6 @@
 # Triggers
 
-Triggers are hooks which Ent Framework execute right before or after a mutation (insert, update or delete).
+Triggers are hooks that Ent Framework executes right before or after a mutation (insert, update or delete). They can modify the table row before it's got saved, and also load or update other Ents.
 
 The word "hook" also draws the analogy with React Hooks (from frontend world), since update-triggers in Ent Framework have several traits in common with React's `useEffect()` hook.
 
