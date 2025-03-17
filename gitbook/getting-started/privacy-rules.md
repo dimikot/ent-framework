@@ -2,11 +2,11 @@
 
 A crucial reason on why Ent Framework exists at all is its privacy layer. No data exits the API unless it's rechecked against a set of explicitly defined security predicates. In other words, when you have multiple users in your service, you can enforce the strict guarantees that one user can't see other user's data even in theory.
 
-In relational databases world, this concept is called "row-level security".&#x20;
+In relational databases world, the concept of per-row security rechecking is called "row-level security".&#x20;
 
-## Disadvantages of PostgreSQL Built-in Row Level Security
+## PostgreSQL Built-in Row Level Security
 
-We need to mention that some support for row-level security is [built in to PostgreSQL](https://www.postgresql.org/docs/current/ddl-rowsecurity.html), but it has several drawbacks which makes it almost useless in web development:
+Before we continue, we must mention that some support for row-level security is [built in to PostgreSQL](https://www.postgresql.org/docs/current/ddl-rowsecurity.html), but it has several drawbacks that makes it almost useless in web development:
 
 1. It is expensive and, at the same time, too "sloppy" and low-level (the amount of DDL code you need to write is large, and there is no framework in place to help you with it).
 2. There is no support for "per-transaction variables" in PostgreSQL (no per-session variables as well), so if you want to pass an "acting user ID" (similar to Ent Framework VC's Principal), other than the database DDL user/role, into the query, then you can't.
@@ -14,7 +14,7 @@ We need to mention that some support for row-level security is [built in to Post
 
 ## How Ent Framework Privacy Rules Work
 
-In each Ent class, you need to define an explicit set of rules and determine, can a VC read that Ent, create a new Ent, update the Ent and delete the Ent:
+In each Ent class, you need to define an explicit set of rules and determine, can a VC read that Ent (`privacyLoad`), create a new Ent (`privacyInsert`), update the Ent (`privacyUpdate`) and delete the Ent (`privacyDelete`):
 
 ```typescript
 const schema = new PgSchema(
@@ -61,6 +61,19 @@ So, the logic in the example is following:
 2. `new CanReadOutgoingEdge("topic_id", EntTopic)`:  if `vc.principal` is able to run `EntTopic.loadX(vc, comment.topic_id)` successfully, then reading of the comment is immediately allowed. This is an extremely powerful construction, the essence of Ent Framework's privacy layer: you can **delegate** privacy checks to other Ents in the graph. And since the engine does batching and caching aggressively, this all will be performance efficient.
 
 Idiomatically, `privacyLoad` defines access permissions in terms of **graph edges reachability**: typically, if there is **at least one** path in the graph originating from the VC and ending at the target Ent, then this VC is allowed to read the Ent.
+
+### privacyLoad is a Safety Net, not a Filter
+
+As opposed to [Meta's Ent Framework](../architecture/ent-framework-metas-tao-entgo.md), privacy rules _do not post-filter_ the loaded Ents. They only recheck and throw.
+
+I.e. if you run a `select()` call, it will either return you all of the loaded Ents (if they all pass privacy checks) or throw a detailed error (if some of them don't). This applies to all other API calls as well.
+
+There are several reasons for such behavior:
+
+1. **Performance.** Ent Framework sits close to the underlying relational database. If you run a call that returns multiple Ents (e.g. `select()`), you most likely want to make sure that the query matches an existing database index. So you _have to_ encode the filtering logic in your `where` condition directly, not just "bulk-load everything and then post-filter". It also applies to other aspects of fetching like pagination, `limit` clause etc.
+2. **Debugging simplicity.** In Meta (where privacy rules actually _did_ filter), it was a severe pain to figure out, why some query returns you an empty (or incomplete) response. This is because privacy rules were implicitly filtering "invisible" Ents, and once the Ents are hidden, you don't even know whether they are filtered out or do not exist.
+
+Let's consider a common example: an Ent class with `is_archived` boolean field. You obviously want the archived Ents to fail the privacy checks of a regular VC. In Ent Framework, it is not enough: you also have to modify your `select()` calls to explicitly mention `is_archived: false`, otherwise your queries will start throwing EntAccessError when trying to load an archived Ent. Add a static helper method to your Ent class if you don't want to repear `is_archived` over and over again. (BTW, to still enable archived Ents reading, you may create a `VCReadArchive` [flavor](../advanced/vc-flavors.md).)
 
 ### privacyInsert and Referential Permissions
 
@@ -234,6 +247,6 @@ Notice that you likely don't need this predicate when working with `privacyLoad`
 
 This predicate returns true if there is flavor of a particular class added to the acting VC.
 
-Flavors will be discussed later in details. For now, we can just mentioned that it's some kind of a "flag" which can be added to a VC instance for later rechecking or to carry some auxiliary information (more precisely, you can derive a new VC with a flavor added to it, since VC itself is an immutable object).
+[Flavors](../advanced/vc-flavors.md) will be discussed later in details. For now, we can just mentioned that it's some kind of a "flag" which can be added to a VC instance for later rechecking or to carry some auxiliary information (more precisely, you can derive a new VC with a flavor added to it, since VC itself is an immutable object).
 
 A very common case is to define your own `VCAdmin` flavor which is added to a VC very early in the request cycle with `vc = vc.withFlavor(new VCAdmin())`, when the corresponding user is an admin and can see any data in the database. Then, in `privacyLoad/Insert/Update/Delete` of the Ent classes, you can add `new AllowIf(new VCHasFlavor(VCAdmin))` to allow an admin to read that Ent unconditionally.
