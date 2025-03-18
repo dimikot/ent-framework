@@ -73,7 +73,15 @@ There are several reasons for such behavior:
 1. **Performance.** Ent Framework sits close to the underlying relational database. If you run a call that returns multiple Ents (e.g. `select()`), you most likely want to make sure that the query matches an existing database index. So you _have to_ encode the filtering logic in your `where` condition directly, not just "bulk-load everything and then post-filter". It also applies to other aspects of fetching like pagination, `limit` clause etc.
 2. **Debugging simplicity.** In Meta (where privacy rules actually _did_ filter), it was a severe pain to figure out, why some query returns you an empty (or incomplete) response. This is because privacy rules were implicitly filtering "invisible" Ents, and once the Ents are hidden, you don't even know whether they are filtered out or do not exist.
 
-Let's consider a common example: an Ent class with `is_archived` boolean field. You obviously want the archived Ents to fail the privacy checks of a regular VC. In Ent Framework, it is not enough: you also have to modify your `select()` calls to explicitly mention `is_archived: false`, otherwise your queries will start throwing EntAccessError when trying to load an archived Ent. Add a static helper method to your Ent class if you don't want to repear `is_archived` over and over again. (BTW, to still enable archived Ents reading, you may create a `VCReadArchive` [flavor](../advanced/vc-flavors.md).)
+Let's consider a common example: an Ent class with `is_archived` boolean field. You obviously want the archived Ents to fail the privacy checks of a regular VC. In Ent Framework, it is not enough: you also have to modify your `select()` calls to explicitly mention `is_archived: false`, otherwise your queries will start throwing `EntNotReadableError` when trying to load an archived Ent. Add a static helper method to your Ent class if you don't want to repear `is_archived` over and over again. (BTW, to still enable archived Ents reading, you may create a `VCReadArchive` [flavor](../advanced/vc-flavors.md).)
+
+### privacyLoad and load\*() Calls
+
+The way privacy rules interact with [load\*()](ent-api-load-by-id.md) and [loadBy\*()](ent-api-loadby-unique-key.md) API calls is following:
+
+* `loadX()` and `loadByX()`: they obviously throw `EntNotReadable` error (derived from `EntAccessError` base class) if the privacy checks fails.
+* `loadNullable()`  and `loadByNullable()`: they will also throw `EntNotReadableError`, not just return null! This greatly helps with debugging of privacy rules violations.
+* `loadIfReadableNullable()`: this is what you want to use in an unlikely case when you _really_ need to treat an unavailable Ent as absent. The method name is long intentionally: the best practice is to not use it too often.
 
 ### privacyInsert and Referential Permissions
 
