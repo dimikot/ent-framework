@@ -1,6 +1,6 @@
 # Ent API: select() by Expression
 
-The previous chapters explained how to load an Ent by its ID: `load*()` API, which is the most basic operation, and it is usually the most common one in the code as well. Now, it comes to some more complicated ways of loading.
+The previous chapters explained how to load an Ent by its ID: `load*()` API.  Loading by ID is the most basic operation, and it is usually the most common one in the code as well. Now, let's talk about some more complicated ways of loading.
 
 TL;DR:
 
