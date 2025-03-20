@@ -209,7 +209,7 @@ await Promise.all([
 
 ## Custom Engine Specific Features
 
-The syntax of `select()` call (as all other Ent API calls) is generic and engine independent, be it PostgreSQL or any other database. It allows to pass the last additional engine-specific argument though, to let you use the most of PostgreSQL features without falling back to vanilla SQL queries prematurely.
+The default `select()` call (as all other Ent API calls) is generic and engine independent, be it PostgreSQL or any other database. In addition to that, `select()` allows to pass the last optional engine-specific argument, to let you use the most of PostgreSQL features without falling back to vanilla SQL queries prematurely.
 
 ```typescript
 const comments = await EntComment.select(
@@ -221,7 +221,7 @@ const comments = await EntComment.select(
 );
 ```
 
-Despite the last optional parameter is an untyped object, it's in fact accepts the following structure:
+Despite the last optional parameter is an untyped object, it in fact accepts the following structure:
 
 ```typescript
 type SelectInputCustom ={
