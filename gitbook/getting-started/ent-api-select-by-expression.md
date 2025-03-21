@@ -1,6 +1,6 @@
 # Ent API: select() by Expression
 
-The previous chapters explained how to load an Ent by its ID: `load*()` API.  Loading by ID is the most basic operation, and it is usually the most common one in the code as well. Now, let's talk about some more complicated ways of loading.
+The previous chapters explained how to load an Ent by its ID: `load*()` API. Loading by ID is the most basic operation, and it is usually the most common one in the code as well. Now, let's talk about some more complicated ways of loading.
 
 TL;DR:
 
@@ -82,7 +82,7 @@ classDiagram
 
 Let's think about those `???` on the diagram. To traverse edges in a graph in both directions, the edges must be bi-directional (or, there should be pairs of edges, which is the same). In the graph with bi-directional edges we discussed earlier, the child-to-parent direction of an edge is represented by an "Ent field edge". But what corresponds to `???`, the opposite **parent-to-children direction** of that edge?
 
-This `???`, dear friends, is the **automatic database index** (or an index prefix, which is `topic_id` in the example). In fact, as we hinted above, without such an index, the queries will just blow up.&#x20;
+This `???`, dear friends, is the **automatic database index** (or an index prefix, which is `topic_id` in the example). In fact, as we hinted above, without such an index, the queries will just blow up.
 
 This distinction between graph edge directions is crucial to understand: for free traversal of the graph, both **field edges** and **indexes** are absolutely essential.
 
@@ -207,81 +207,21 @@ await Promise.all([
 ]);
 ```
 
-## Custom Engine Specific Features
+## JOIN, WITH, FROM and Subqueries, Planner Hints
 
-The default `select()` call (as all other Ent API calls) is generic and engine independent, be it PostgreSQL or any other database. In addition to that, `select()` allows to pass the last optional engine-specific argument, to let you use the most of PostgreSQL features without falling back to vanilla SQL queries prematurely.
+In addition to database-independent features, `select()` call also supports engine-specific customizations using its last optional argument:
 
 ```typescript
 const comments = await EntComment.select(
   vc,
   { creator_id: "101" },
-  20,
+  20, // limit
   undefined, // order
-  custom, // untyped, but of type SelectInputCustom
+  { joins, ctes, from, hints }, // untyped, but of type SelectInputCustom
 );
 ```
 
-Despite the last optional parameter is an untyped object, it in fact accepts the following structure:
+Read more in:
 
-```typescript
-type SelectInputCustom ={
-  ctes?: Literal[];
-  joins?: Literal[];
-  from?: Literal;
-  hints?: Record<string, string>;
-}
-```
-
-An artificial usage example:
-
-```typescript
-const comments = await EntComment.select(
-  vc,
-  { created_at: { $gt: yesterdayDate } },
-  10,
-  [{ created_at: "DESC" }],
-  {
-    // WITH clauses (Common Table Expressions).
-    ctes: [
-      [
-        "recent_topics AS (SELECT * FROM topics WHERE created_at > ?)",
-        yesterdayDate,
-      ],
-      [
-        "recent_comments AS (SELECT * FROM comments WHERE created_at > ?)",
-        yesterdayDate,
-      ],
-    ],
-    // A replacement for the entire FROM clause.
-    from: ["recent_comments"],
-    // Clauses after FROM.
-    joins: [
-      [
-        "JOIN recent_topics t ON t.id = topic_id AND comment_count > ?",
-        minComments,
-      ],
-    ],
-    // Parameters like enable_seqscan, enable_bitmapscan etc.
-    hints: {
-      enable_seqscan: "off",
-    }
-);
-```
-
-Of course, this all works only within one microshard. You can't use JOINS or WITH statements targeting different microshards.
-
-## Planner Hints
-
-Probably the most frequent use of the last custom `select()` argument is giving the PostgreSQL planner some hint on how you prefer the query to be executed. E.g. if your table contains data with very different cardinality of a particular field, and you see that PostgreSQL runs a seqscan sometimes, you may try to lower the seqscan priority:
-
-```typescript
-const comments = await EntComment.select(
-  vc,
-  { topic_id: topicID },
-  100,
-  [{ created_at: "DESC" }],
-  { hints: { enable_seqscan: "off" } },
-);
-```
-
-The planner settings like [enable\_seqscan](https://www.postgresql.org/docs/current/runtime-config-query.html#GUC-ENABLE-SEQSCAN) do not fully prevent sequential scan, but they greatly reduce its probability, in case you know what you're doing.
+* [postgresql-specific-features.md](../advanced/postgresql-specific-features.md "mention")
+* [query-planner-hints.md](../advanced/query-planner-hints.md "mention")
