@@ -65,10 +65,13 @@ The resulting SQL multi-query (one transaction) sent to the server will then loo
 SET LOCAL search_path TO sh0123;
 SET LOCAL work_mem TO 10MB;
 SET LOCAL statement_timeout TO 20s;
-SELECT ... FROM comments WHERE topic_id=? LIMIT 100;
+SELECT ... FROM comments WHERE topic_id=?
+  ORDER BY created_at DESC LIMIT 100;
 RESET statement_timeout;
 RESET work_mem;
 SELECT pg_last_wal_replay_lsn();
 ```
 
 Since it's a multi-query, there will be only one round-trip to the server and one transaction.
+
+The use of raw-prepend hint turns off Ent Framework's SELECT query batching. I.e. your query is guaranteed to run alone, not in a `UNION ALL` construction. 
