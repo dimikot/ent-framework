@@ -39,7 +39,7 @@ export class EntComment extends BaseEnt(cluster, schema) {
       ],
       afterDelete: [
         async (vc, { oldRow }) => {
-          const text = EntText.loadNullable(vc, oldRow.id);
+          const text = await EntText.loadNullable(vc, oldRow.id);
           await text?.deleteOriginal();
         }
       ],
