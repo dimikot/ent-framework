@@ -39,6 +39,8 @@ In case your project doesn't have microsharding and uses just 1 database, you ca
 pg-mig
   [--migdir=path/to/my-migrations/directory]
   [--hosts=host1,host2,...]
+  [--hosts=host[:port][/db],...]
+  [--hosts=postgres://[user][:password][@]host[:port][/db],...]
   [--port=5432]
   [--user=user-which-can-apply-ddl]
   [--pass=password]
@@ -51,13 +53,13 @@ pg-mig
   [--dry]
 ```
 
-All of the command line arguments are optional, the tool uses defaults from environment variables or `pg-mig.config.ts` (or `.js`) file.
+All of the command line arguments are optional, the tool uses defaults from environment variables or `pg-mig.config.ts` (or `.js`) file; see details below.
 
 ## Environment Variables
 
 There are variables standard for `psql` tool:
 
-* `PGHOST`: database server hostname. When the cluster has multiple nodes in it, separate them here with commas. You may also include both master and replica hosts in the list: the tool is smart enough to only use the master nodes and ignore everything else.
+* `PGHOST`: database server hostname, or `host:port/db`  string, or `postgres://user:password@host:port/db`  string (all parts except of `host`  are optional). When the cluster has multiple nodes in it, separate them here with commas. You may also include both master and replica hosts in the list: the tool is smart enough to only use the master nodes and ignore everything else.
 * `PGPORT`: database servers port.
 * `PGUSER`: database user.
 * `PGPASSWORD`: database password.
