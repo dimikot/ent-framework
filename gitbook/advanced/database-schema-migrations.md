@@ -348,7 +348,7 @@ Here is the complete list of `-- $` pseudo comments that pg-mig supports in the 
 
 ## Advanced: Use With pg-microsharding Library
 
-Overall, there are many popular alternatives to pg-mig when it comes to managing a single database with no sharding. But when it comes to migrating the entire cluster with multiple nodes, or working with microsharding, pg-mig starts shining.
+Overall, there are many popular alternatives to pg-mig for managing a single database without sharding. But when it comes to migrating an entire cluster with multiple nodes or working with microsharding, pg-mig shines.
 
 The recommended library to manage the microshards schemas is [pg-microsharding](https://www.npmjs.com/package/@clickup/pg-microsharding). To couple it with pg-mig, create the following before/after scripts:
 
