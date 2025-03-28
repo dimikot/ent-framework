@@ -303,11 +303,11 @@ See the [official psql documentation](https://www.postgresql.org/docs/current/ap
 
 ## Transactions, CREATE INDEX CONCURRENTLY
 
-Every migration version file is executed in a separate transactions, but sometimes you'll want to make an exception.
+Every migration version file is executed in separate transactions, but sometimes you'll want to make an exception.
 
 E.g. it is highly discouraged to create indexes in transactions using the plain `CREATE INDEX` query, especially when the table is large. The query acquires a write lock on the table, so no data can be written to it until the index creation finishes, which may take many minutes.
 
-Luckily, PostgreSQL supports a non-blocking version of this query, `CREATE INDEX CONCURRENTLY`. It allows write when the index is creating. The query has its downsides though:
+Luckily, PostgreSQL supports a non-blocking version of this query, `CREATE INDEX CONCURRENTLY`. It allows writes when the index is creating. The query has its downsides though:
 
 1. It may be 2 times slower than the regular `CREATE INDEX`.
 2. In rare cases, it may fail and leave the index in a "broken" state. Nothing too bad will happen in terms of the database health though: you'll just need to drop that broken index and retry.
@@ -333,9 +333,9 @@ BEGIN;
 
 Here, we first tell pg-mig that it should not run this script with concurrency higher than `$parallelism_per_host=2` (for instance, if you have multiple microshard schemas `shNNNN` on that host, then it will apply the query not to all of them simultaneously, but slower). This is a good practice to not max out the database server CPU (PostgreSQL also has a built-in protection against running too many maintenance queries in parallel, but often times it's better to be explicit).
 
-Then, we close the transaction that pg-mig automatically opens for each migration version file, run `CREATE INDEX CONCURRENTLY` and, in the end, open a new transaction to let pg-mig commit the new version update fact to the database. It makes this migration version non-transactional, so there is a nonzero chance that it may fail. Also, as `CREATE INDEX CONCURRENTLY`  may legally fail as well and produce a "broken index", we use `DROP INDEX IF EXISTS` query before creating the index, to remove any leftovers.
+Then, we close the transaction that pg-mig automatically opens for each migration version file, run `CREATE INDEX CONCURRENTLY` and, in the end, open a new transaction to let pg-mig commit the new version update fact to the database. It makes this migration version non-transactional, so there is a nonzero chance that it may fail. Also, as `CREATE INDEX CONCURRENTLY`  may legally fail as well and produce a "broken index", we use `DROP INDEX IF EXISTS` query before creating the index, to remove any leftovers in case you manually retry.
 
-In a rare case when the migration fails, you'll be able to just rerun pg-mig: it will just continue from the place where it failed. (In fact, when using microsharding, it will only continue with the schemas that failed, so the rerun will be way quicker than the initial run).
+In a rare case when the migration fails, you'll be able to just rerun pg-mig: it will just continue from the place where it failed. (In fact, when using microsharding, it will only continue with the schemas that failed, so the rerun will be way quicker than the initial run.)
 
 ## Parallelism Limiting Options
 
