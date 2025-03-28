@@ -303,7 +303,7 @@ See the [official psql documentation](https://www.postgresql.org/docs/current/ap
 
 ## Transactions, CREATE INDEX CONCURRENTLY
 
-Every migration version file is executed in separate transactions, but sometimes you'll want to make an exception.
+Every migration version file is executed in a separate transaction, but sometimes you'll want to make an exception.
 
 E.g. it is highly discouraged to create indexes in transactions using the plain `CREATE INDEX` query, especially when the table is large. The query acquires a write lock on the table, so no data can be written to it until the index creation finishes, which may take many minutes.
 
