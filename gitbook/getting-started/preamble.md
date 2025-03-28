@@ -14,7 +14,7 @@ Below, we'll show some Ent Framework usage examples. We will progress from the s
 
 ### Code Structure
 
-The examples in this tutorial will approximately follow [examles/next-example](https://github.com/dimikot/ent-framework/tree/main/examples/next-example) `src` folder structure:
+The examples in this tutorial will approximately follow [examples/next-example](https://github.com/dimikot/ent-framework/tree/main/examples/next-example) `src` folder structure:
 
 * ents/
   * cluster.sql
