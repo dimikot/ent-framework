@@ -42,7 +42,7 @@ pg-mig
   [--hosts=host[:port][/db],...]
   [--hosts=postgres://[user][:password][@]host[:port][/db],...]
   [--port=5432]
-  [--user=user-which-can-apply-ddl]
+  [--user=user-that-can-apply-ddl]
   [--pass=password]
   [--db=my-database-name]
   [--createdb]
@@ -59,11 +59,11 @@ All of the command line arguments are optional, the tool uses defaults from envi
 
 There are variables standard for `psql` tool:
 
-* `PGHOST`: database server hostname, or `host:port/db`  string, or `postgres://user:password@host:port/db`  string (all parts except of `host`  are optional). When the cluster has multiple nodes in it, separate them here with commas. You may also include both master and replica hosts in the list: the tool is smart enough to only use the master nodes and ignore everything else.
-* `PGPORT`: database servers port.
-* `PGUSER`: database user.
-* `PGPASSWORD`: database password.
-* `PGDATABASE`: database name.
+* `PGHOST`: database server hostname, or `host:port/db` string, or `postgres://user:password@host:port/db` string (all parts except of `host` are optional). When the cluster has multiple nodes in it, separate them here with commas. You may also include both master and replica hosts in the list: the tool is smart enough to only use the master nodes and ignore everything else.
+* `PGPORT`: default database servers port.
+* `PGUSER`: default database user.
+* `PGPASSWORD`: default database password.
+* `PGDATABASE`: default database name.
 
 Other variables:
 
@@ -72,7 +72,7 @@ Other variables:
 
 ## Configuration File
 
-Instead of setting the environment variables, you can export the same exact values in `pg-mig.config.ts` file by e.g. deriving them directly from the [Ent Framework](https://ent-framework.org/) cluster configuration:
+Instead of setting the environment variables, you can export the same exact values in `pg-mig.config.ts` (or `pg-mig.config.js`) file by e.g. deriving them directly from the [Ent Framework](https://ent-framework.org/) cluster configuration:
 
 ```javascript
 import { cluster } from "ents/cluster";
@@ -100,7 +100,7 @@ export default async function(action: "apply" | "undo" | string) {
 }
 ```
 
-The file `pg-mig.config.ts` is searched in all parent folders starting from the current working directory when `pg-mig` is run (typically you want to have it in the root of your project, near the other configuration files).
+The file `pg-mig.config.*` is searched in all parent folders starting from the current working directory when `pg-mig` is run (typically you want to have it in the root of your project, near the other configuration files).
 
 You can export-default a regular function, an async function, or even a plain constant object.
 
@@ -142,11 +142,14 @@ To run the up migration, simply execute one of:
 
 ```
 pnpm pg-mig
-npm run pg-mig
 yarn pg-mig
+npm exec pg-mig
+deno run pg-mig
 ```
 
-Technically, pg-mig doesn't know anything about microsharding; instead, it recognizes the databasde schemas. Each migration version will be applied (in order) to all PostgreSQL schemas (aka microshards) on all hosts. The schema names should start from the prefix provided in the migration version file name.&#x20;
+(To run in Deno v2+, you first need to add `"pg-mig": "pg-mig"` to `scripts` section in your `package.json`.)
+
+Technically, pg-mig doesn't know anything about microsharding; instead, it recognizes the databasde schemas. Each migration version will be applied (in order) to all PostgreSQL schemas (aka microshards) on all hosts. The schema names should start from the prefix provided in the migration version file name.
 
 If multiple migration files match some schema, then only the file with the **longest prefix** will be used; in the above example, prefix "sh" effectively works as "sh\* except sh0000", because there are other migration version files with "sh0000" prefix.
 
@@ -333,7 +336,7 @@ BEGIN;
 
 Here, we first tell pg-mig that it should not run this script with concurrency higher than `$parallelism_per_host=2` (for instance, if you have multiple microshard schemas `shNNNN` on that host, then it will apply the query not to all of them simultaneously, but slower). This is a good practice to not max out the database server CPU (PostgreSQL also has a built-in protection against running too many maintenance queries in parallel, but often times it's better to be explicit).
 
-Then, we close the transaction that pg-mig automatically opens for each migration version file, run `CREATE INDEX CONCURRENTLY` and, in the end, open a new transaction to let pg-mig commit the new version update fact to the database. It makes this migration version non-transactional, so there is a nonzero chance that it may fail. Also, as `CREATE INDEX CONCURRENTLY`  may legally fail as well and produce a "broken index", we use `DROP INDEX IF EXISTS` query before creating the index, to remove any leftovers in case you manually retry.
+Then, we close the transaction that pg-mig automatically opens for each migration version file, run `CREATE INDEX CONCURRENTLY` and, in the end, open a new transaction to let pg-mig commit the new version update fact to the database. It makes this migration version non-transactional, so there is a nonzero chance that it may fail. Also, as `CREATE INDEX CONCURRENTLY` may legally fail as well and produce a "broken index", we use `DROP INDEX IF EXISTS` query before creating the index, to remove any leftovers in case you manually retry.
 
 In a rare case when the migration fails, you'll be able to just rerun pg-mig: it will just continue from the place where it failed. (In fact, when using microsharding, it will only continue with the schemas that failed, so the rerun will be way quicker than the initial run.)
 
@@ -381,7 +384,7 @@ export default async function(action: "apply" | "undo" | string) {
 }
 ```
 
-The `microsharding_migration_after()` function from pg-microsharding creates so-called "debug views", which are giant `UNION ALL` across all tables in all shards on all PostgreSQL nodes.  This allows to query the sharded tables for the data, as if they are not sharded. Of course, it is slow and should only be used for debugging purposes (don't use the debug views from your app). See more details in pg-microsharding documentation.
+The `microsharding_migration_after()` function from pg-microsharding creates so-called "debug views", which are giant `UNION ALL` across all tables in all shards on all PostgreSQL nodes. This allows to query the sharded tables for the data, as if they are not sharded. Of course, it is slow and should only be used for debugging purposes (don't use the debug views from your app). See more details in pg-microsharding documentation.
 
 ## Advanced: Merge Conflicts
 
