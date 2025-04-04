@@ -365,24 +365,14 @@ SELECT microsharding.microsharding_migration_before();
 
 ```sql
 -- mig/after.sql
-\set PGHOST `echo "$PGHOST"`
-SELECT microsharding.microsharding_migration_after(:'PGHOST');
+\set PG_MIG_HOSTS `echo "$PG_MIG_HOSTS"`
+SELECT microsharding.microsharding_migration_after(
+  src_hosts => 'PG_MIG_HOSTS',
+  only_if_has_schema => 'sh0000'
+);
 ```
 
-Make sure that you also define `PGHOST` environment variable as a comma-separated list of cluster hosts in your `pg-mig.config.ts`:
-
-```typescript
-export default async function(action: "apply" | "undo" | string) {
-  ...
-  return {
-    PGHOST: islands
-      .map((island) => island.nodes.map(({ host }) => host)
-      .flat()
-      .join(","),
-    ...
-  };
-}
-```
+The `PG_MIG_HOSTS` environment variable is automatically assigned by pg-mig tool with the value like: `host1:port/db,host2:port/db,...`.
 
 The `microsharding_migration_after()` function from pg-microsharding creates so-called "debug views", which are giant `UNION ALL` across all tables in all shards on all PostgreSQL nodes. This allows to query the sharded tables for the data, as if they are not sharded. Of course, it is slow and should only be used for debugging purposes (don't use the debug views from your app). See more details in pg-microsharding documentation.
 
