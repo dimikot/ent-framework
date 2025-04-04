@@ -366,10 +366,7 @@ SELECT microsharding.microsharding_migration_before();
 ```sql
 -- mig/after.sql
 \set PG_MIG_HOSTS `echo "$PG_MIG_HOSTS"`
-SELECT microsharding.microsharding_migration_after(
-  src_hosts => 'PG_MIG_HOSTS',
-  only_if_has_schema => 'sh0000'
-);
+SELECT microsharding.microsharding_migration_after(:'PG_MIG_HOSTS');
 ```
 
 The `PG_MIG_HOSTS` environment variable is automatically assigned by pg-mig tool with the value like: `host1:port/db,host2:port/db,...`.

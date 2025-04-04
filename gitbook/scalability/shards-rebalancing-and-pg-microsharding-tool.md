@@ -321,7 +321,7 @@ export const cluster = new Cluster({
 The `microsharding_migration_after()` function creates so-called "debug views" for each sharded table in your cluster:
 
 ```sql
-SELECT microsharding.microsharding_migration_after('host1,host2,host3');
+SELECT microsharding.microsharding_migration_after();
 ```
 
 For instance, it you have `sh0001.users`, `sh0002.users` etc. tables, then it will create a debug view `public.users` with the definition like:
@@ -339,10 +339,7 @@ CREATE VIEW public.users AS
 Even more, if you pass the list of all PostgreSQL hosts, and those hosts can access each other without a password (e.g. they have  `/var/lib/postgresql/N/.pgpass` files), then those debug views will work **across all shards on all nodes, including the remote ones** (using [foreign-data wrapper](https://www.postgresql.org/docs/current/postgres-fdw.html) functionality):
 
 ```sql
-SELECT microsharding.microsharding_migration_after(
-  src_hosts => 'host1,host2,host3',
-  only_if_has_schema => 'sh0000'
-);
+SELECT microsharding.microsharding_migration_after('host1,host2,host3');
 ```
 
 So **for debugging purposes**, you'll be able to run queries _across all microshards on all hosts_ in your `psql` sessions.
