@@ -199,6 +199,8 @@ At any moment, you can abort the move with ^C. It is safe: half-moved data will 
 
 <figure><img src="../.gitbook/assets/pg-microsharding-move.png" alt=""><figcaption></figcaption></figure>
 
+In addition to printing to console, `move` action also writes the same output to a log file in `/tmp/pg-microsharding.$uid` directory. Each individual move creates its own file prefixed with a timestamp and including the microshard number moved.
+
 ### Clean Old Moved Copies: pg-microsharding cleanup
 
 ```bash
