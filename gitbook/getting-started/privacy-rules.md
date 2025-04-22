@@ -4,7 +4,7 @@ A crucial reason on why Ent Framework exists at all is its privacy layer. No dat
 
 In relational databases world, the concept of per-row security rechecking is called "row-level security".&#x20;
 
-## PostgreSQL Built-in Row Level Security
+## PostgreSQL Built-in Row Level Security?
 
 Before we continue, we must mention that some support for row-level security is [built in to PostgreSQL](https://www.postgresql.org/docs/current/ddl-rowsecurity.html), but it has several drawbacks that makes it almost useless in web development:
 

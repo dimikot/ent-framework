@@ -26,6 +26,10 @@
 * [Triggers](getting-started/triggers.md)
 * [Custom Field Types](getting-started/custom-field-types.md)
 
+***
+
+* [Ent API: Configuration and Types](ent-api-configuration-and-types.md)
+
 ## Scalability
 
 * [Replication and Automatic Lag Tracking](scalability/replication-and-automatic-lag-tracking.md)
