@@ -66,3 +66,42 @@ await EntUser.select(vc, where, 100);
 ```
 
 Notice how we used `typeof EntUser.SCHEMA.table` in the example above: it's a common pattern in Ent Framework. Most of the types it exposes (like `Row`, `Where` etc.) accept a generic `TTable` argument that can be obtained with this construction.
+
+## EntUser.VALIDATION
+
+This static Ent property allows you to manually run  privacy and validation rules on an Ent without triggering an insert/update/delete. It is convenient if you want do a "dry-run" before applying an actual operation, to e.g. enable or disable some form controls or buttons in the user interface.
+
+```typescript
+try {
+  await EntUser.VALIDATION.validateUpdate(vc, user, {
+    email: "new@example.com"
+  });
+} catch (e: unknown) {
+  if (e instanceof EntAccessError) {
+    // It's a top-level base class for all access related errors.
+    if (e instanceof EntNotUpdatableError) {
+      // Privacy rules failure with details.
+      console.log(e.message);
+    } else if (e instanceof EntValidatonError) {
+      // Fields validation error.
+      console.log(e.errors);
+      console.log(e.toStandardSchemaV1()); // https://standardschema.dev
+    } else {
+      ...
+    }
+  } else {
+    throw e;
+  }
+}
+```
+
+The methods available on `VALIDATION` property are:
+
+* `validateInsert(vc, input: InsertInput<TTable>)`: checks what would happen if you try to insert a new Ent with such properties.&#x20;
+* `validateUpdate(vc, old: Row<TTable>, input: UpdateInput<TTable>, privacyOnly: boolean)`: we already mentioned this method in the example above. You can also pass the last `privacyOnly` parameter as `true` if you do not want to run user-defined fields validators and only need to recheck the privacy rules. Otherwise, by default, it runs both privacy rules and fields validators, which is almost always what we want.
+* `validateDelete(vc, row: Row<TTable>)`: rarely used, checks what would happen if you try to delete that Ent.&#x20;
+
+Notice that `Row<TTable>` is not the same as an instance of your Ent (although you can pass an Ent to the functions that accept a `Row` type). Rows are a lower level concept: `Row<TTable>` represents a plain object, it's basically a strongly-typed TypeScript `Record` of fields and their values (including nullability concept, custom field types etc.). Rows don't have `vc` property, nor do they have any Ent specific methods.&#x20;
+
+And as mentioned above, `TTable` is derived from the Ent schema, e.g.  `typeof EntUser.SCHEMA.table`.
+

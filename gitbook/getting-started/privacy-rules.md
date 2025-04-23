@@ -258,3 +258,7 @@ This predicate returns true if there is flavor of a particular class added to th
 [Flavors](../advanced/vc-flavors.md) will be discussed later in details. For now, we can just mentioned that it's some kind of a "flag" which can be added to a VC instance for later rechecking or to carry some auxiliary information (more precisely, you can derive a new VC with a flavor added to it, since VC itself is an immutable object).
 
 A very common case is to define your own `VCAdmin` flavor which is added to a VC very early in the request cycle with `vc = vc.withFlavor(new VCAdmin())`, when the corresponding user is an admin and can see any data in the database. Then, in `privacyLoad/Insert/Update/Delete` of the Ent classes, you can add `new AllowIf(new VCHasFlavor(VCAdmin))` to allow an admin to read that Ent unconditionally.
+
+## Running Privacy Rules Manually
+
+Every Ent class exposes a special "constant" `VALIDATION` static property that allows you to run privacy rules and fields validators manually if needed. Read more about this in [ent-api-configuration-and-types.md](../ent-api-configuration-and-types.md "mention").

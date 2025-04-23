@@ -117,3 +117,7 @@ validators: [
 ```
 
 Basically, when you omit the last `message` parameter of `FieldIs` or `RowIs` constructors, then it's expected that your validator callback returns an object compatible with Zod's [safeParse()](https://zod.dev/?id=safeparse) or Standard Schema's [validate()](https://standardschema.dev) result shape.
+
+## Running Validators Manually
+
+Every Ent class exposes a special "constant" `VALIDATION` static property that allows you to run fields validators manually if needed. Read more about this in [ent-api-configuration-and-types.md](../ent-api-configuration-and-types.md "mention").
