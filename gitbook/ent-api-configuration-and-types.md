@@ -26,7 +26,7 @@ export class EntUser extends BaseEnt(cluster, schema) {
 }
 ```
 
-## EntUser.CLUSTER
+## EntClass.CLUSTER
 
 This static property simply equals to `cluster` parameter of `BaseEnt` you are extending when defining your Ent class. Use it in case you need to access some low-level Cluster API:
 
@@ -34,7 +34,7 @@ This static property simply equals to `cluster` parameter of `BaseEnt` you are e
 const master = await EntUser.CLUSTER.globalShard().client(MASTER);
 ```
 
-## EntUser.SCHEMA
+## EntClass.SCHEMA
 
 Similarly, it is equal to `BaseEnt`'s `schema` parameter. Each Schema has the following properties:
 
@@ -67,7 +67,7 @@ await EntUser.select(vc, where, 100);
 
 Notice how we used `typeof EntUser.SCHEMA.table` in the example above: it's a common pattern in Ent Framework. Most of the types it exposes (like `Row`, `Where` etc.) accept a generic `TTable` argument that can be obtained with this construction.
 
-## EntUser.VALIDATION
+## EntClass.VALIDATION
 
 This static Ent property allows you to manually run  privacy and validation rules on an Ent without triggering an insert/update/delete. It is convenient if you want do a "dry-run" before applying an actual operation, to e.g. enable or disable some form controls or buttons in the user interface.
 
@@ -105,3 +105,19 @@ Notice that `Row<TTable>` is not the same as an instance of your Ent (although y
 
 And as mentioned above, `TTable` is derived from the Ent schema, e.g.  `typeof EntUser.SCHEMA.table`.
 
+## EntClass.SHARD\_AFFINITY and .SHARD\_LOCATOR
+
+The `SHAR_AFFINITY` static property simply returns the value of `shardAffinity` configuration option.
+
+The `SHARD_LOCATOR` property is pretty low-level: it exposes an Ent Framework object that allows to infer the affected microshards based on various criteria (like from an ID, or from a `Where<TTable>` clause, or from a list of IDs etc.): `singleShardForInsert()`, `multiShardsFromInput()`, `singleShardFromID()` etc. We won't discuss them here.
+
+It also exposes a useful method  `allShards()`:
+
+```typescript
+const userShards = EntUser.SHARD_LOCATOR.allShards();
+for (const shard of userShards) {
+  // do something with users on this shard
+}
+```
+
+Depending on the Ent's `shardAffinity`, this method will return either one shard (if it's `GLOBAL_SHARD`) or all shards of the cluster (in case it's `RANDOM_SHARD` or some other affinity), thus, allowing you to iterate over all Ents of this type in the cluster. Read more about sharding in [shard-affinity-ent-colocation.md](scalability/shard-affinity-ent-colocation.md "mention").
