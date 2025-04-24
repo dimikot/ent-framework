@@ -1,6 +1,8 @@
 # Ent API: Configuration and Types
 
-Every Ent class exposes several static "constant" properties that can be used to get access to various Ent configuration features.
+Every Ent class exposes several static "constant" properties that you can use to get access to various Ent configuration features.
+
+## Ent Class Static Properties
 
 Consider having the following Ent class defined:
 
@@ -11,7 +13,7 @@ const schema = new PgSchema(
     id: { type: ID, autoInsert: "nextval('users_id_seq')" },
     email: { type: String },
   },
-  ["email"]
+  ["email"],
 );
 
 export class EntUser extends BaseEnt(cluster, schema) {
@@ -26,7 +28,7 @@ export class EntUser extends BaseEnt(cluster, schema) {
 }
 ```
 
-## EntClass.CLUSTER
+### EntClass.CLUSTER
 
 This static property simply equals to `cluster` parameter of `BaseEnt` you are extending when defining your Ent class. Use it in case you need to access some low-level Cluster API:
 
@@ -34,7 +36,7 @@ This static property simply equals to `cluster` parameter of `BaseEnt` you are e
 const master = await EntUser.CLUSTER.globalShard().client(MASTER);
 ```
 
-## EntClass.SCHEMA
+### EntClass.SCHEMA
 
 Similarly, it is equal to `BaseEnt`'s `schema` parameter. Each Schema has the following properties:
 
@@ -67,7 +69,7 @@ await EntUser.select(vc, where, 100);
 
 Notice how we used `typeof EntUser.SCHEMA.table` in the example above: it's a common pattern in Ent Framework. Most of the types it exposes (like `Row`, `Where` etc.) accept a generic `TTable` argument that can be obtained with this construction.
 
-## EntClass.VALIDATION
+### EntClass.VALIDATION
 
 This static Ent property allows you to manually run  privacy and validation rules on an Ent without triggering an insert/update/delete. It is convenient if you want do a "dry-run" before applying an actual operation, to e.g. enable or disable some form controls or buttons in the user interface.
 
@@ -105,13 +107,13 @@ Notice that `Row<TTable>` is not the same as an instance of your Ent (although y
 
 And as mentioned above, `TTable` is derived from the Ent schema, e.g.  `typeof EntUser.SCHEMA.table`.
 
-## EntClass.SHARD\_AFFINITY and .SHARD\_LOCATOR
+### EntClass.SHARD\_AFFINITY and .SHARD\_LOCATOR
 
 The `SHAR_AFFINITY` static property simply returns the value of `shardAffinity` configuration option.
 
-The `SHARD_LOCATOR` property is pretty low-level: it exposes an Ent Framework object that allows to infer the affected microshards based on various criteria (like from an ID, or from a `Where<TTable>` clause, or from a list of IDs etc.): `singleShardForInsert()`, `multiShardsFromInput()`, `singleShardFromID()` etc. We won't discuss them here.
+The `SHARD_LOCATOR` property is pretty low-level: it exposes an Ent Framework object that allows to infer the affected microshards based on various criteria (like from an ID, or from a `Where<TTable>` clause, or from a list of IDs etc.): `singleShardForInsert()`, `multiShardsFromInput()`, `singleShardFromID()` etc. Those methods are aware of the Ent's Inverses (see [inverses-cross-shard-foreign-keys.md](scalability/inverses-cross-shard-foreign-keys.md "mention")), but we won't discuss them here much.
 
-It also exposes a useful method  `allShards()`:
+It also exposes a useful method `allShards()`:
 
 ```typescript
 const userShards = EntUser.SHARD_LOCATOR.allShards();
@@ -121,3 +123,31 @@ for (const shard of userShards) {
 ```
 
 Depending on the Ent's `shardAffinity`, this method will return either one shard (if it's `GLOBAL_SHARD`) or all shards of the cluster (in case it's `RANDOM_SHARD` or some other affinity), thus, allowing you to iterate over all Ents of this type in the cluster. Read more about sharding in [shard-affinity-ent-colocation.md](scalability/shard-affinity-ent-colocation.md "mention").
+
+### EntClass.TRIGGERS&#x20;
+
+This static property exposes a `Triggers` objects that allows you to enumerate all of the Ent's trggers. It is almost never used externally, so we'll skip the details (see the source code if you want to learn more).
+
+## EntClass and Ent Interfaces
+
+Sometimes you want to write a generic function that accepts _any_ Ent of a particular shape, or _any_ Ent class. You can use EntClass and Ent interfaces (type shapes) for this. Here are some pretty artificial examples:
+
+```typescript
+async function fancyDelete<TTable extends Table & { key: String }>(
+  ent: Ent<TTable>,
+): Promise<void> {
+  ...
+  await deleteExternalResource(ent.key);
+  await ent.deleteOriginal();
+}
+
+async function loadAny<TTable extends Table>(
+  vc: VC,
+  EntCls: EntClass<TTable>,
+  id: string,
+): Promise<Ent<TTable>> {
+  return EntCls.loadIfReadableNullable(vc, id);
+}
+```
+
+Unfortunately, due to some TypeScript limitations (incomplete mixins support and a lack of class static properties typing), the functionality of EntClass and Ent interfaces is limited. But keep them in mind still, since they may be useful.
