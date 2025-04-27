@@ -41,6 +41,7 @@ Each microshard is a PostgreSQL schema with numeric suffix. Microshard schemas h
 
 ```
 pg-microsharding install
+  [--schema-name-fmt=SCHEMA_NAME_FMT]
   [--dsn=DSN | --dsns=DNS1,DSN2,...]
 
 pg-microsharding list | ls
@@ -99,6 +100,8 @@ Custom variables of the tool itself:
 * `DEACTIVATE_SQL`: default value for `--deactivate-sql` option
 * `PARALLELISM`: default value for `--parallelism` option
 * `MAX_REPLICATION_LAG_SEC`: default value for `--max-replication-lag-sec` option
+* `SCHEMA_NAME_FMT`: default value for `--schema-name-fmt` (applies only\
+  to install action; if not passed, `"sh%04d"` is used)
 
 ## Configuration File: pg-microsharding.config.ts
 
