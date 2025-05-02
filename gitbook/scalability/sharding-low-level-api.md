@@ -11,6 +11,8 @@ But there is also a lower level set of methods in `Cluster` class, for the follo
 The API described below is exposed by `Cluster` class, see [locating-a-shard-id-format.md](locating-a-shard-id-format.md "mention").
 
 ```typescript
+import { Pool } from "pg";
+
 export const cluster = new Cluster({
   islands: () => [
     {
@@ -28,14 +30,24 @@ export const cluster = new Cluster({
       ],
     },
   ],
-  shards: {
-    nameFormat: "sh%04d",
-    discoverQuery:
-      "SELECT unnest FROM unnest(microsharding.microsharding_list_active_shards())",
-  },
+  createClient: (node) => new PgClientPool({
+    ...node,
+    Pool, // you can use your own Pool class here instead of node-postgres
+    shards: {
+      nameFormat: "sh%04d",
+      discoverQuery:
+        "SELECT unnest FROM unnest(microsharding.microsharding_list_active_shards())",
+    },
+  } satisfies PgClientPoolOptions),
   ...,
 });
 ```
+
+## Substituting the Default node-postgres Pool
+
+Instead of the default [node-postgres Pool](https://node-postgres.com/apis/pool) class, you can tell `PgClientPool`  to use the custom one you built. Create that class and derive it from `Pool` , making sure the constructor arguments signature remains compatible.
+
+This is a rarely used feature: in most of the cases, you can just skip passing the `Pool`  property, and `PgClientPool`  will use the built-in node-postgres `Pool` class.
 
 ## cluster.shardByNo(): Get a Shard by its Number
 

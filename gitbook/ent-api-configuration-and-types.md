@@ -28,17 +28,9 @@ export class EntUser extends BaseEnt(cluster, schema) {
 }
 ```
 
-### EntClass.CLUSTER
-
-This static property simply equals to `cluster` parameter of `BaseEnt` you are extending when defining your Ent class. Use it in case you need to access some low-level Cluster API:
-
-```typescript
-const master = await EntUser.CLUSTER.globalShard().client(MASTER);
-```
-
 ### EntClass.SCHEMA
 
-Similarly, it is equal to `BaseEnt`'s `schema` parameter. Each Schema has the following properties:
+In the example above, `EntUser.SCHEMA`  it is equal to `BaseEnt`'s `schema` parameter. Each Schema has the following properties:
 
 * `name`: name of the underlying Ent table ("users" in the above example)
 * `table`: an stronly typed object that defines the table's shape. In our example it is `{ id: ..., email: ... }` ,  exactly as defined in `new PgSchema(...)` code above.
@@ -68,6 +60,17 @@ await EntUser.select(vc, where, 100);
 ```
 
 Notice how we used `typeof EntUser.SCHEMA.table` in the example above: it's a common pattern in Ent Framework. Most of the types it exposes (like `Row`, `Where` etc.) accept a generic `TTable` argument that can be obtained with this construction.
+
+### Helper (Input) Types
+
+Ent Framework API methods like `insert*()`, `update*()`, `load*()`, `select*()`  etc. accept strongly-typed input and return strongly typed Ents. Here are some examples:
+
+* `InsertInput<typeof EntUser.SCHEMA.table>`: the shape of the object that `insert*()`  and `upsert*()`  methods accept. This type plays nice with e.g. optional fields (the fields that have `autoInsert`  in their definition), nulls etc.
+* `UpdateInput<typeof EntUser.SCHEMA.table>`: methods like `update*()`  accept this shape. Since you can choose, which fields to update, all of the properties of that type are optional.
+* `Row<typeof EntUser.SCHEMA.table>` : that's a general shape of Ents returned from `load*()`  and  `select*()`  calls. Notice that the type is very different from InsertInput, because it never has any optional fields. Optionality is the concept related to _mutations_; once you load something existing from the database, all the fields are present, so they will all be "required". Don't mix up `Row`  and `InsertInput` types!
+* `Where<typeof EntUser.SCHEMA.table>`: a query that `select()`  call accepts. It supports rich query language features like `$not`, `$and`, `$lt`  etc. See more details in [ent-api-select-by-expression.md](getting-started/ent-api-select-by-expression.md "mention").
+
+There are some other, less frequently, used types as well. See the docblocks in Ent Framework source code for more details and examples.
 
 ### EntClass.VALIDATION
 
@@ -106,6 +109,14 @@ The methods available on `VALIDATION` property are:
 Notice that `Row<TTable>` is not the same as an instance of your Ent (although you can pass an Ent to the functions that accept a `Row` type). Rows are a lower level concept: `Row<TTable>` represents a plain object, it's basically a strongly-typed TypeScript `Record` of fields and their values (including nullability concept, custom field types etc.). Rows don't have `vc` property, nor do they have any Ent specific methods.&#x20;
 
 And as mentioned above, `TTable` is derived from the Ent schema, e.g.  `typeof EntUser.SCHEMA.table`.
+
+### EntClass.CLUSTER
+
+This static property simply equals to `cluster` parameter of `BaseEnt` you are extending when defining your Ent class. Use it in case you need to access some low-level Cluster API:
+
+```typescript
+const master = await EntUser.CLUSTER.globalShard().client(MASTER);
+```
 
 ### EntClass.SHARD\_AFFINITY and .SHARD\_LOCATOR
 
