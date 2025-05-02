@@ -65,9 +65,9 @@ Notice how we used `typeof EntUser.SCHEMA.table` in the example above: it's a co
 
 Ent Framework API methods like `insert*()`, `update*()`, `load*()`, `select*()`  etc. accept strongly-typed input and return strongly typed Ents. Here are some examples:
 
-* `InsertInput<typeof EntUser.SCHEMA.table>`: the shape of the object that `insert*()`  and `upsert*()`  methods accept. This type plays nice with e.g. optional fields (the fields that have `autoInsert`  in their definition), nulls etc.
+* `InsertInput<typeof EntUser.SCHEMA.table>`: the shape of the argument that `insert*()`  and `upsert*()`  methods accept. This type plays nice with e.g. optional fields (the fields that have `autoInsert`  in their definition), nulls etc.
 * `UpdateInput<typeof EntUser.SCHEMA.table>`: methods like `update*()`  accept this shape. Since you can choose, which fields to update, all of the properties of that type are optional.
-* `Row<typeof EntUser.SCHEMA.table>` : that's a general shape of Ents returned from `load*()`  and  `select*()`  calls. Notice that the type is very different from InsertInput, because it never has any optional fields. Optionality is the concept related to _mutations_; once you load something existing from the database, all the fields are present, so they will all be "required". Don't mix up `Row`  and `InsertInput` types!
+* `Row<typeof EntUser.SCHEMA.table>` : that's a general shape of Ents returned from `load*()`  and  `select*()`  calls. Notice that the type is very different from `InsertInput`, because it never has any optional fields. Optionality is the concept related to _mutations_; once you load something _existing_ from the database, all of the fields are present, so they will all be "required". Don't mix up `Row`  and `InsertInput` types in your code!
 * `Where<typeof EntUser.SCHEMA.table>`: a query that `select()`  call accepts. It supports rich query language features like `$not`, `$and`, `$lt`  etc. See more details in [ent-api-select-by-expression.md](getting-started/ent-api-select-by-expression.md "mention").
 
 There are some other, less frequently, used types as well. See the docblocks in Ent Framework source code for more details and examples.
