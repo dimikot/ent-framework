@@ -45,7 +45,7 @@ const fields = Object.keys(EntUser.SCHEMA.table);
 // Using the Row type and table name.
 const master = await EntUser.CLUSTER.globalShard().client(MASTER);
 const rows = await master.query<Row<typeof EntUser.SCHEMA.table>>({
-  query: [`SELECT * FROM ${EntUser.SCHEMA.name} WHERE id=?", userID],
+  query: [`SELECT * FROM ${EntUser.SCHEMA.name} WHERE id=?`, userID],
   isWrite: false,
   annotations: [vc.toAnnotation()],
   op: "MY_SELECT",
