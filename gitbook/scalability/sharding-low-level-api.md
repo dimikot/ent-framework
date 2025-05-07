@@ -14,31 +14,31 @@ The API described below is exposed by `Cluster` class, see [locating-a-shard-id-
 import { Pool } from "pg";
 
 export const cluster = new Cluster({
-  islands: () => [
+  islands: async () => [ // sync or async
     {
       no: 0,
       nodes: [
-        { name: "abc-writer-1", host: "...", ... },
-        { name: "abc-reader-2", host: "...", ... },
+        { name: "abc-writer-1", config: { host: "...", ... } },
+        { name: "abc-reader-2", config: { host: "...", ... } },
       ],
     },
     {
       no: 1,
       nodes: [
-        { name: "abc-writer-3", host: "...", ... },
-        { name: "abc-reader-4", host: "...", ... },
+        { name: "abc-writer-3", config: { host: "...", ... } },
+        { name: "abc-reader-4", config: { host: "...", ... } },
       ],
     },
   ],
   createClient: (node) => new PgClientPool({
     ...node,
     Pool, // you can use your own Pool class here instead of node-postgres
-    shards: {
-      nameFormat: "sh%04d",
-      discoverQuery:
-        "SELECT unnest FROM unnest(microsharding.microsharding_list_active_shards())",
-    },
   } satisfies PgClientPoolOptions),
+  shardNamer: new ShardNamer({
+    nameFormat: "sh%04d",
+    discoverQuery:
+      "SELECT unnest FROM unnest(microsharding.microsharding_list_active_shards())",
+  }),
   ...,
 });
 ```

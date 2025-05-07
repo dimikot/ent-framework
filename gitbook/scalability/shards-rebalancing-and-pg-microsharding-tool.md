@@ -4,11 +4,11 @@ Ent Framework by itself does not include a tool that allows to create new micros
 
 ```typescript
 export const cluster = new Cluster({
-  shards: {
+  shardNamer: new ShardNamer({
     nameFormat: "sh%04d",
     discoverQuery:
       "SELECT nspname FROM pg_namespace WHERE nspname ~ 'sh[0-9]+'",
-  },
+  }),
   ...
 });
 ```

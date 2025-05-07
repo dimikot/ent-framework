@@ -55,7 +55,7 @@ import { PgClientPool } from "ent-framework/pg";
 import type { PoolConfig } from "pg";
 
 export const cluster = new Cluster<PgClientPool, PgClientPoolOptions>({
-  islands: () => [
+  islands: async () => [ // sync or async
     {
       no: 0,
       nodes: [

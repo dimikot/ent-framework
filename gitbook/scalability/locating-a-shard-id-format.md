@@ -4,27 +4,28 @@ To enable microshardig support, we first need to configure the instance of `Clus
 
 ```typescript
 export const cluster = new Cluster({
-  islands: () => [
+  islands: async () => [ // sync or async
     {
       no: 0,
       nodes: [
-        { name: "abc-instance-1", host: "...", ... },
-        { name: "abc-instance-2", host: "...", ... },
+        { name: "abc-instance-1", config: { host: "...", ... } },
+        { name: "abc-instance-2", config: { host: "...", ... } },
       ],
     },
     {
       no: 1,
       nodes: [
-        { name: "abc-instance-3", host: "...", ... },
-        { name: "abc-instance-4", host: "...", ... },
+        { name: "abc-instance-3", config: { host: "...", ... } },
+        { name: "abc-instance-4", config: { host: "...", ... } },
       ],
     },
   ],
-  shards: {
+  createClient: (node) => new PgClientPool(node),
+  shardNamer: new ShardNamer({
     nameFormat: "sh%04d",
     discoverQuery:
-      "SELECT nspname FROM pg_namespace WHERE nspname ~ 'sh[0-9]+'",
-  },
+      "SELECT unnest FROM unnest(microsharding.microsharding_list_active_shards())",
+  }),
   ...,
 });
 ```

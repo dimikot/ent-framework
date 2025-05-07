@@ -12,6 +12,12 @@ When Ent Framework boots, it does not start sending all those prewarm queries im
 
 Notice that the default value of `prewarmIntervalMs` is chosen intentionally: adding its jitter `prewarmIntervalJitter` (which is +0.5x), the interval is lower than node-postgres'es `idleTimeoutMillis` value that is 10 seconds by default. Thus, Ent Framework is able to keep the desired number of open connections and not risk them being closed on an idle condition.
 
+## Cluster Islands Reconfiguration
+
+From time to time (`ClusterOptions#reloadIslandsIntervalMs`, defaults to 500 ms if it is sync function or 10 seconds if it's an async function), Ent Frameworks calls `islands()` callback from Cluster object options, to figure out whether some new islands or nodes were added to the cluster, or some nodes were removed. This allows you to dynamically change the cluster configuration without restarting Node process.
+
+You may also use an async function for `islands()`: in this case, Ent Framework will take care of proper caching and error handling. If the callback starts failing, it won't cause any downtime: instead, it will be retried, until it succeeds (and the Cluster's configuration will remain unchanged). If your function fails at the very 1st attempt, right after the process boot, then the error will be propagated back to the client code.
+
 ## Shards Rediscovery
 
 From time to time (`CusterOptions#shardsDiscoverIntervalMs`, defaults to 10 seconds), Ent Framework polls all of the Cluster nodes to get the list of active microshards on those nodes.
@@ -20,10 +26,6 @@ It also runs such a poll immediately in the following rare cases:
 
 1. When the very 1st query arrives, and there is no yet info about the microshards in the cluster.
 2. When a query fails with "table not found" exception. It is often times the case when a microshard has just [moved](../scalability/shards-rebalancing-and-pg-microsharding-tool.md) from one island to another, so the cluster needs to be rediscovered.
-
-## Cluster Reconfiguration
-
-From time to time (`ClusterOptions#shardsDiscoverRecheckIslandsIntervalMs`, defaults to 500 ms), Ent Frameworks calls `islands` callback from Cluster object options, to figure out whether some new islands or nodes were added to the cluster, or some nodes were removed. This allows you to dynamically change the cluster configuration in memory without restarting Node process.
 
 ## Jitter
 

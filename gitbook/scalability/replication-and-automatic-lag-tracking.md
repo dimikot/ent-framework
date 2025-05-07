@@ -74,7 +74,7 @@ First, you need to tell Ent Framework, where can it find the master database and
 
 ```typescript
 export const cluster = new Cluster({
-  islands: () => [
+  islands: async () => [ // sync or async
     {
       no: 0,
       nodes: [
@@ -113,7 +113,7 @@ This is why in `Cluster` configuration, the list of islands (nodes) is returned 
 
 ```typescript
 export const cluster = new Cluster({
-  islands: () => [ // <-- callback
+  islands: async () => [ // <-- sync or async callback
     {
       no: 0,
       nodes: [
