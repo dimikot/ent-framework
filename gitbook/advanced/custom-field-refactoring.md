@@ -4,7 +4,7 @@ In [custom-field-types.md](../getting-started/custom-field-types.md "mention") a
 
 You also learned, how easy it is to modify the custom type when you add new properties.
 
-Although adding optional and required properties to custom types covers the absolute most of cases, sometimes we want to do a large refactoring, changing the shape of the data entirely. It's harder to do, since you need to deal with both the old format and the new format at all times (unless you want to rewrite all the rows in your database).
+Although adding optional and required properties to custom types covers the absolute most of cases, sometimes we want to do a larger refactoring, changing the _shape_ of the data _entirely_. It's harder to do, since you need to deal with both the old DB format and the new format at all times (unless you want to rewrite all the rows in your database).
 
 There are some best practices still, and TypeScript helps here a lot.
 
