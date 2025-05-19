@@ -50,11 +50,11 @@ To access that database, create an instance of Cluster:
 {% code title="ents/cluster.ts" fullWidth="false" %}
 ```typescript
 import { Cluster } from "ent-framework";
-import type { PgClientPoolOptions } from "ent-framework/pg";
-import { PgClientPool } from "ent-framework/pg";
+import type { PgClientOptions } from "ent-framework/pg";
+import { PgClient } from "ent-framework/pg";
 import type { PoolConfig } from "pg";
 
-export const cluster = new Cluster<PgClientPool, PgClientPoolOptions>({
+export const cluster = new Cluster<PgClient, PgClientOptions>({
   islands: async () => [ // sync or async
     {
       no: 0,
@@ -73,7 +73,7 @@ export const cluster = new Cluster<PgClientPool, PgClientPoolOptions>({
       ],
     },
   ],
-  createClient: (node) => new PgClientPool(node),
+  createClient: (node) => new PgClient(node),
   loggers: {
     clientQueryLogger: (props) => console.debug(props.msg),
     swallowedErrorLogger: (props) => console.log(props),
@@ -93,6 +93,6 @@ Terminology:
 
 Notice that we define the layout of the cluster using a callback. Ent Framework will call it from time to time to refresh the view of the cluster, so in this callback, you can read the data from some centralized configuration database (new nodes may be added, or empty nodes may be removed with no downtime). This is called "dynamic real-time reconfiguration".
 
-[PgClientPool](https://github.com/clickup/ent-framework/blob/main/docs/classes/PgClientPool.md) class accepts several options, one of them is the standard [node-postgres PoolConfig](https://node-postgres.com/apis/pool) interface. For simplicity, when we define a cluster shape in `islands`, we just return a list of such configs, to be passed into `createClient()` lambda.
+[PgClient](https://github.com/clickup/ent-framework/blob/main/docs/classes/PgClient.md) class accepts several options, one of them is the standard [node-postgres PoolConfig](https://node-postgres.com/apis/pool) interface. For simplicity, when we define a cluster shape in `islands`, we just return a list of such configs, to be passed into `createClient()` lambda.
 
 As of `prewarm()` call, it's explained in Advanced section.

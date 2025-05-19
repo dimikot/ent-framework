@@ -11,7 +11,7 @@ But there is also a lower level set of methods in `Cluster` class, for the follo
 The API described below is exposed by `Cluster` class, see [locating-a-shard-id-format.md](locating-a-shard-id-format.md "mention").
 
 ```typescript
-import { Pool } from "pg";
+import pg from "pg";
 
 export const cluster = new Cluster({
   islands: async () => [ // sync or async
@@ -30,10 +30,11 @@ export const cluster = new Cluster({
       ],
     },
   ],
-  createClient: (node) => new PgClientPool({
+  createClient: (node) => new PgClient({
     ...node,
-    Pool, // you can use your own Pool class here instead of node-postgres
-  } satisfies PgClientPoolOptions),
+    // you can use your own Pool class here instead of node-postgres
+    createPool: (config) => new pg.Pool(config), 
+  } satisfies PgClientOptions),
   shardNamer: new ShardNamer({
     nameFormat: "sh%04d",
     discoverQuery:
@@ -45,9 +46,9 @@ export const cluster = new Cluster({
 
 ## Substituting the Default node-postgres Pool
 
-Instead of the default [node-postgres Pool](https://node-postgres.com/apis/pool) class, you can tell `PgClientPool`  to use the custom one you built. Create that class and derive it from `Pool` , making sure the constructor arguments signature remains compatible.
+Instead of the default [node-postgres Pool](https://node-postgres.com/apis/pool) class, you can tell `PgClient`  to use the custom one you built. Create that class and derive it from `pg.Pool` , then pass `createPool()`  property that creates an instance of it.
 
-This is a rarely used feature: in most of the cases, you can just skip passing the `Pool`  property, and `PgClientPool`  will use the built-in node-postgres `Pool` class.
+This is a rarely used feature: in most of the cases, you can just skip passing the `createPool`  property, and `PgClient`  will use the built-in node-postgres `Pool` class.
 
 ## cluster.shardByNo(): Get a Shard by its Number
 

@@ -20,7 +20,7 @@ export const cluster = new Cluster({
       ],
     },
   ],
-  createClient: (node) => new PgClientPool(node),
+  createClient: (node) => new PgClient(node),
   shardNamer: new ShardNamer({
     nameFormat: "sh%04d",
     discoverQuery:

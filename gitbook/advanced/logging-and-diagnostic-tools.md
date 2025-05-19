@@ -7,7 +7,7 @@ Ent Framework includes reach instrumentation features that allows you to see, wh
 In [connect-to-a-database.md](../getting-started/connect-to-a-database.md "mention") article we defined our cluster the following way:
 
 ```typescript
-export const cluster = new Cluster<PgClientPool, PgClientPoolOptions>({
+export const cluster = new Cluster<PgClient, PgClientOptions>({
   ...,
   loggers: {
     clientQueryLogger: (props) => console.debug(props.msg),

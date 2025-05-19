@@ -84,7 +84,7 @@ export const cluster = new Cluster({
       ],
     },
   ],
-  createClient: ({ name, ...config }) => new PgClientPool({ name, config }),
+  createClient: ({ name, ...config }) => new PgClient({ name, config }),
   ...,
 });
 ```

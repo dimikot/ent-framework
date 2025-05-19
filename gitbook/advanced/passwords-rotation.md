@@ -11,7 +11,7 @@ Ent Framework supports both approaches:
 ```typescript
 import type { PoolConfig } from "pg";
 
-export const cluster = new Cluster<PgClientPool, PgClientPoolOptions>({
+export const cluster = new Cluster<PgClient, PgClientOptions>({
   islands: () => [
     {
       no: 0,
@@ -34,7 +34,7 @@ export const cluster = new Cluster<PgClientPool, PgClientPoolOptions>({
       ],
     },
   ],
-  createClient: (node) => new PgClientPool(node),
+  createClient: (node) => new PgClient(node),
   ...,
 });
 ```
@@ -88,7 +88,7 @@ export const cluster = new Cluster({
       }))
     )
   })),
-  createClient: (node) => new PgClientPool(node),
+  createClient: (node) => new PgClient(node),
   ...,
 });
 ```

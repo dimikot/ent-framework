@@ -4,9 +4,9 @@ During its work, Ent Framework cluster runs various queries in background, invis
 
 ## Connectons Prewarming
 
-In [connect-to-a-database.md](../getting-started/connect-to-a-database.md "mention") article, we briefly mentioned `cluster.prewarm()` call. The goal of this feature is to let Ent Framework keep the minimal number of open database connections per each client pool (e.g. per each `PgClientPool`). Having ready open connections means that the queries can be processed immediately (connection establishment is expensive, especially when it uses SSL and/or a proxy solution like pgbouncer).
+In [connect-to-a-database.md](../getting-started/connect-to-a-database.md "mention") article, we briefly mentioned `cluster.prewarm()` call. The goal of this feature is to let Ent Framework keep the minimal number of open database connections per each client pool (e.g. per each `PgClient`). Having ready open connections means that the queries can be processed immediately (connection establishment is expensive, especially when it uses SSL and/or a proxy solution like pgbouncer).
 
-Prewarming is done by sending a simple `SELECT 1` SQL query to the pool from time to time (`PgClientOptions#prewarmIntervalMs`, defaults to 5 seconds), in controlled parallel bursts. You can customize the query Ent Framework sends with `PgClientPoolOptions#prewarmQuery` property (to e.g. prewarm full-text search dictionaries if you use them).
+Prewarming is done by sending a simple `SELECT 1` SQL query to the pool from time to time (`PgClientOptions#prewarmIntervalMs`, defaults to 5 seconds), in controlled parallel bursts. You can customize the query Ent Framework sends with `PgClientOptions#prewarmQuery` property (to e.g. prewarm full-text search dictionaries if you use them).
 
 When Ent Framework boots, it does not start sending all those prewarm queries immediately. Instead, it waits for a random time period (passed as a parameter to `prewarm()` method). And, Ent Framework first prewarms 1 connection, then 2, then 3 etc. until it reaches the `min` value passed to the client's config.
 
@@ -39,4 +39,4 @@ Having jitter helps in this situation perfectly.
 
 ## Tweaking Maintenance Operations
 
-Normally, you don't need to tweak any of the parameters (time intervals and jitters) mentioned above, since Ent Framework has sane defaults for them. In case you still have to, then look at `PgClientPoolOptions` and `ClusterOptions` interfaces.
+Normally, you don't need to tweak any of the parameters (time intervals and jitters) mentioned above, since Ent Framework has sane defaults for them. In case you still have to, then look at `PgClientOptions` and `ClusterOptions` interfaces.
