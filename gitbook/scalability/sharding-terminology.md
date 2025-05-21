@@ -1,4 +1,4 @@
-# Terminology
+# Sharding Terminology
 
 Naming things is [one of two hardest problems in computer science](https://martinfowler.com/bliki/TwoHardThings.html), so before we continue, let's agree on terminology.
 
@@ -19,7 +19,7 @@ Every vendor uses different words to name what we call "island" here:
 * in PostgreSQL documentation, there is no common term; the closest one is probably "replication cluster"
 * in AWS RDS and Aurora, they call it "database"
 * in AWS Elasticsearch or OpenSearch services, it is "domain"
-* in AWD Elasticache Redis, they call it "cluster"
+* in AWS Elasticache Redis, they call it "cluster"
 
 The name "island" is a common way to refer any of the above concepts. We also emphasize the logical nature of the island and that microshards can be migrated from one island to another (the same way as people sail between islands in the ocean).
 

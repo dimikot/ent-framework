@@ -2,9 +2,10 @@
 
 [replication-and-automatic-lag-tracking.md](replication-and-automatic-lag-tracking.md "mention") is not a silver bullet: you get fault tolerance and linear reads scaling, but there are limitations too:
 
-1. **You can't scale writes.** Eventually, your single master will become a bottleneck.
-2. **It's not easy to add more disk space to the database.** You have to shutdown a node, grow its volume and then sync the node back. If it's a master node, and you don't want downtime, then you have to switchover the master with one of replicas. Plus, there is in practice a limit on the total size of the database.
-3. **You can't upgrade PostgreSQL across major versions** (e.g. from v16 to v17) without stopping the entire cluster or using logical replication (which is slower and is hard to manage).
+1. **You can't scale writes.** Eventually, your single master CPU will become a bottleneck.
+2. **Single master disk throughput and IOPS have their limits.** Even in AWS, you can't scale them infinitely, there are hard caps on both.
+3. **Physical replication in PostgreSQL is single-threaded.** Which means that at some point, single core CPU utilization on replicas will become a bottleneck: the master will still happily cope with writes, but the replicas won't catch up, having 100% CPU utilization in WAL replay process.
+4. **You can't upgrade PostgreSQL across major versions** (e.g. from v16 to v17) without stopping the entire cluster or using logical replication (which is slower and is hard to manage).
 
 Microsharding (horizontal scaling) solves all of the above downsides. And it is an Ent Framework's built-in feature.
 
