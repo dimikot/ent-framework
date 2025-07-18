@@ -1,7 +1,7 @@
 {
   "name": "ent-framework",
   "description": "A PostgreSQL graph-database-alike library with microsharding and row-level security",
-  "version": "2.22.2",
+  "version": "2.23.1",
   "license": "MIT",
   "keywords": [
     "postgresql",
@@ -26,7 +26,7 @@
     "deploy": "internal/deploy.sh"
   },
   "dependencies": {
-    "@clickup/ent-framework": "2.22.2"
+    "@clickup/ent-framework": "2.23.1"
   },
   "repository": {
     "type": "git",
