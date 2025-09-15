@@ -49,6 +49,7 @@ pg-microsharding list | ls
   [--weight-sql='SELECT returning weight with optional unit']
   [--verbose]
   [--dsn=DSN | --dsns=DNS1,DSN2,...]
+  [--json]
 
 pg-microsharding allocate
   --shard=N | --shards=N-M
@@ -165,6 +166,8 @@ pg-microsharding list
 ```
 
 This action prints the list of all PostgreSQL islands (pointed by DNSn), microshards and some statistics.
+
+If `--json` flag is passed, prints a JSON version of the output. Otherwise, prints a pseudo-graphic representation.
 
 In `--verbose` mode, also prints detailed statistics about insert/update/delete, index scans and seqscans.
 
