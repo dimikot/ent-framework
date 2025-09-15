@@ -28,11 +28,12 @@ See also [TypeScript API documentation](https://github.com/clickup/pg-microshard
 The [pg-microsharding](https://www.npmjs.com/package/@clickup/pg-microsharding) CLI tool enables microshard schemas management across multiple PostgreSQL servers. You can do the following:
 
 * Add and remove microshard schemas.
-* Activate and deactivate schemas.
-* Enumerate active microshard schemas.
-* View the entire cluster layout: what microshard schemas are where, of what size, and how many reads/writes do the experience.
 * Move a microshard from one PostgreSQL server to another with no downtime.
 * Automatically rebalance microshards among multiple servers, so that each server will become of approximately the same size.
+* Copy regular PostgreSQL schemas (unrelated to microshards) from one host to another without downtime (think of no-downtime dump-restore workflow).
+* Activate and deactivate microshards.
+* Enumerate active microshard schemas.
+* View the entire cluster layout: what microshard schemas are where, of what size, and how many reads/writes do the experience.
 * Weighted rebalancing: when one server looks overloaded, you can "dissolve out" some shards from it to other servers to achieve equal load.
 
 Each microshard is a PostgreSQL schema with numeric suffix. Microshard schemas have the same set of tables with same names; it's up to the higher-level tools to keep the schemas of all those tables in sync (e.g. see [pg-mig](https://www.npmjs.com/package/@clickup/pg-mig) tool).
@@ -77,6 +78,14 @@ pg-microsharding rebalance
 
 pg-microsharding cleanup
   [--dsn=DSN | --dsns=DNS1,DSN2,...]
+
+pg-microsharding copy
+  --schema=SCHEMA-NAME
+  --from=DSN-OR-DSN-PREFIX-OR
+  --to=DSN-OR-DSN-PREFIX
+  [--wait]
+  [--max-replication-lag-sec=N]
+  [--dsns=DNS1,DSN2,...]
 ```
 
 ## Environment Variables
@@ -262,6 +271,19 @@ Such situation typically happens, because one microshard became too large, or th
 When you run `pg-microsharding factor --factor="*1.2"`, the tool artificially increases the "weight" of each microshard on the provided host (in this example, the increase is by 1.2, i.e. by 20%). This information is then remembered in the microshards themselves (and is displayed in `list` action), so you can run rebalancing and "dissolve" some of the microshards among other hosts. As a result, your target island will become less loaded (on average), and by repeating this step several times, you can achieve a more fair load distribution.
 
 The "weight increase factor" is technically stored as a SQL comment on the microshard schema, and it travels along with the microshard when you move it.
+
+### Dump-Restore a Schema with no Downtime: pg-microsharding copy
+
+```bash
+pg-microsharding copy \
+  --schema=my-schema --from=host1 --to=host2 \
+  --wait \
+  --max-replication-lag-sec=20
+```
+
+This action works very similarly to the move action, but it doesn't deactivate/activate microshards, so it may be used for other regular PostgreSQL schemas. Unlike when using regular `pg_dump` and restoring, you may continue sending writes to the source host, and the changes will eventually be replayed on the destination while the action is running.
+
+It is very convenient to run this action with `--wait` flag: in this case, it will ask for the user confirmation right before removing the logical subscription, so you'll have a chance to stop writes on the source host and quickly reroute the traffic to destination before finishing the action and removing the logical subscription.
 
 ### Replication Lag Prevention
 
