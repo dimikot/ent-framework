@@ -64,16 +64,23 @@ pg-microsharding factor
 
 pg-microsharding move
   --shard=N
-  --from=DSN
-  --to=DSN
+  --from=DSN-OR-DSN-PREFIX-OR
+  --to=DSN-OR-DSN-PREFIX
   --activate-on-destination={yes | no}
+  [--wait]
+  [--validate-fks]
+  [--max-replication-lag-sec=N]
+  [--dsns=DNS1,DSN2,...]
   [--deactivate-sql='SQL $1 SQL']
 
 pg-microsharding rebalance
   --activate-on-destination={yes | no}
+  [--wait]
+  [--validate-fks]
   [--deactivate-sql='SQL $1 SQL']
   [--weight-sql='SELECT returning weight with optional unit']
   [--decommission=DSN1,DSN2,...]
+  [--max-replication-lag-sec=N]
   [--parallelism=N]
   [--dsn=DSN | --dsns=DNS1,DSN2,...]
 
@@ -85,6 +92,7 @@ pg-microsharding copy
   --from=DSN-OR-DSN-PREFIX-OR
   --to=DSN-OR-DSN-PREFIX
   [--wait]
+  [--validate-fks]
   [--max-replication-lag-sec=N]
   [--dsns=DNS1,DSN2,...]
 ```
@@ -205,6 +213,7 @@ There are many aspects and corner cases addressed in the move action, here are s
 * The move is fast even for large microshards. The tool internally uses the same approach for data copying as `pg_dump`. First recreates the tables structure on the destination, except most of the indexes and foreign key constraints (only the primary key indexes or REPLICA IDENTITY indexes are created at this stage, since they are required for the logical replication to work). Then, it copies the data, utilizing the built-in PostgreSQL tablesync worker; this process is fast, since it inserts the data in bulk and doesn't update indexes. In the end, the tool creates the remaining indexes and foreign key constraints (this is where you may want to increase [maintenance\_work\_mem](https://www.postgresql.org/docs/current/runtime-config-resource.html) for the role you pass to pg-microsharding, since it directly affects the indexes creation time). Overall, this approach speeds up the copying by \~10x comparing to the naive way of using logical subscriptions.
 * At each long running step, the tool shows a descriptive progress information: how many tuples are copied so far, what is the elapsed %, how much time is left, what are the SQL queries it executes (dynamically updatable block in console) etc.
 * It also shows replication lag statistics for all physical replicas of the source and the destination, plus the logical replication lag of the temporary subscription.
+* By default, foreign keys on the destination node are created with `NOT VALID`  clause. This speeds up the move severely, because we assume that the foreign keys are valid on the source, and we don't want to spend time re-validating them. You can amend this behavior by passing `--validate-fks`  flag: the move will take more time though.
 * In the end, the tool activates the microshard on the destination and deactivates on the source, but it does it only when the replication lag in seconds dropped below some reasonable threshold (defaults to 20 seconds, but you can pass a lower value to be on a safe side). So the write lock is guaranteed to be acquired for only a brief moment.
 * The tool runs it all in an automatically created tmux session. If you accidentally disconnect, then just connect back and rerun the same command line: instead of running another move action, if will jump you back in the existing session.
 

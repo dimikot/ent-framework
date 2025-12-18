@@ -1,24 +1,6 @@
----
-layout:
-  title:
-    visible: false
-  description:
-    visible: false
-  tableOfContents:
-    visible: true
-  outline:
-    visible: false
-  pagination:
-    visible: true
----
-
 # Ent Framework
 
-<div align="left">
-
-<figure><img src=".gitbook/assets/logo-berkshire-swash.svg" alt="" width="375"><figcaption></figcaption></figure>
-
-</div>
+<div align="left"><figure><img src=".gitbook/assets/logo-berkshire-swash.svg" alt="" width="375"><figcaption></figcaption></figure></div>
 
 The TypeScript library for working with microsharded PostgreSQL databases.
 
@@ -44,8 +26,4 @@ pnpm add ent-framework
 yarn add ent-framework
 ```
 
-<div align="left">
-
-<figure><img src="https://github.com/clickup/ent-framework/actions/workflows/ci.yml/badge.svg?branch=main" alt="" width="188"><figcaption></figcaption></figure>
-
-</div>
+<div align="left"><figure><img src="https://github.com/clickup/ent-framework/actions/workflows/ci.yml/badge.svg?branch=main" alt="" width="188"><figcaption></figcaption></figure></div>
