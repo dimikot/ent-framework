@@ -109,6 +109,7 @@ Some variables are standard for psql command:
 * `PGPORT`: default database port
 * `PGDATABASE`: default database name
 * `PGSSLMODE`: default SSL mode (e.g. "prefer")
+* `PGOPTIONS`: options (like `-c maintenance_work_mem=500MB`) used when creating indexes
 
 Custom variables of the tool itself:
 
@@ -210,7 +211,7 @@ Microshards can be moved from one PostgreSQL node to another. There is no need t
 
 There are many aspects and corner cases addressed in the move action, here are some of them:
 
-* The move is fast even for large microshards. The tool internally uses the same approach for data copying as `pg_dump`. First recreates the tables structure on the destination, except most of the indexes and foreign key constraints (only the primary key indexes or REPLICA IDENTITY indexes are created at this stage, since they are required for the logical replication to work). Then, it copies the data, utilizing the built-in PostgreSQL tablesync worker; this process is fast, since it inserts the data in bulk and doesn't update indexes. In the end, the tool creates the remaining indexes and foreign key constraints (this is where you may want to increase [maintenance\_work\_mem](https://www.postgresql.org/docs/current/runtime-config-resource.html) for the role you pass to pg-microsharding, since it directly affects the indexes creation time). Overall, this approach speeds up the copying by \~10x comparing to the naive way of using logical subscriptions.
+* The move is fast even for large microshards. The tool internally uses the same approach for data copying as `pg_dump`. First recreates the tables structure on the destination, except most of the indexes and foreign key constraints (only the primary key indexes or REPLICA IDENTITY indexes are created at this stage, since they are required for the logical replication to work). Then, it copies the data, utilizing the built-in PostgreSQL tablesync worker; this process is fast, since it inserts the data in bulk and doesn't update indexes. In the end, the tool creates the remaining indexes and foreign key constraints (this is where you may want to increase [maintenance\_work\_mem](https://www.postgresql.org/docs/current/runtime-config-resource.html) and [max\_parallel\_maintenance\_workers](https://www.postgresql.org/docs/current/runtime-config-resource.html#GUC-MAX-PARALLEL-MAINTENANCE-WORKERS) for the role you pass to pg-microsharding, or use `PGOPTIONS`  environment variable, since it directly affects the indexes creation time). Overall, this approach speeds up the copying by \~10x comparing to the naive way of using logical subscriptions.
 * At each long running step, the tool shows a descriptive progress information: how many tuples are copied so far, what is the elapsed %, how much time is left, what are the SQL queries it executes (dynamically updatable block in console) etc.
 * It also shows replication lag statistics for all physical replicas of the source and the destination, plus the logical replication lag of the temporary subscription.
 * By default, foreign keys on the destination node are created with `NOT VALID`  clause. This speeds up the move severely, because we assume that the foreign keys are valid on the source, and we don't want to spend time re-validating them. You can amend this behavior by passing `--validate-fks`  flag: the move will take more time though.
@@ -302,6 +303,23 @@ It is very convenient to run this action with `--wait` flag: in this case, it wi
 The tool tries hard to not affect the replication lag of the destination nodes when moving or rebalancing microshards. It waits until the lag drops below `--max-replication-lag-sec` seconds before running heavy operations (or until the user presses Shift+S to force-continue).
 
 Also, if you want the tool to pause explicitly and wait until the user presses Shift+S before activating the shard on the destination node, you can use the `--wait` option.
+
+### Tuning Indexes Creation Performance
+
+When moving or rebalancing microshards, indexes creation may take a substantial amount of time. You can tell pg-microsharding to use more memory and run faster by passing `PGOPTIONS` environment variable to the tool, similar to how you would do it in psql:
+
+```bash
+PGOPTIONS="-c maintenance_work_mem=500MB -c max_parallel_maintenance_workers=4" \\
+  pg-microsharding rebalance ...
+```
+
+Some options you may want to increase:
+
+* [maintenance\_work\_mem](https://www.postgresql.org/docs/current/runtime-config-resource.html)
+* [max\_parallel\_maintenance\_workers](https://www.postgresql.org/docs/current/runtime-config-resource.html#GUC-MAX-PARALLEL-MAINTENANCE-WORKERS)&#x20;
+* [work\_mem](https://www.postgresql.org/docs/current/runtime-config-resource.html#GUC-WORK-MEM) (not clear whether it affects index creation time, but you can try)
+
+It's generally safe to set high values in those options, because they are applied only in the session that runs queries like `CREATE INDEX`  and do not affect other database sessions/queries.
 
 ## PostgreSQL Stored Functions API
 
