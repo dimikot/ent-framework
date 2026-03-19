@@ -233,6 +233,46 @@ wsServer.on("subscribe", (ws, message) => {
 
 VC's method `deserializeTimelines()` **merges** the received timelines signal into the current VC's timelines. You can call call it as many times as needed, when you receive a pub-sub signal.
 
+### Saving Timelines in TimelineStorage
+
+If you can't easily use sessions in your app, there is a `TimelineStorage`  abstraction to store the timelines in an external database.
+
+Ent Framework has one built-in implementation to save timelines on the master nodes in PostgreSQL (microsharded by `vc.principal`):
+
+```typescript
+export const cluster = new Cluster({ ... });
+export const timelineStorage = new PgTimelineStorage({ cluster });
+...
+// In the beginning of the request processing:
+vc = await vc.loadTimelines(timelineStorage);
+// Right before the response is sent to the browser:
+await vc.saveTimelines(timelineStorage);
+```
+
+When using `PgTimelineStorage`, the timelines are saved in the following table in all microshards (you need to create it using [database-schema-migrations.md](../advanced/database-schema-migrations.md "mention") or somehow else):
+
+```sql
+CREATE UNLOGGED TABLE timelines(
+  id bigserial PRIMARY KEY,
+  principal text NOT NULL,
+  data text NOT NULL,
+  created_at timestamptz NOT NULL
+);
+CREATE INDEX timelines_principal ON timelines (principal);
+```
+
+The table is append-only (with idempotent compaction step happening from time to time), so multiple clients can write to it using `saveTimelines()`  without having any race conditions.
+
+You can also build your own `TimelineStorage`  implementation (e.g. based off Redis) by extending `TimelineStorage`  base class. Just make sure about taking care of race conditions when saving.
+
+```typescript
+export class RedisTimelineStorage extends TimelineStorage {
+  ...
+  async load(principal: string): Promise<string[]> { ... }
+  async save(principal: string, dataStr: string): Promise<void> { ... }
+}
+```
+
 ### What Data is Stored In a Timeline
 
 VC timelines are basically an array of the following structures:
