@@ -1,3 +1,4 @@
+import { AsyncLocalStorage } from "async_hooks";
 import delay from "delay";
 import pDefer from "p-defer";
 import waitForExpect from "wait-for-expect";
@@ -328,4 +329,88 @@ test("changes in deps are respected", async () => {
 
   depsValue = "other";
   await waitForExpect(async () => expect(await cache.cached()).toEqual("two"));
+});
+
+test("timer-triggered refreshes each run in a separate trace", async () => {
+  // Models how an async_hooks based APM tracer derives a "trace id" from the
+  // current async context: if a query runs with an active trace, it joins it;
+  // otherwise (i.e. when the framework detached us into a fresh async context),
+  // the tracer opens a brand-new trace AND pins it to the current context via
+  // enterWith() (so it would "leak" into the next refresh and coalesce all
+  // refreshes into one trace, were the detachment not restoring a clean
+  // baseline on every iteration).
+  const als = new AsyncLocalStorage<{ traceId: string }>();
+  let detachedTraceSeq = 0;
+  const traces: string[] = [];
+  const recordTrace = (): void => {
+    let store = als.getStore();
+    if (!store) {
+      store = { traceId: `detached-trace-${++detachedTraceSeq}` };
+      als.enterWith(store);
+    }
+
+    traces.push(store.traceId);
+  };
+
+  cache = new CachedRefreshedValue({
+    ...OPTIONS,
+    delayMs: 10,
+    resolverFn: async () => {
+      recordTrace();
+      return "value";
+    },
+  });
+
+  // The very 1st refresh is triggered synchronously by this cached() call (akin
+  // to the 1st query), so it must run in (and thus inherit) the caller's trace.
+  await als.run({ traceId: "caller-trace" }, async () => cache.cached());
+
+  // Let several timer-triggered refreshes happen.
+  await waitForExpect(() => expect(traces.length).toBeGreaterThanOrEqual(4));
+
+  expect(traces[0]).toBe("caller-trace");
+
+  // Every subsequent (timer-triggered) refresh ran detached from the caller's
+  // trace, and each one got its own brand-new trace.
+  const timerTraces = traces.slice(1);
+  expect(
+    timerTraces.every((trace) => trace.startsWith("detached-trace-")),
+  ).toBe(true);
+  expect(new Set(timerTraces).size).toBe(timerTraces.length);
+});
+
+test("manual refreshAndWait() keeps the caller's trace", async () => {
+  const als = new AsyncLocalStorage<{ traceId: string }>();
+  let detachedTraceSeq = 0;
+  const traces: string[] = [];
+  const recordTrace = (): void => {
+    let store = als.getStore();
+    if (!store) {
+      store = { traceId: `detached-trace-${++detachedTraceSeq}` };
+      als.enterWith(store);
+    }
+
+    traces.push(store.traceId);
+  };
+
+  cache = new CachedRefreshedValue({
+    ...OPTIONS,
+    // Large delay, so no timer-triggered refresh interferes: only the initial
+    // refresh and the manual refreshAndWait() ones happen.
+    delayMs: 1_000_000,
+    resolverFn: async () => {
+      recordTrace();
+      return "value";
+    },
+  });
+
+  await als.run({ traceId: "caller-trace" }, async () => {
+    await cache.cached(); // initial refresh
+    await cache.refreshAndWait(); // manual rediscovery
+    await cache.refreshAndWait(); // manual rediscovery
+  });
+
+  // Neither the initial nor the manual refreshes were detached into a fresh
+  // trace: they all kept running in the loop's (caller's) trace.
+  expect(traces).toEqual(["caller-trace", "caller-trace", "caller-trace"]);
 });

@@ -1,3 +1,4 @@
+import { AsyncLocalStorage } from "async_hooks";
 import { createHash } from "crypto";
 import { inspect } from "util";
 import compact from "lodash/compact";
@@ -397,6 +398,43 @@ export function runInVoid(
   } else {
     // do nothing, our Promise is already hanging in nowhere
   }
+}
+
+/**
+ * A snapshot of the "clean" async context, captured at module load time, i.e.
+ * BEFORE any request-scoped async context (such as an incoming HTTP request, and
+ * thus the APM/tracing "trace id" that tracers propagate through
+ * AsyncLocalStorage) could possibly have been established. Calling the returned
+ * runner executes a callback within that captured clean context.
+ *
+ * We deliberately use AsyncLocalStorage.snapshot() and NOT AsyncResource: both
+ * can detach an async context, but AsyncLocalStorage (including .snapshot()) is
+ * supported across runtimes (Node, Deno, Bun), whereas AsyncResource is a
+ * non-functional stub in some of them. If .snapshot() is unavailable (very old
+ * runtimes), we degrade gracefully to running the callback inline (no
+ * detachment).
+ */
+const runInRootAsyncContext: <T>(func: () => T) => T =
+  typeof AsyncLocalStorage?.snapshot === "function"
+    ? AsyncLocalStorage.snapshot()
+    : (func) => func();
+
+/**
+ * Runs an async function detached from the async context (and thus from the
+ * APM/tracing trace id, if any) that is active at the call site: the callback
+ * runs in the "clean" context that was captured at module load time instead.
+ * Each call starts its own fresh async subtree rooted in that clean context, so:
+ * - async_hooks-based tracers observe each call as a separate, brand-new trace
+ *   (the tracer sees no active trace and starts a new one), and
+ * - all the async work spawned within a single call shares that one trace.
+ *
+ * This is used for background loops (e.g. Shards rediscovery) which are kicked
+ * off lazily by the very first query: without this, every subsequent timer-
+ * triggered loop iteration would forever remain attached to (and would thus
+ * pollute) the trace id of that very first query.
+ */
+export async function maybeRunInSeparateTrace<T>(keepCallerTrace: boolean, func: () => Promise<T>): Promise<T> {
+  return keepCallerTrace ? func() : runInRootAsyncContext(func);
 }
 
 /**

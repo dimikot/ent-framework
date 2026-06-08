@@ -2,5 +2,13 @@
   "cSpell.words": [
     "PGDATABASE",
     "PGPORT"
-  ]
+  ],
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": "explicit"
+  },
+  "[typescript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "js/ts.experimental.useTsgo": true,
+  "typescript.native-preview.tsdk": "node_modules/@typescript/native-preview"
 }
