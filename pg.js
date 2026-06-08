@@ -1,1 +1,2 @@
-module.exports = require("@clickup/ent-framework/pg");
+"use strict";
+module.exports = require("./dist/pg");

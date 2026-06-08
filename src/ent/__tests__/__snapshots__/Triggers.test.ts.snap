@@ -1,0 +1,560 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`skip after triggers if operation soft fails: 1: insert happened 1`] = `
+"[
+  {
+    type: 'beforeInsert',
+    input: { name: 'abc', id: '<id>' }
+  },
+  {
+    type: 'afterInsert',
+    input: { name: 'abc', id: '<id>' }
+  },
+  {
+    type: 'afterMutation',
+    input: { name: 'abc', id: '<id>' }
+  }
+]"
+`;
+
+exports[`skip after triggers if operation soft fails: 2: insert soft-failed on unique key conflict 1`] = `
+"[
+  {
+    type: 'beforeInsert',
+    input: { name: 'abc', id: '<id>' }
+  }
+]"
+`;
+
+exports[`skip after triggers if operation soft fails: 3: update soft-failed on non-existing row 1`] = `
+"[
+  {
+    type: 'beforeUpdate',
+    old: EntTestCountry { id: '<id>', name: 'abc' },
+    new: { id: '<id>', name: 'zzz' },
+    input: { name: 'zzz' }
+  }
+]"
+`;
+
+exports[`skip after triggers if operation soft fails: 4: delete soft-failed on non-existing row 1`] = `
+"[
+  {
+    type: 'beforeDelete',
+    old: EntTestCountry { id: '<id>', name: 'abc' }
+  }
+]"
+`;
+
+exports[`triggers: 0: insert happened 1`] = `
+"[
+  {
+    type: 'beforeInsert1',
+    input: {
+      user_id: '<id>',
+      headline: 'xyz',
+      id: '<id>',
+      [Symbol($EPHEMERAL)]: null
+    }
+  },
+  {
+    type: 'beforeInsert2',
+    input: {
+      user_id: '<id>',
+      headline: 'xyz added-by-beforeInsert1',
+      id: '<id>',
+      [Symbol($EPHEMERAL)]: null
+    }
+  },
+  {
+    type: 'beforeMutation',
+    op: 'INSERT',
+    newOrOldRow: {
+      user_id: '<id>',
+      headline: 'xyz added-by-beforeInsert1 added-by-beforeInsert2',
+      id: '<id>',
+      [Symbol($EPHEMERAL)]: null
+    },
+    input: {
+      user_id: '<id>',
+      headline: 'xyz added-by-beforeInsert1 added-by-beforeInsert2',
+      id: '<id>',
+      [Symbol($EPHEMERAL)]: null
+    }
+  },
+  {
+    type: 'beforeMutation (if name changed or INSERT/DELETE)',
+    op: 'INSERT',
+    newOrOldRow: {
+      user_id: '<id>',
+      headline: 'xyz added-by-beforeInsert1 added-by-beforeInsert2',
+      id: '<id>',
+      [Symbol($EPHEMERAL)]: null
+    },
+    input: {
+      user_id: '<id>',
+      headline: 'xyz added-by-beforeInsert1 added-by-beforeInsert2',
+      id: '<id>',
+      [Symbol($EPHEMERAL)]: null
+    }
+  },
+  {
+    type: 'afterInsert',
+    input: {
+      user_id: '<id>',
+      headline: 'xyz added-by-beforeInsert1 added-by-beforeInsert2',
+      id: '<id>',
+      [Symbol($EPHEMERAL)]: null
+    }
+  },
+  {
+    type: 'afterMutation',
+    op: 'INSERT',
+    newOrOldRow: {
+      user_id: '<id>',
+      headline: 'xyz added-by-beforeInsert1 added-by-beforeInsert2',
+      id: '<id>',
+      [Symbol($EPHEMERAL)]: null
+    }
+  },
+  {
+    type: 'afterMutation (if name changed or INSERT/DELETE)',
+    op: 'INSERT',
+    newOrOldRow: {
+      user_id: '<id>',
+      headline: 'xyz added-by-beforeInsert1 added-by-beforeInsert2',
+      id: '<id>',
+      [Symbol($EPHEMERAL)]: null
+    }
+  }
+]"
+`;
+
+exports[`triggers: 1: insert happened 1`] = `
+"[
+  {
+    type: 'beforeInsert1',
+    input: {
+      user_id: '<id>',
+      headline: 'abc',
+      id: '<id>',
+      [Symbol($EPHEMERAL)]: 'eph',
+      [Symbol($EPHEMERAL2)]: 42
+    }
+  },
+  {
+    type: 'beforeInsert2',
+    input: {
+      user_id: '<id>',
+      headline: 'abc added-by-beforeInsert1',
+      id: '<id>',
+      [Symbol($EPHEMERAL)]: 'eph',
+      [Symbol($EPHEMERAL2)]: 1042
+    }
+  },
+  {
+    type: 'beforeMutation',
+    op: 'INSERT',
+    newOrOldRow: {
+      user_id: '<id>',
+      headline: 'abc added-by-beforeInsert1 added-by-beforeInsert2',
+      id: '<id>',
+      [Symbol($EPHEMERAL)]: 'eph',
+      [Symbol($EPHEMERAL2)]: 1042
+    },
+    input: {
+      user_id: '<id>',
+      headline: 'abc added-by-beforeInsert1 added-by-beforeInsert2',
+      id: '<id>',
+      [Symbol($EPHEMERAL)]: 'eph',
+      [Symbol($EPHEMERAL2)]: 1042
+    }
+  },
+  {
+    type: 'beforeMutation (if name changed or INSERT/DELETE)',
+    op: 'INSERT',
+    newOrOldRow: {
+      user_id: '<id>',
+      headline: 'abc added-by-beforeInsert1 added-by-beforeInsert2',
+      id: '<id>',
+      [Symbol($EPHEMERAL)]: 'eph',
+      [Symbol($EPHEMERAL2)]: 1042
+    },
+    input: {
+      user_id: '<id>',
+      headline: 'abc added-by-beforeInsert1 added-by-beforeInsert2',
+      id: '<id>',
+      [Symbol($EPHEMERAL)]: 'eph',
+      [Symbol($EPHEMERAL2)]: 1042
+    }
+  },
+  {
+    type: 'afterInsert',
+    input: {
+      user_id: '<id>',
+      headline: 'abc added-by-beforeInsert1 added-by-beforeInsert2',
+      id: '<id>',
+      [Symbol($EPHEMERAL)]: 'eph',
+      [Symbol($EPHEMERAL2)]: 1042
+    }
+  },
+  {
+    type: 'afterMutation',
+    op: 'INSERT',
+    newOrOldRow: {
+      user_id: '<id>',
+      headline: 'abc added-by-beforeInsert1 added-by-beforeInsert2',
+      id: '<id>',
+      [Symbol($EPHEMERAL)]: 'eph',
+      [Symbol($EPHEMERAL2)]: 1042
+    }
+  },
+  {
+    type: 'afterMutation (if name changed or INSERT/DELETE)',
+    op: 'INSERT',
+    newOrOldRow: {
+      user_id: '<id>',
+      headline: 'abc added-by-beforeInsert1 added-by-beforeInsert2',
+      id: '<id>',
+      [Symbol($EPHEMERAL)]: 'eph',
+      [Symbol($EPHEMERAL2)]: 1042
+    }
+  }
+]"
+`;
+
+exports[`triggers: 2: update happened 1`] = `
+"[
+  {
+    type: 'beforeUpdate',
+    oldRow: EntTestHeadline {
+      id: '<id>',
+      user_id: '<id>',
+      headline: 'abc added-by-beforeInsert1 added-by-beforeInsert2',
+      name: null
+    },
+    newRow: {
+      id: '<id>',
+      user_id: '<id>',
+      headline: 'xyz-updated',
+      name: 'new-name',
+      [Symbol($EPHEMERAL2)]: 101
+    },
+    input: {
+      headline: 'xyz-updated',
+      name: 'new-name',
+      [Symbol($EPHEMERAL2)]: 101
+    }
+  },
+  {
+    type: 'beforeUpdate (if name changed)',
+    newRow: {
+      id: '<id>',
+      user_id: '<id>',
+      headline: 'xyz-updated added-by-beforeUpdate',
+      name: 'new-name',
+      [Symbol($EPHEMERAL2)]: 1000101
+    },
+    oldRow: EntTestHeadline {
+      id: '<id>',
+      user_id: '<id>',
+      headline: 'abc added-by-beforeInsert1 added-by-beforeInsert2',
+      name: null
+    },
+    input: {
+      headline: 'xyz-updated added-by-beforeUpdate',
+      name: 'new-name',
+      [Symbol($EPHEMERAL2)]: 1000101
+    }
+  },
+  {
+    type: 'beforeMutation',
+    op: 'UPDATE',
+    newOrOldRow: {
+      id: '<id>',
+      user_id: '<id>',
+      headline: 'xyz-updated added-by-beforeUpdate',
+      name: 'new-name',
+      [Symbol($EPHEMERAL2)]: 1000101
+    },
+    input: {
+      headline: 'xyz-updated added-by-beforeUpdate',
+      name: 'new-name',
+      [Symbol($EPHEMERAL2)]: 1000101
+    }
+  },
+  {
+    type: 'beforeMutation (if name changed or INSERT/DELETE)',
+    op: 'UPDATE',
+    newOrOldRow: {
+      id: '<id>',
+      user_id: '<id>',
+      headline: 'xyz-updated added-by-beforeUpdate',
+      name: 'new-name',
+      [Symbol($EPHEMERAL2)]: 1000101
+    },
+    input: {
+      headline: 'xyz-updated added-by-beforeUpdate',
+      name: 'new-name',
+      [Symbol($EPHEMERAL2)]: 1000101
+    }
+  },
+  {
+    type: 'afterUpdate',
+    oldRow: EntTestHeadline {
+      id: '<id>',
+      user_id: '<id>',
+      headline: 'abc added-by-beforeInsert1 added-by-beforeInsert2',
+      name: null
+    },
+    newRow: {
+      id: '<id>',
+      user_id: '<id>',
+      headline: 'xyz-updated added-by-beforeUpdate',
+      name: 'new-name',
+      [Symbol($EPHEMERAL2)]: 1000101
+    }
+  },
+  {
+    type: 'afterUpdate (if name changed)',
+    oldRow: EntTestHeadline {
+      id: '<id>',
+      user_id: '<id>',
+      headline: 'abc added-by-beforeInsert1 added-by-beforeInsert2',
+      name: null
+    },
+    newRow: {
+      id: '<id>',
+      user_id: '<id>',
+      headline: 'xyz-updated added-by-beforeUpdate',
+      name: 'new-name',
+      [Symbol($EPHEMERAL2)]: 1000101
+    }
+  },
+  {
+    type: 'afterMutation',
+    op: 'UPDATE',
+    newOrOldRow: {
+      id: '<id>',
+      user_id: '<id>',
+      headline: 'xyz-updated added-by-beforeUpdate',
+      name: 'new-name',
+      [Symbol($EPHEMERAL2)]: 1000101
+    }
+  },
+  {
+    type: 'afterMutation (if name changed or INSERT/DELETE)',
+    op: 'UPDATE',
+    newOrOldRow: {
+      id: '<id>',
+      user_id: '<id>',
+      headline: 'xyz-updated added-by-beforeUpdate',
+      name: 'new-name',
+      [Symbol($EPHEMERAL2)]: 1000101
+    }
+  }
+]"
+`;
+
+exports[`triggers: 3: noop-update happened 1`] = `
+"[
+  {
+    type: 'beforeUpdate',
+    oldRow: EntTestHeadline {
+      id: '<id>',
+      user_id: '<id>',
+      headline: 'abc added-by-beforeInsert1 added-by-beforeInsert2',
+      name: null
+    },
+    newRow: {
+      id: '<id>',
+      user_id: '<id>',
+      headline: 'abc added-by-beforeInsert1 added-by-beforeInsert2',
+      name: null,
+      [Symbol($EPHEMERAL)]: 'eph3'
+    },
+    input: { [Symbol($EPHEMERAL)]: 'eph3' }
+  },
+  {
+    type: 'beforeMutation',
+    op: 'UPDATE',
+    newOrOldRow: {
+      id: '<id>',
+      user_id: '<id>',
+      headline: 'abc added-by-beforeInsert1 added-by-beforeInsert2 added-by-beforeUpdate',
+      name: null,
+      [Symbol($EPHEMERAL)]: 'eph3'
+    },
+    input: {
+      headline: 'abc added-by-beforeInsert1 added-by-beforeInsert2 added-by-beforeUpdate',
+      [Symbol($EPHEMERAL)]: 'eph3'
+    }
+  },
+  {
+    type: 'afterUpdate',
+    oldRow: EntTestHeadline {
+      id: '<id>',
+      user_id: '<id>',
+      headline: 'abc added-by-beforeInsert1 added-by-beforeInsert2',
+      name: null
+    },
+    newRow: {
+      id: '<id>',
+      user_id: '<id>',
+      headline: 'abc added-by-beforeInsert1 added-by-beforeInsert2 added-by-beforeUpdate',
+      name: null,
+      [Symbol($EPHEMERAL)]: 'eph3'
+    }
+  },
+  {
+    type: 'afterMutation',
+    op: 'UPDATE',
+    newOrOldRow: {
+      id: '<id>',
+      user_id: '<id>',
+      headline: 'abc added-by-beforeInsert1 added-by-beforeInsert2 added-by-beforeUpdate',
+      name: null,
+      [Symbol($EPHEMERAL)]: 'eph3'
+    }
+  }
+]"
+`;
+
+exports[`triggers: 4: updateChanged happened 1`] = `
+"[
+  {
+    type: 'beforeUpdate',
+    oldRow: EntTestHeadline {
+      id: '<id>',
+      user_id: '<id>',
+      headline: 'abc added-by-beforeInsert1 added-by-beforeInsert2',
+      name: null
+    },
+    newRow: {
+      id: '<id>',
+      user_id: '<id>',
+      headline: 'abc added-by-beforeInsert1 added-by-beforeInsert2',
+      name: null,
+      [Symbol($EPHEMERAL)]: 'eph4'
+    },
+    input: { [Symbol($EPHEMERAL)]: 'eph4' }
+  },
+  {
+    type: 'beforeMutation',
+    op: 'UPDATE',
+    newOrOldRow: {
+      id: '<id>',
+      user_id: '<id>',
+      headline: 'abc added-by-beforeInsert1 added-by-beforeInsert2 added-by-beforeUpdate',
+      name: null,
+      [Symbol($EPHEMERAL)]: 'eph4'
+    },
+    input: {
+      headline: 'abc added-by-beforeInsert1 added-by-beforeInsert2 added-by-beforeUpdate',
+      [Symbol($EPHEMERAL)]: 'eph4'
+    }
+  },
+  {
+    type: 'afterUpdate',
+    oldRow: EntTestHeadline {
+      id: '<id>',
+      user_id: '<id>',
+      headline: 'abc added-by-beforeInsert1 added-by-beforeInsert2',
+      name: null
+    },
+    newRow: {
+      id: '<id>',
+      user_id: '<id>',
+      headline: 'abc added-by-beforeInsert1 added-by-beforeInsert2 added-by-beforeUpdate',
+      name: null,
+      [Symbol($EPHEMERAL)]: 'eph4'
+    }
+  },
+  {
+    type: 'afterMutation',
+    op: 'UPDATE',
+    newOrOldRow: {
+      id: '<id>',
+      user_id: '<id>',
+      headline: 'abc added-by-beforeInsert1 added-by-beforeInsert2 added-by-beforeUpdate',
+      name: null,
+      [Symbol($EPHEMERAL)]: 'eph4'
+    }
+  }
+]"
+`;
+
+exports[`triggers: 5: delete happened 1`] = `
+"[
+  {
+    type: 'beforeDelete',
+    oldRow: EntTestHeadline {
+      id: '<id>',
+      user_id: '<id>',
+      headline: 'abc added-by-beforeInsert1 added-by-beforeInsert2',
+      name: null
+    }
+  },
+  {
+    type: 'beforeMutation',
+    op: 'DELETE',
+    newOrOldRow: EntTestHeadline {
+      id: '<id>',
+      user_id: '<id>',
+      headline: 'abc added-by-beforeInsert1 added-by-beforeInsert2',
+      name: null
+    },
+    input: {
+      id: '<id>',
+      user_id: '<id>',
+      headline: 'abc added-by-beforeInsert1 added-by-beforeInsert2',
+      name: null
+    }
+  },
+  {
+    type: 'beforeMutation (if name changed or INSERT/DELETE)',
+    op: 'DELETE',
+    newOrOldRow: EntTestHeadline {
+      id: '<id>',
+      user_id: '<id>',
+      headline: 'abc added-by-beforeInsert1 added-by-beforeInsert2',
+      name: null
+    },
+    input: {
+      id: '<id>',
+      user_id: '<id>',
+      headline: 'abc added-by-beforeInsert1 added-by-beforeInsert2',
+      name: null
+    }
+  },
+  {
+    type: 'afterDelete',
+    oldRow: EntTestHeadline {
+      id: '<id>',
+      user_id: '<id>',
+      headline: 'abc added-by-beforeInsert1 added-by-beforeInsert2',
+      name: null
+    }
+  },
+  {
+    type: 'afterMutation',
+    op: 'DELETE',
+    newOrOldRow: EntTestHeadline {
+      id: '<id>',
+      user_id: '<id>',
+      headline: 'abc added-by-beforeInsert1 added-by-beforeInsert2',
+      name: null
+    }
+  },
+  {
+    type: 'afterMutation (if name changed or INSERT/DELETE)',
+    op: 'DELETE',
+    newOrOldRow: EntTestHeadline {
+      id: '<id>',
+      user_id: '<id>',
+      headline: 'abc added-by-beforeInsert1 added-by-beforeInsert2',
+      name: null
+    }
+  }
+]"
+`;

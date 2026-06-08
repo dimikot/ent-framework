@@ -1,3 +1,15 @@
+# Ent Framework
+
+<div align="left"><figure><img src="gitbook/.gitbook/assets/logo-berkshire-swash.svg" alt="" width="375"><figcaption></figcaption></figure></div>
+
+The TypeScript library for working with microsharded PostgreSQL databases.
+
+* [Getting Started and Tutorials](https://ent-framework.net)
+* [API documentation](https://github.com/dimikot/ent-framework/blob/main/docs/globals.md)
+* [Source code](https://github.com/dimikot/ent-framework/tree/main/src)
+* [Ent Framework's Discord](https://discord.gg/QXvN6VTCKS)
+
+#### Core Features
 
 1. **Graph-like representation of entities.** With Ent Framework, you represent each Ent (a domain object of your business logic) as a TypeScript class with immutable properties. An Ent class instance maps to one row of some table in a relational database (like PostgreSQL). It may look similar to ORM, but has many aspects that traditional ORMs don't have.
 2. **Row-level security in a graph (privacy layer).** You manage data as a graph where each node is an Ent instance, and each edge is a field link (think of foreign keys) to other Ents. To be allowed to read (or update/delete) some Ent, you define a set of explicit rules like "user can read EntA if they can read EntB or EntC". And, consequently, in EntB you define its own set of rules, like "user can read EntB if they can read EntD".

@@ -1,1 +1,1 @@
-export * from "@clickup/ent-framework/pg";
+export * from "./dist/pg";

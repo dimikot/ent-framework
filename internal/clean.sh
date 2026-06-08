@@ -1,5 +1,4 @@
 #!/bin/bash
-set -e -x
+set -e
 
-rm -rf node_modules package-lock.json yarn.lock pnpm-lock.yaml
-
+rm -rf dist dist.* yarn.lock package-lock.json pnpm-lock.yaml node_modules ./*.log

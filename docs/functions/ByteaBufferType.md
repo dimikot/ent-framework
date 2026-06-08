@@ -1,0 +1,59 @@
+[**ent-framework**](../README.md)
+
+***
+
+[ent-framework](../globals.md) / ByteaBufferType
+
+# Function: ByteaBufferType()
+
+> **ByteaBufferType**(): `object`
+
+Defined in: [src/pg/types/ByteaBufferType.ts:6](https://github.com/clickup/ent-framework/blob/master/src/pg/types/ByteaBufferType.ts#L6)
+
+A value stored in the DB as a bytea buffer.
+
+## Returns
+
+`object`
+
+### dbValueToJs()
+
+> **dbValueToJs**: (`dbValue`) => `Buffer`
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `dbValue` | `Buffer` |
+
+#### Returns
+
+`Buffer`
+
+### stringify()
+
+> **stringify**: (`jsValue`) => `string`
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `jsValue` | `Buffer` |
+
+#### Returns
+
+`string`
+
+### parse()
+
+> **parse**: (`str`) => `Buffer`
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `str` | `string` |
+
+#### Returns
+
+`Buffer`

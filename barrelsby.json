@@ -1,0 +1,15 @@
+{
+  "name": "index",
+  "directory": [
+    "./src/abstract",
+    "./src/ent",
+    "./src/helpers",
+    "./src/pg",
+    "./src/tools"
+  ],
+  "exclude": [
+    "ent-framework\/.*\/__",
+    "ent-framework\/.*\/internal"
+  ],
+  "delete": true
+}
