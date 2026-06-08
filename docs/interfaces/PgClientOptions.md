@@ -6,7 +6,7 @@
 
 # Interface: PgClientOptions\<TPool\>
 
-Defined in: [src/pg/PgClient.ts:40](https://github.com/clickup/ent-framework/blob/master/src/pg/PgClient.ts#L40)
+Defined in: [src/pg/PgClient.ts:41](https://github.com/clickup/ent-framework/blob/master/src/pg/PgClient.ts#L41)
 
 Options for PgClient constructor.
 

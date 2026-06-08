@@ -6,7 +6,7 @@
 
 # Interface: PgClientSubPoolConfig
 
-Defined in: [src/pg/PgClient.ts:116](https://github.com/clickup/ent-framework/blob/master/src/pg/PgClient.ts#L116)
+Defined in: [src/pg/PgClient.ts:117](https://github.com/clickup/ent-framework/blob/master/src/pg/PgClient.ts#L117)
 
 A named low-level Pool config used to create sub-pools. Sub-pool derives
 configuration from the default PgClientOptions#config, but allow overrides.

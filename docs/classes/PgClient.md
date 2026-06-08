@@ -6,7 +6,7 @@
 
 # Class: PgClient\<TPool\>
 
-Defined in: [src/pg/PgClient.ts:128](https://github.com/clickup/ent-framework/blob/master/src/pg/PgClient.ts#L128)
+Defined in: [src/pg/PgClient.ts:129](https://github.com/clickup/ent-framework/blob/master/src/pg/PgClient.ts#L129)
 
 An abstract PostgreSQL Client. Includes connection pooling logic.
 
@@ -31,7 +31,7 @@ if you need some mutable properties.
 
 > **new PgClient**\<`TPool`\>(`options`): [`PgClient`](PgClient.md)\<`TPool`\>
 
-Defined in: [src/pg/PgClient.ts:190](https://github.com/clickup/ent-framework/blob/master/src/pg/PgClient.ts#L190)
+Defined in: [src/pg/PgClient.ts:191](https://github.com/clickup/ent-framework/blob/master/src/pg/PgClient.ts#L191)
 
 Initializes an instance of PgClient.
 
@@ -120,7 +120,7 @@ All that means that in a 1000-Shard 20-table Cluster we'll eventually have
 
 > `protected` **logSwallowedError**(`props`): `void`
 
-Defined in: [src/pg/PgClient.ts:181](https://github.com/clickup/ent-framework/blob/master/src/pg/PgClient.ts#L181)
+Defined in: [src/pg/PgClient.ts:182](https://github.com/clickup/ent-framework/blob/master/src/pg/PgClient.ts#L182)
 
 Calls swallowedErrorLogger() doing some preliminary amendment.
 
@@ -144,7 +144,7 @@ Calls swallowedErrorLogger() doing some preliminary amendment.
 
 > **address**(): `string`
 
-Defined in: [src/pg/PgClient.ts:239](https://github.com/clickup/ent-framework/blob/master/src/pg/PgClient.ts#L239)
+Defined in: [src/pg/PgClient.ts:240](https://github.com/clickup/ent-framework/blob/master/src/pg/PgClient.ts#L240)
 
 Represents the full destination address this Client is working with.
 Depending on the implementation, it may include hostname, port number,
@@ -166,7 +166,7 @@ shardNos) based on that address.
 
 > **end**(): `Promise`\<`void`\>
 
-Defined in: [src/pg/PgClient.ts:256](https://github.com/clickup/ent-framework/blob/master/src/pg/PgClient.ts#L256)
+Defined in: [src/pg/PgClient.ts:257](https://github.com/clickup/ent-framework/blob/master/src/pg/PgClient.ts#L257)
 
 Gracefully closes all the connections of this Client to let the caller
 destroy it. The pending queries are awaited to finish before returning. The
@@ -187,7 +187,7 @@ connections are drained): you should not send queries to it.
 
 > **isEnded**(): `boolean`
 
-Defined in: [src/pg/PgClient.ts:270](https://github.com/clickup/ent-framework/blob/master/src/pg/PgClient.ts#L270)
+Defined in: [src/pg/PgClient.ts:271](https://github.com/clickup/ent-framework/blob/master/src/pg/PgClient.ts#L271)
 
 Returns true if the Client is ended and can't be used anymore.
 
@@ -205,7 +205,7 @@ Returns true if the Client is ended and can't be used anymore.
 
 > **shardNos**(): `Promise`\<readonly `number`[]\>
 
-Defined in: [src/pg/PgClient.ts:278](https://github.com/clickup/ent-framework/blob/master/src/pg/PgClient.ts#L278)
+Defined in: [src/pg/PgClient.ts:279](https://github.com/clickup/ent-framework/blob/master/src/pg/PgClient.ts#L279)
 
 Returns all Shard numbers discoverable via the connection to the Client's
 database.
@@ -224,7 +224,7 @@ database.
 
 > **ping**(`__namedParameters`): `Promise`\<`void`\>
 
-Defined in: [src/pg/PgClient.ts:305](https://github.com/clickup/ent-framework/blob/master/src/pg/PgClient.ts#L305)
+Defined in: [src/pg/PgClient.ts:306](https://github.com/clickup/ent-framework/blob/master/src/pg/PgClient.ts#L306)
 
 Sends a read or write test query to the server. Tells the server to sit and
 wait for at least the provided number of milliseconds.
@@ -249,7 +249,7 @@ wait for at least the provided number of milliseconds.
 
 > **withShard**(`no`): `this`
 
-Defined in: [src/pg/PgClient.ts:327](https://github.com/clickup/ent-framework/blob/master/src/pg/PgClient.ts#L327)
+Defined in: [src/pg/PgClient.ts:328](https://github.com/clickup/ent-framework/blob/master/src/pg/PgClient.ts#L328)
 
 Creates a new Client which is namespaced to the provided Shard number. The
 new Client will share the same connection pool with the parent's Client.
@@ -274,7 +274,7 @@ new Client will share the same connection pool with the parent's Client.
 
 > **role**(): [`ClientRole`](../type-aliases/ClientRole.md)
 
-Defined in: [src/pg/PgClient.ts:345](https://github.com/clickup/ent-framework/blob/master/src/pg/PgClient.ts#L345)
+Defined in: [src/pg/PgClient.ts:346](https://github.com/clickup/ent-framework/blob/master/src/pg/PgClient.ts#L346)
 
 Returns the Client's role reported after the last successful query. Master
 and replica roles may switch online unpredictably, without reconnecting, so
@@ -294,7 +294,7 @@ we only know the role after a query.
 
 > **connectionIssue**(): `null` \| [`ClientConnectionIssue`](../interfaces/ClientConnectionIssue.md)
 
-Defined in: [src/pg/PgClient.ts:355](https://github.com/clickup/ent-framework/blob/master/src/pg/PgClient.ts#L355)
+Defined in: [src/pg/PgClient.ts:356](https://github.com/clickup/ent-framework/blob/master/src/pg/PgClient.ts#L356)
 
 Returns a non-nullable value if the Client couldn't connect to the server
 (or it could, but the load balancer reported the remote server as not
@@ -315,7 +315,7 @@ until e.g. the next discovery query to it (or any query) succeeds.
 
 > **prewarm**(): `void`
 
-Defined in: [src/pg/PgClient.ts:365](https://github.com/clickup/ent-framework/blob/master/src/pg/PgClient.ts#L365)
+Defined in: [src/pg/PgClient.ts:366](https://github.com/clickup/ent-framework/blob/master/src/pg/PgClient.ts#L366)
 
 A convenience method to put connections prewarming logic to. The idea is to
 keep the needed number of open connections and also, in each connection,
@@ -336,7 +336,7 @@ full-text dictionaries).
 
 > **pool**(`subPoolConfig`?): `TPool`
 
-Defined in: [src/pg/PgClient.ts:431](https://github.com/clickup/ent-framework/blob/master/src/pg/PgClient.ts#L431)
+Defined in: [src/pg/PgClient.ts:432](https://github.com/clickup/ent-framework/blob/master/src/pg/PgClient.ts#L432)
 
 Returns a default pool (when subPoolConfig is not passed), or a "sub-pool"
 (a named low-level Pool implementation compatible to node-postgres). The
@@ -364,7 +364,7 @@ database-agnostic Client API.
 
 > **acquireConn**(`subPoolConfig`?): `Promise`\<[`PgClientConn`](../interfaces/PgClientConn.md)\<`TPool`\>\>
 
-Defined in: [src/pg/PgClient.ts:493](https://github.com/clickup/ent-framework/blob/master/src/pg/PgClient.ts#L493)
+Defined in: [src/pg/PgClient.ts:494](https://github.com/clickup/ent-framework/blob/master/src/pg/PgClient.ts#L494)
 
 Called when the Client needs a connection in the default pool (when
 subPoolConfig is not passed), or in a sub-pool (see pool() method) to run a
@@ -392,7 +392,7 @@ database-agnostic Client API.
 
 > **query**\<`TRow`\>(`__namedParameters`): `Promise`\<`TRow`[]\>
 
-Defined in: [src/pg/PgClient.ts:517](https://github.com/clickup/ent-framework/blob/master/src/pg/PgClient.ts#L517)
+Defined in: [src/pg/PgClient.ts:518](https://github.com/clickup/ent-framework/blob/master/src/pg/PgClient.ts#L518)
 
 Sends a query (internally, a multi-query) through the default Pool (if
 subPoolConfig is not passed), or through a named sub-pool (see pool()

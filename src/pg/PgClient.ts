@@ -1,5 +1,6 @@
 import defaults from "lodash/defaults";
 import range from "lodash/range";
+import uniq from "lodash/uniq";
 import pg from "pg";
 import type {
   ClientConnectionIssue,
@@ -762,7 +763,7 @@ export class PgClient<TPool extends pg.Pool = pg.Pool> extends Client {
     // pg_dump when migrating this Shard to another machine since pg_dump
     // doesn't emit CREATE EXTENSION statement when filtering by schema name).
     queriesPrologue.unshift(
-      `SET LOCAL search_path TO ${this.shardName}, public`,
+      `SET LOCAL search_path TO ${uniq([this.shardName, "public"]).join(", ")}`,
     );
 
     if (epilogue) {
