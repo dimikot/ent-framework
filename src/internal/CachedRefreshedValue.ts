@@ -2,7 +2,7 @@ import { Memoize } from "fast-typescript-memoize";
 import type { DeferredPromise } from "p-defer";
 import pDefer from "p-defer";
 import type { MaybeCallable } from "./misc";
-import { maybeCall, runInVoid } from "./misc";
+import { maybeCall, maybeRunInSeparateTrace, runInVoid } from "./misc";
 
 export interface CachedRefreshedValueOptions<TValue> {
   /** Delay between calling resolver. */
@@ -111,6 +111,16 @@ export class CachedRefreshedValue<TValue> {
 
   @Memoize()
   private async refreshLoop(): Promise<void> {
+    // Whether the upcoming resolverFn() call must run in the caller's async
+    // context (and thus inherit its APM/tracing trace id), or in a fresh,
+    // detached trace. The very 1st refresh is triggered synchronously by the
+    // very 1st cached() caller (e.g. the 1st query), so it intentionally stays
+    // in that caller's trace. Same for refreshes triggered manually via
+    // refreshAndWait() (e.g. Cluster#rediscover()). But refreshes triggered on
+    // the timer (or by a deps change) must NOT pollute the trace of whoever
+    // happened to start the loop - each such refresh gets its own fresh trace.
+    let keepCallerTrace = true;
+
     while (!this.destroyedError) {
       const warningDelayMs = maybeCall(this.options.warningTimeoutMs);
       const depsDelayMs = maybeCall(this.options.deps.delayMs);
@@ -131,11 +141,13 @@ export class CachedRefreshedValue<TValue> {
       let depsPrev: unknown = undefined;
       try {
         this.resolverFnCallCount++;
-        depsPrev = await this.options.deps.handler();
-        this.latestValue = await this.options.resolverFn();
+        await maybeRunInSeparateTrace(keepCallerTrace, async () => {
+          depsPrev = await this.options.deps.handler();
+          this.latestValue = await this.options.resolverFn();
+        });
         const oldNextValue = this.nextValue;
         this.nextValue = pDefer();
-        oldNextValue.resolve(this.latestValue);
+        oldNextValue.resolve(this.latestValue!);
       } catch (e: unknown) {
         this.onError(e, Math.round(performance.now() - startTime));
       } finally {
@@ -143,10 +155,16 @@ export class CachedRefreshedValue<TValue> {
       }
 
       // Wait for delayMs. If this.skipDelay() is called, the code unfreezes
-      // immediately. Also, deps are rechecked every depsDelayMs, and if they
-      // change, the code unfreezes too.
+      // immediately, and the next refresh is treated as caller-triggered (so it
+      // keeps the trace). Also, deps are rechecked every depsDelayMs, and if
+      // they change, the code unfreezes too (and the next refresh is treated as
+      // timer-triggered, i.e. it runs in a fresh detached trace).
+      keepCallerTrace = false;
       const delayDefer = pDefer<void>();
-      this.skipDelay = () => delayDefer.resolve();
+      this.skipDelay = () => {
+        keepCallerTrace = true;
+        delayDefer.resolve();
+      };
 
       let depsTimeoutBody: null | (() => void) = () =>
         runInVoid(async () => {
